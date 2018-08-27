@@ -70,6 +70,10 @@ public class CollisionSystem
         }
         for(Boid boid : boids)
         {
+            if(!boid.isActive())
+            {
+                continue;
+            }
             Rectangle bouncerRect = boid.getBoundingBox();
             
             for(Bullet bullet : bullets)

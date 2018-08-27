@@ -63,7 +63,7 @@ public class Bouncer extends Entity
         this.dir = dir.nor();
         speed = Globals.WIDTH/2f;
         
-        color = Color.YELLOW;
+        color = Color.YELLOW.cpy();
         
         active = false;
         
@@ -144,8 +144,9 @@ public class Bouncer extends Entity
             position.y = model.WORLD_HEIGHT - height -1;
             dir.y  = -dir.y;
         }
-        
-        model.applyRadialForce(getMid(), 600, 128);
+        //twice on purpose
+        model.applyRadialForce(getMid(), 600, 96);
+        model.applyRadialForce(getMid(), 600, 96);
     }
 
     @Override
@@ -161,8 +162,7 @@ public class Bouncer extends Entity
         {
             color.a = 0.45f;
         }
-        s.setColor(color);
-        
+        s.setColor(color);       
         s.draw(tex,
                     position.x, position.y,
                     width / 2, height / 2,
@@ -201,19 +201,32 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
-                int particles = 64;
+                int particles = 128;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
 
                     angle += MathUtils.random(-2.5f, 2.5f);
-
-                    model.createParticle(
+                    
+                    if(i % 2 == 0)
+                    {
+                        ParticleSpin p = new ParticleSpin(
+                                new Vector2(
+                                    position.x + width/2,
+                                    position.y + height/2), 
+                                angle, MathUtils.random(0.4f, 1.2f), 
+                                Color.WHITE.cpy(), Color.GREEN.cpy(), Globals.WIDTH/2f);
+                        model.addEntity(p);
+                    }
+                    else
+                    {
+                        model.createParticle(
                             new Vector2(
                                     position.x + width/2,
                                     position.y + height/2), 
                             angle, MathUtils.random(0.2f, .8f), Globals.WIDTH,
-                            Color.CYAN.cpy(), Color.YELLOW.cpy());
+                            Color.WHITE.cpy(), Color.YELLOW.cpy());
+                    }
                 }
 
                 for (int i = 0; i < 5; i++)

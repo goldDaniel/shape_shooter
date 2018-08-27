@@ -71,7 +71,7 @@ public class Boid extends Entity
         active = false;
         isAlive = true;
         
-        color = Color.CYAN.cpy();
+        color = Color.CORAL.cpy();
      
         
         boids.add(this);
@@ -81,7 +81,7 @@ public class Boid extends Entity
     {
         Vector2 result = new Vector2();
         int count = 0;
-        float range = 64;
+        float range =72;
         
         Vector2 sum = new Vector2();
         for(Boid b : boids)
@@ -123,7 +123,6 @@ public class Boid extends Entity
         
         if(count > 0)
         {
-            sum.scl(1f/(float)count);
             sum.setLength(SPEED_MAX);
             
             result = sum.sub(velocity);
@@ -139,7 +138,7 @@ public class Boid extends Entity
     
         int count = 0;
         
-        float range = 72;
+        float range = 64;
         
         Vector2 sum = new Vector2();
         for(Boid b : boids)
@@ -206,33 +205,37 @@ public class Boid extends Entity
         
         if(active)
         {
+            borderCheck(model);
             
-            ///N seconds to accelerate to full speed
             Vector2 separation = separation();
             Vector2 allignment = allignment();
             Vector2 cohesion   = cohesion();
-            
+            Vector2 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             Vector2 seek = new Vector2();
             
             float dist = Float.MAX_VALUE;
-            float range = 768;
+            float range = 512;
             if(model.getEntityType(Player.class).size > 0)
             {
-                Vector2 pos = model.getEntityType(Player.class).first().position;
-                dist = pos.dst(position);
+                Vector2 target = model.getEntityType(Player.class).first().position;
+                dist = target.dst(position);
                 
                 if(dist < range)
-                    seek.set(seek(pos)).scl(2f-dist/range);
+                {
+                    seek.set(seek(target)).scl(dist/range);
+                }
             }
             
             acceleration.add(separation);
             acceleration.add(allignment);
             acceleration.add(cohesion);
+            acceleration.add(boundary);
             acceleration.add(seek);
             
+            //turn faster toward the target when near
             if(dist < range)
             {
-                acceleration.limit(SPEED_MAX/2f*delta);
+                acceleration.limit(SPEED_MAX/4f*delta);
             }
             else
             {
@@ -245,7 +248,7 @@ public class Boid extends Entity
             
             acceleration.set(0, 0);
         
-            borderCheck(model);
+            
             
             model.applyRadialForce(position, 800f, 128);
         }
@@ -256,24 +259,22 @@ public class Boid extends Entity
     {
         if(position.x < 0)
         {
-            position.x = 1;
-            velocity.x = -velocity.x;
+            position.x = 0;
+            
         }
         else if(position.x + width > model.WORLD_WIDTH)
         {
-            position.x = model.WORLD_WIDTH - width;
-            velocity.x = -velocity.x;
+            position.x = model.WORLD_WIDTH - height;
+            
         }
         
         if(position.y < 0)
         {
-            position.y = 1;
-            velocity.y = -velocity.y;
+            position.y = 0;
         }
         else if(position.y + height > model.WORLD_HEIGHT)
         {
             position.y = model.WORLD_HEIGHT - height;
-            velocity.y = - velocity.y;
         }
     }
     
@@ -302,7 +303,7 @@ public class Boid extends Entity
     @Override
     public void kill(WorldModel model)
     {
-        //immune for first 5s
+        //immune until active
         if(active)
         {
             int particles = 64;
@@ -312,12 +313,25 @@ public class Boid extends Entity
                 
                 angle += MathUtils.random(-2.5f, 2.5f);
                 
-                model.createParticle(
+                if(i % 2 == 0)
+                {
+                    ParticleSpin p = new ParticleSpin(
+                            new Vector2(
+                                position.x + width/2,
+                                position.y + height/2), 
+                            angle, MathUtils.random(0.2f, .6f), 
+                            Color.ORANGE.cpy(), Color.WHITE.cpy(), Globals.WIDTH/2f);
+                    model.addEntity(p);
+                }
+                else
+                {
+                    model.createParticle(
                         new Vector2(
                                 position.x + width/2,
                                 position.y + height/2), 
-                        angle, MathUtils.random(0.1f, 0.4f), Globals.WIDTH/2,
-                        Color.WHITE.cpy(), Color.RED.cpy());
+                        angle, MathUtils.random(0.1f, 0.4f), Globals.WIDTH/1.2f,
+                        Color.WHITE.cpy(), Color.LIME.cpy());
+                }
             }
 
             for(int i = 0; i < 5; i++)
@@ -353,11 +367,58 @@ public class Boid extends Entity
     {
         Vector2 result = new Vector2();
         
+        float range = 384;
+        
+        Vector2 wallCheck = new Vector2();
+        
+        //left wall
+        wallCheck.x = 0;
+        wallCheck.y = position.y;
+        float dist = position.dst(wallCheck);
+        
+        if(dist < range)
+        {
+            result.add(SPEED_MAX*(1f - dist/range), 0);
+        }
+        
+        //right wall
+        wallCheck.x = WORLD_WIDTH;
+        
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(-SPEED_MAX*(1f - dist/range), 0);
+        }
+        
+        //bottom wall
+        wallCheck.x = position.x;
+        wallCheck.y = 0;
+        
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(0, SPEED_MAX*(1f - dist/range));
+        }
+        
+        //top wall
+        wallCheck.y = WORLD_HEIGHT;
+        
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(0, -SPEED_MAX*(1f - dist/range));
+        }
+        
         return result;
     }
     
     public void setVelocity(Vector2 v)
     {
         velocity.set(v);
+    }
+    
+    public boolean isActive()
+    {
+        return active;
     }
 }

@@ -71,7 +71,8 @@ com_crashlytics_export_strings.xml
 /ios/nbproject/private/
 /ios-moe/nbproject/private/
 
-
+/core/assets/levels/
+/core/assets/
 /build/
 /android/build/
 /core/build/

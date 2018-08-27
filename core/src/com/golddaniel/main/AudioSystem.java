@@ -58,6 +58,7 @@ public class AudioSystem implements MessageListener
         {
             playSound(SOUND.LASER_2);
             backgroundSong.play();
+            backgroundSong.setVolume(MUSIC_VOLUME);
         }
         if(event == Messenger.EVENT.BOUNCER_DEAD)
         {

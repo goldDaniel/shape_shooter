@@ -45,7 +45,7 @@ public class Player extends Entity
     float width;
     float height;
     
-    final float ACCELERATION = Globals.WIDTH*2f;
+    final float ACCELERATION = Globals.WIDTH*4;
     final float MAX_SPEED = Globals.WIDTH / 4f;
 
     float angle;

@@ -29,6 +29,7 @@ import com.golddaniel.main.MessageListener;
 import com.golddaniel.main.Messenger;
 import com.golddaniel.main.PhysicsGrid;
 import com.golddaniel.main.WorldModel;
+import java.util.Scanner;
 
 /**
  * Helps manage worldModel
@@ -66,6 +67,34 @@ public class Level implements MessageListener
         buildLevel();
     }
     
+    private void buildLevel(String levelData)
+    {
+        //TODO: NOT GWT COMPATABLE
+        //if you ever want to move to html this must be altered
+        Scanner s = new Scanner("");
+        while(s.hasNextLine())
+        {   
+            String line = s.nextLine();
+            char delim = ' ';
+            
+            /*
+                0 - time to spawn at
+            */
+            String[] values = new String[5];
+        }  
+        Vector2 size = new Vector2(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+        int spacing = 64;
+        model.addEntity(new PhysicsGrid(size, (int)size.x/spacing, (int)size.y/spacing));
+        model.addEntity(new Player(model));
+        
+        for (int i = 0; i < 128; i++)
+        {
+            model.addEntity(new Boid(
+                    new Vector2(model.WORLD_WIDTH/2f, model.WORLD_HEIGHT/2f)));
+        }
+    }
+    
+    //TODO: this is disgusting. fix it.
     private void buildLevel()
     {
         Vector2 size = new Vector2(model.WORLD_WIDTH, model.WORLD_HEIGHT);
@@ -187,11 +216,11 @@ public class Level implements MessageListener
             toSpawn.get(time).add(new Bouncer(pos.cpy(), dir.cpy()));
         }
         
-        time += 5;
-        numSpawning = 10f;
-        for (int i = 0; i < 20; i++)
+        time += 2;
+        numSpawning = 20f;
+        for (int i = 0; i < 4; i++)
         {
-            time += 1;
+            time += 2;
             toSpawn.put(time, new Array<Entity>());
             
             for (int a = 0; a < numSpawning; a++)
@@ -207,11 +236,54 @@ public class Level implements MessageListener
             }
         }
         
+        time += 1;
+        toSpawn.put(time, new Array<Entity>());
+        numSpawning = 6f;
+        for (int i = 0; i < numSpawning; i++)
+        {
+            Vector2 pos = new Vector2();
+            pos.x = model.WORLD_WIDTH * ((float)i + 1f)/((float)numSpawning + 1f);
+            pos.y = 0;
+            
+            Vector2 dir = new Vector2();
+            dir.x = 0;
+            dir.y = 1;
+            
+            toSpawn.get(time).add(new Bouncer(pos.cpy(), dir.cpy()));
+            
+            
+            pos.x = model.WORLD_WIDTH * ((float)i + 1f)/((float)numSpawning + 1f);
+            pos.y = model.WORLD_HEIGHT;
+            
+            dir.x = 0;
+            dir.y = -1;
+            
+            toSpawn.get(time).add(new Bouncer(pos.cpy(), dir.cpy()));
+            
+            
+            pos.x = 0;
+            pos.y = model.WORLD_HEIGHT * ((float)i + 1f)/((float)numSpawning + 1f);
+            
+            
+            dir.x = 1;
+            dir.y = 0;
+            
+            toSpawn.get(time).add(new Bouncer(pos.cpy(), dir.cpy()));
+            
+            
+            pos.x = model.WORLD_WIDTH;
+            pos.y = model.WORLD_HEIGHT * ((float)i + 1f)/((float)numSpawning + 1f);
+            
+           
+            dir.x = -1;
+            dir.y = 0;
+            
+            toSpawn.get(time).add(new Bouncer(pos.cpy(), dir.cpy()));
+        }
     }   
     
     public void update(float delta)
     {
-        
         if(model.getEntityType(Player.class).size == 0)
         {
             respawnPlayer();
@@ -274,6 +346,17 @@ public class Level implements MessageListener
         return score;
     }
 
+    public void killAll()
+    {
+        for(Entity e : model.getAllEntities())
+        {
+            if(!(e instanceof Player))
+            {
+                e.kill(model);
+            }
+        }
+    }
+    
     @Override
     public void onNotify(Messenger.EVENT event)
     {

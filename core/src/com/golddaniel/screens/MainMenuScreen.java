@@ -117,7 +117,7 @@ public class MainMenuScreen extends VScreen
         g.update(delta);
         
         camera.position.x = Globals.WIDTH/2f;
-        camera.position.y = Globals.HEIGHT/2f + 16;
+        camera.position.y = Globals.HEIGHT/2f;
         camera.update();
         
         bloom.capture();

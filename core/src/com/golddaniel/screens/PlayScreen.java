@@ -87,6 +87,7 @@ public class PlayScreen extends VScreen implements MessageListener
             font.draw(s, "LEVEL END", 
                 Globals.WIDTH/2, 
                 Globals.HEIGHT/2);
+            level.killAll();
         }
         s.end();
     }
