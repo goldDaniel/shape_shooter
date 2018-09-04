@@ -36,8 +36,7 @@ import java.util.Scanner;
  * @author wrksttn
  */
 public class Level implements MessageListener
-{
-    
+{   
     float stateTime;
     
     float respawnTimer;

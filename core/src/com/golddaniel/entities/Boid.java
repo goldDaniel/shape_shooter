@@ -306,7 +306,7 @@ public class Boid extends Entity
         //immune until active
         if(active)
         {
-            int particles = 64;
+            int particles = 32;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -315,22 +315,16 @@ public class Boid extends Entity
                 
                 if(i % 2 == 0)
                 {
-                    ParticleSpin p = new ParticleSpin(
+                    model.createParticle(
                             new Vector2(
                                 position.x + width/2,
-                                position.y + height/2), 
-                            angle, MathUtils.random(0.2f, .6f), 
-                            Color.ORANGE.cpy(), Color.WHITE.cpy(), Globals.WIDTH/2f);
-                    model.addEntity(p);
-                }
-                else
-                {
-                    model.createParticle(
-                        new Vector2(
-                                position.x + width/2,
-                                position.y + height/2), 
-                        angle, MathUtils.random(0.1f, 0.4f), Globals.WIDTH/1.2f,
-                        Color.WHITE.cpy(), Color.LIME.cpy());
+                                position.y + height/2),
+                            angle,
+                            MathUtils.random(0.5f, 0.9f),
+                            -Globals.WIDTH/2f,
+                            Color.CYAN.cpy(),
+                            Color.MAGENTA.cpy(),
+                            Particle.TYPE.SPIN);
                 }
             }
 

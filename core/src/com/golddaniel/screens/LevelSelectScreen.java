@@ -8,7 +8,6 @@ package com.golddaniel.screens;
 import bloom.Bloom;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -21,7 +20,6 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.main.Globals;
-import com.golddaniel.main.PhysicsGrid;
 
 /**
  *
@@ -36,8 +34,6 @@ public class LevelSelectScreen extends VScreen
     
     BitmapFont font;
     
-    PhysicsGrid g;
-       
     Texture panelTexture;
     
     Bloom bloom;
@@ -55,9 +51,9 @@ public class LevelSelectScreen extends VScreen
         
         
         //defaults to false
-        unlocked = new boolean[rows][cols];
-        unlocked[rows - 1][0] = true;
-        selectedPanel = new Vector2(rows - 1, 0);
+        unlocked = new boolean[cols][rows];
+        unlocked[0][rows - 1] = true;
+        selectedPanel = new Vector2(0, rows - 1);
                 
         camera = new OrthographicCamera();
         viewport = new FitViewport(Globals.WIDTH, Globals.HEIGHT, camera);
@@ -75,10 +71,6 @@ public class LevelSelectScreen extends VScreen
         
         panelTexture = new Texture("ui/glassPanel_cornerTL.png");
         
-        int spacing = 32;
-        g = new PhysicsGrid(new Vector2(Globals.WIDTH*2, Globals.HEIGHT*2), 
-                Globals.WIDTH*2/spacing, Globals.HEIGHT*2/spacing);
-        
 
         bloom = new Bloom(viewport, 1f);
     }
@@ -90,8 +82,6 @@ public class LevelSelectScreen extends VScreen
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         s.setProjectionMatrix(camera.combined);
-        
-        g.update(delta);
         
         if(Gdx.input.isKeyJustPressed(Keys.LEFT))
         {
@@ -128,14 +118,8 @@ public class LevelSelectScreen extends VScreen
         //selectedPanel is in valid state by now
         if(Gdx.input.isKeyJustPressed(Keys.ENTER))
         {
-            unlocked[(int)selectedPanel.y][(int)selectedPanel.x] = true;
+            unlocked[(int)selectedPanel.x][(int)selectedPanel.y] = true;
         }        
-        
-        Vector2 pos = new Vector2();
-        pos.x = selectedPanel.x*Globals.WIDTH/cols + 128 +  192;
-        pos.y = selectedPanel.y*Globals.HEIGHT/1.5f/rows + 128 + 64;
-        
-        g.applyRadialForce(pos, 4000f, 192);
         
         camera.position.x = Globals.WIDTH/2f;
         camera.position.y = Globals.HEIGHT/2f;
@@ -143,36 +127,32 @@ public class LevelSelectScreen extends VScreen
         
         bloom.capture();
         s.begin();
-        
-        g.draw(s);
-        
         float w = 256;
         float h = 256;
         
-        
-        for (int j = 0; j < cols; j++)
+        for (int i = 0; i < cols; i++)
         {
-            for (int i = 0; i < rows; i++)
+            for (int j = 0; j < rows; j++)
             {
-                Color color = Color.WHITE.cpy();
-                color.a =  0.5f;
+                Color color = Color.MAGENTA.cpy();
+                
+                color.a =  0.55f;
                 
                 if(!unlocked[i][j])
                 {
-                    color.r = 1f;
-                    color.g = 0.1f;
-                    color.b = 0.1f;
+                    color.r = Color.RED.r;
+                    color.g = Color.RED.g;
+                    color.b = Color.RED.b;
                 }
-                if(selectedPanel.x == j && selectedPanel.y == i)
+                if(selectedPanel.x == i && selectedPanel.y == j)
                 {
                     color.a = 1f;
                 }
                 
                 s.setColor(color);
-                s.draw(panelTexture, j* Globals.WIDTH/cols + 192, i* Globals.HEIGHT/1.5f/rows + 64, w, h);
+                s.draw(panelTexture, i* Globals.WIDTH/cols + 192, j* Globals.HEIGHT/1.5f/rows + 64, w, h);
             }
         }
-        
         s.end();
         
         bloom.render();

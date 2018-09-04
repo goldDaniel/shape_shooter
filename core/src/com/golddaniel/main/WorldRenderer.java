@@ -28,6 +28,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 
 /**
@@ -157,6 +158,12 @@ public class WorldRenderer
         {
             model.player.draw(s);
         }
+        
+        for(Particle p : model.getAllParticles())
+        {
+            p.draw(s);
+        }
+        
         s.end();
         if(doBloom)bloom.render();
     }

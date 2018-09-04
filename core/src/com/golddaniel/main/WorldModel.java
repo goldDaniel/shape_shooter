@@ -18,6 +18,7 @@ package com.golddaniel.main;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
@@ -38,6 +39,9 @@ public class WorldModel
     Array<Entity> entities;
     Array<Entity> toRemove;
     
+    Array<Particle> particles;
+    Pool<Particle> particlePool;
+    
     Player player;
     
     PhysicsGrid g;
@@ -56,6 +60,17 @@ public class WorldModel
         
         entities = new Array<Entity>();
         toRemove = new Array<Entity>();
+        
+        particles = new Array<Particle>();
+        
+        particlePool = new Pool<Particle>(2048) {
+            @Override
+            protected Particle newObject()
+            {
+                return new Particle(null,0, 0, null, null, 0, null);
+            }
+        };
+        
     }
     
     public void update(float delta)
@@ -81,6 +96,20 @@ public class WorldModel
         
         entities.removeAll(toRemove, true);
         toRemove.clear();
+        
+        for(Particle e : particles)
+        {
+            if(!e.isAlive())
+            {
+                e.dispose();
+                particles.removeValue(e, true);
+            }
+            else
+            {
+                e.update(this, delta);
+            }
+            
+        }
     }
   
     public void addEntity(Entity e)
@@ -125,9 +154,11 @@ public class WorldModel
         addEntity(new Bullet(pos, dir, type));
     }
     
-    public void createParticle(Vector2 pos, float dir, float lifespan, float speed, Color startColor, Color endColor)
+    public void createParticle(Vector2 pos, float dir, float lifespan, float speed, Color startColor, Color endColor, Particle.TYPE type)
     {
-        addEntity(new Particle(pos, dir, lifespan, startColor, endColor, speed));
+        Particle p = particlePool.obtain();
+        p.init(pos, dir, lifespan, startColor, endColor, speed, type);
+        particles.add(p);
     }
     
     public void killAllEntities()
@@ -142,6 +173,11 @@ public class WorldModel
     public Array<Entity> getAllEntities()
     {
         return entities;
+    }
+    
+    public Array<Particle> getAllParticles()
+    {
+        return particles;
     }
     
     public <T> Array<T> getEntityType(Class<T> type)

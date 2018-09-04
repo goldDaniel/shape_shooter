@@ -33,8 +33,8 @@ import com.golddaniel.entities.Entity;
 public class PhysicsGrid extends Entity
 {    
     
-    private final float STIFFNESS = 8.5f;
-    private final float DAMPING = 4f;
+    private final float STIFFNESS = 12.5f;
+    private final float DAMPING = 10f;
     private final float INVERSE_MASS = 1f/0.2f;
     
     private class Spring
@@ -227,7 +227,7 @@ public class PhysicsGrid extends Entity
     @Override
     public void update(WorldModel model, float delta)
     {
-        if(delta < 0.25f)
+        if(delta < 0.025f)
             update(delta);
     }
 

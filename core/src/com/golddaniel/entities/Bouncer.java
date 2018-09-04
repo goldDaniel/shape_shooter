@@ -210,13 +210,16 @@ public class Bouncer extends Entity
                     
                     if(i % 2 == 0)
                     {
-                        ParticleSpin p = new ParticleSpin(
+                        model.createParticle(
                                 new Vector2(
                                     position.x + width/2,
                                     position.y + height/2), 
-                                angle, MathUtils.random(0.4f, 1.2f), 
-                                Color.WHITE.cpy(), Color.GREEN.cpy(), Globals.WIDTH/2f);
-                        model.addEntity(p);
+                                angle, 
+                                MathUtils.random(0.3f, 0.4f), 
+                                Globals.WIDTH/4f, 
+                                Color.WHITE.cpy(), 
+                                Color.GREEN.cpy(),
+                                Particle.TYPE.SPIN);
                     }
                     else
                     {
@@ -224,8 +227,12 @@ public class Bouncer extends Entity
                             new Vector2(
                                     position.x + width/2,
                                     position.y + height/2), 
-                            angle, MathUtils.random(0.2f, .8f), Globals.WIDTH,
-                            Color.WHITE.cpy(), Color.YELLOW.cpy());
+                            angle, 
+                            MathUtils.random(0.2f, .8f), 
+                            Globals.WIDTH,
+                            Color.WHITE.cpy(), 
+                            Color.YELLOW.cpy(),
+                            Particle.TYPE.NORMAL);
                     }
                 }
 
@@ -233,7 +240,7 @@ public class Bouncer extends Entity
                 {
                     model.applyRadialForce(
                     getMid(), 
-                    4000, 
+                    16000, 
                     512);
                 }
                 Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);

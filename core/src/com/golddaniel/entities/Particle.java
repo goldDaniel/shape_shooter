@@ -20,22 +20,31 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.golddaniel.main.Messenger;
+import com.badlogic.gdx.utils.Pool;
 import com.golddaniel.main.WorldModel;
 
 /**
  *
  * @author wrksttn
+ * @param <T>
+ * 
  */
-public class Particle extends Entity
+public class Particle<T> implements Pool.Poolable
 {
+    public static enum TYPE
+    {
+        NORMAL,
+        SPIN,
+    }
+    
     Vector2 pos;
     float angle;
     
     float lifespan;
-    final float START_LIFESPAN;
+    
+    //would make final, but cannot due to poolable
+    float START_LIFESPAN;
     
     Color startColor;
     Color endColor;
@@ -46,14 +55,29 @@ public class Particle extends Entity
     float height;
     
     float speed;
-    final float START_SPEED;
+    
+    //would make final, but cannot due to poolable
+    float START_SPEED;
+    
+    TYPE type;
     
     private static TextureRegion tex = new TextureRegion(new Texture("texture.png"));
+    
+    boolean isAlive;
     
     public Particle(
             Vector2 pos, float dir, 
             float lifespan, Color startColor, Color endColor, 
-            float speed)
+            float speed, TYPE type)
+    {
+        init(pos, dir, lifespan, startColor, endColor, speed,type);
+    }
+    
+     public void init(
+            Vector2 pos, float dir, 
+            float lifespan, Color startColor, Color endColor, 
+            float speed,
+            TYPE type)
     {
         this.pos = pos;
         this.angle = dir;
@@ -68,18 +92,19 @@ public class Particle extends Entity
         
         this.START_SPEED = speed;
         
+        this.type = type;
         
-        
+        width = 64;
         height = 4;
+        
+        if(type == TYPE.SPIN)
+        {
+            width = 128;
+        }
         
         isAlive = true;
     }
     
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
-    }
-
     private void lerpColor()
     {
         color.r = MathUtils.lerp(endColor.r, startColor.r, lifespan/START_LIFESPAN);
@@ -88,7 +113,6 @@ public class Particle extends Entity
         color.a = MathUtils.lerp(0.4f, 1f, lifespan/START_LIFESPAN);
     }
     
-    @Override
     public void update(WorldModel world, float delta)
     {
         pos.x += MathUtils.cosDeg(angle)*speed*delta;
@@ -99,13 +123,17 @@ public class Particle extends Entity
         
         speed = START_SPEED * lifespan/START_LIFESPAN;
         
+        if(type == TYPE.SPIN)
+        {
+            angle += MathUtils.random(90f, 360f) * delta * lifespan/START_LIFESPAN;
+        }
+        
         lerpColor();
         
         lifespan -= delta;
         if(lifespan <= 0) isAlive = false;
     }
-
-    @Override
+    
     public void draw(SpriteBatch s)
     {
         s.enableBlending();
@@ -119,20 +147,27 @@ public class Particle extends Entity
         s.setColor(Color.WHITE);
     }
 
-    @Override
+    public boolean isAlive()
+    {
+        return isAlive;
+    }
+    
     public void dispose()
     {
+        
     }
 
     @Override
-    public Rectangle getBoundingBox()
+    public void reset()
     {
-        return new Rectangle(pos.x, pos.y, width, height);
-    }
-    
-    @Override
-    public void kill(WorldModel model)
-    {
-        //isAlive = false;
+        pos = new Vector2(-100, -100);
+        angle = 0;
+        lifespan = -1;
+        START_LIFESPAN = -1;
+        
+        startColor = endColor = color = null;
+        
+        width = height = 0;
+        speed = START_SPEED = 0;
     }
 }

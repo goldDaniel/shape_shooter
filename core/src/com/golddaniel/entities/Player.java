@@ -316,7 +316,7 @@ public class Player extends Entity
     {  
        isAlive = false;
         System.out.println("KILL PLAYER");
-        int particles = 2048;
+        int particles = 1024;
         for (int i = 0; i < particles; i++)
         {
             //particle angle
@@ -327,7 +327,7 @@ public class Player extends Entity
                             position.y + height/2), 
                     pAngle, 
                     MathUtils.random(0.5f, 1f)*3f, 
-                    MathUtils.random(0.6f, 0.8f) * model.WORLD_WIDTH*2, 
+                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH/2, 
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
                         MathUtils.random(), 
@@ -335,9 +335,38 @@ public class Player extends Entity
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
                         MathUtils.random(), 
-                        1f));
+                        1f),
+                    Particle.TYPE.NORMAL);
+        }
+        model.killAllEntities();
+        int points = 64;
+        particles = 64;
+        for (int i = 0; i < points; i++)
+        {
+            for (int j = 0; j < particles; j++)
+            {
+                float pAngle = (float)i/(float)particles*360f;
+                
+                Vector2 pos = new Vector2();
+                pos.x = MathUtils.random(model.WORLD_WIDTH);
+                pos.y = MathUtils.random(model.WORLD_HEIGHT);
+                
+                model.createParticle(
+                    pos, 
+                    pAngle, 
+                    MathUtils.random(0.6f, 1.5f)*3f, 
+                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH, 
+                    new Color(MathUtils.random(), 
+                        MathUtils.random(), 
+                        MathUtils.random(), 
+                        1f),
+                    new Color(MathUtils.random(), 
+                        MathUtils.random(), 
+                        MathUtils.random(), 
+                        1f),
+                        Particle.TYPE.SPIN);
+            }
             
-            model.killAllEntities();
         }
         model.applyRadialForce(getMid(), -64000, model.WORLD_WIDTH);   
     }

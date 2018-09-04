@@ -68,7 +68,7 @@ public class MainMenuScreen extends VScreen
         
         titleColor = new Color(1f, 1f, 1f, 1f);
         
-        int spacing = 64;
+        int spacing = 16;
         g = new PhysicsGrid(new Vector2(Globals.WIDTH*2, Globals.HEIGHT*2), 
                 Globals.WIDTH*2/spacing, Globals.HEIGHT*2/spacing);
         
@@ -98,7 +98,7 @@ public class MainMenuScreen extends VScreen
                 ( (ControllerManager.controller != null && 
                 ControllerManager.controller.getButton(XboxMapping.START)) ))
         {
-            sm.setScreen(ScreenManager.STATE.LEVEL_SELECT);
+            sm.setScreen(ScreenManager.STATE.PLAY);
         }
         
         if(ControllerManager.controller != null)
