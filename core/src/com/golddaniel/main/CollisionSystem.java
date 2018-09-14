@@ -21,7 +21,6 @@ import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.Boid;
-import gold.daniel.level.Level;
 
 /**
  *
@@ -29,10 +28,9 @@ import gold.daniel.level.Level;
  */
 public class CollisionSystem
 {   
-    public void update(Level level)
+    public void update(WorldModel model)
     {
-        WorldModel model = level.getModel();
-        
+        if(model == null) return;
         Array<Bullet> bullets = model.getEntityType(Bullet.class);
         Array<Bouncer> bouncers = model.getEntityType(Bouncer.class);
         Array<Boid> boids = model.getEntityType(Boid.class);

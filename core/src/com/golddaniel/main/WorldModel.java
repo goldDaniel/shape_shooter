@@ -19,12 +19,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
-import com.golddaniel.entities.Boid;
 
 /**
  *
@@ -63,7 +61,7 @@ public class WorldModel
         
         particles = new Array<Particle>();
         
-        particlePool = new Pool<Particle>(2048) {
+        particlePool = new Pool<Particle>(4096) {
             @Override
             protected Particle newObject()
             {
@@ -165,8 +163,7 @@ public class WorldModel
     {
         for(Entity e : entities)
         {
-            if(e instanceof Boid ||
-               e instanceof Bouncer) e.kill();
+            if(!(e instanceof PhysicsGrid)) e.kill();
         }
     }
     
@@ -201,5 +198,10 @@ public class WorldModel
         {
             e.dispose();
         }
+    }
+    
+    public Player getPlayer()
+    {
+        return player;
     }
 }

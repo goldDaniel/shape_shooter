@@ -19,7 +19,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.ArrayMap;
-import gold.daniel.level.Level;
+import gold.daniel.level.LevelModel;
 
 /**
  *
@@ -31,7 +31,7 @@ public class AudioSystem implements MessageListener
     private static float MUSIC_VOLUME = 0.3f;
     private static float SFX_VOLUME = 1f;
 
-    public void update(Level level)
+    public void update(LevelModel level)
     {
     }
     

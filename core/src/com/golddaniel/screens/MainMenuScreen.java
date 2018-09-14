@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.main.ControllerManager;
@@ -68,7 +69,7 @@ public class MainMenuScreen extends VScreen
         
         titleColor = new Color(1f, 1f, 1f, 1f);
         
-        int spacing = 16;
+        int spacing = 32;
         g = new PhysicsGrid(new Vector2(Globals.WIDTH*2, Globals.HEIGHT*2), 
                 Globals.WIDTH*2/spacing, Globals.HEIGHT*2/spacing);
         
@@ -79,6 +80,11 @@ public class MainMenuScreen extends VScreen
         bloom = new Bloom(viewport, 1f);
     }
 
+    private float abs(float a)
+    {
+        return a > 0 ? a : -a;
+    }
+    
     @Override
     public void render(float delta)
     {
@@ -98,20 +104,22 @@ public class MainMenuScreen extends VScreen
                 ( (ControllerManager.controller != null && 
                 ControllerManager.controller.getButton(XboxMapping.START)) ))
         {
-            sm.setScreen(ScreenManager.STATE.PLAY);
+            sm.setScreen(ScreenManager.STATE.LEVEL_SELECT);
         }
         
         if(ControllerManager.controller != null)
         {
+            
             float x = ControllerManager.controller.getAxis(XboxMapping.R_STICK_HORIZONTAL_AXIS);
             float y = -ControllerManager.controller.getAxis(XboxMapping.R_STICK_VERTICAL_AXIS);
             
+            if(abs(x) < 0.15f) x = 0;
+            if(abs(y) < 0.15f) y = 0;
             
-            Vector2 dir = new Vector2(x, y);
+            Vector2 dir = new Vector2(x, y).nor();
             point.add(dir.scl(600f*delta));
             g.applyRadialForce(point, 1000f, 256);
         }
-        
         
         
         g.update(delta);

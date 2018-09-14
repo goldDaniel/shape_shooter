@@ -130,6 +130,8 @@ public class Player extends Entity
             rightStick.y = -ControllerManager.controller.
                     getAxis(XboxMapping.R_STICK_VERTICAL_AXIS);
 
+            
+            
             if(SharedLibraryLoader.isWindows)
             {
                 rightStick.y = -rightStick.y;
@@ -146,12 +148,6 @@ public class Player extends Entity
                 
             }
             //-----------------------------------------------------------
-            
-            if(ControllerManager.controller.getButton(XboxMapping.A))
-            {
-                
-            }
-
         }
         else
         {
@@ -253,7 +249,7 @@ public class Player extends Entity
             Vector2 bulletPos = new Vector2();
 
             bulletPos.x = position.x + width/2f;
-            bulletPos.y = position.y + height/2f;
+            bulletPos.y = position. y+ height/2f;
 
 
 
@@ -262,23 +258,22 @@ public class Player extends Entity
 
 
             Messenger.notify(Messenger.EVENT.PLAYER_FIRE);
-
-            Vector3 pos = new Vector3(position, 1);
-            pos.x += width/2;
-            pos.y += height/2;
-
-            float dif = 3f;
-                
+            
+            float dif = 2f;            
             model.createBullet(bulletPos, 
                                rightStick.angle(), 
                                Bullet.TYPE.LASER_1);
-            model.createBullet(bulletPos, 
-                               rightStick.angle() + dif, 
+            int extraBullets = 2;
+            for (int i = 0; i < extraBullets; i++)
+            {
+                model.createBullet(bulletPos, 
+                               rightStick.angle() + dif*(i+1), 
                                Bullet.TYPE.LASER_1);
-            model.createBullet(bulletPos, 
-                               rightStick.angle() - dif, 
+                model.createBullet(bulletPos, 
+                               rightStick.angle() - dif*(i+1), 
                                Bullet.TYPE.LASER_1);
-
+            }
+            
             cooldown = COOLDOWN_MAX;
         }
         
@@ -326,7 +321,7 @@ public class Player extends Entity
                             position.x + width/2,
                             position.y + height/2), 
                     pAngle, 
-                    MathUtils.random(0.5f, 1f)*3f, 
+                    MathUtils.random(0.5f, 1.5f), 
                     MathUtils.random(0.6f, 0.8f) * Globals.WIDTH/2, 
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
@@ -354,7 +349,7 @@ public class Player extends Entity
                 model.createParticle(
                     pos, 
                     pAngle, 
-                    MathUtils.random(0.6f, 1.5f)*3f, 
+                    MathUtils.random(0.6f, 2f), 
                     MathUtils.random(0.6f, 0.8f) * Globals.WIDTH, 
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
@@ -368,6 +363,6 @@ public class Player extends Entity
             }
             
         }
-        model.applyRadialForce(getMid(), -64000, model.WORLD_WIDTH);   
+        model.applyRadialForce(getMid(), 64000, model.WORLD_WIDTH);   
     }
 }

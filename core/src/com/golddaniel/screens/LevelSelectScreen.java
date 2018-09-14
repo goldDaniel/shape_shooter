@@ -66,7 +66,7 @@ public class LevelSelectScreen extends VScreen
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
         parameter.size = 256;
-        font = generator.generateFont(parameter); // font size 12 pixels
+        font = generator.generateFont(parameter); 
         generator.dispose();
         
         panelTexture = new Texture("ui/glassPanel_cornerTL.png");
@@ -77,7 +77,8 @@ public class LevelSelectScreen extends VScreen
 
     @Override
     public void render(float delta)
-    {
+    {   
+        sm.setScreen(ScreenManager.STATE.PLAY);
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         

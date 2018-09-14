@@ -16,6 +16,7 @@ package com.golddaniel.main;
  * limitations under the License.
  ******************************************************************************/
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 
@@ -93,13 +94,13 @@ public class XboxMapping {
             {
                 A = 0;
                 B = 1;
-                X = 2;
-                Y = 3;
+                X = 3;
+                Y = 4;
                 GUIDE = 8;
-                L_BUMPER = 4;
-                R_BUMPER = 5;
+                L_BUMPER = 6;
+                R_BUMPER = 7;
                 BACK = 6;
-                START = 7;
+                START = 11;
                 DPAD_UP = 7;
                 DPAD_DOWN = 7;
                 DPAD_LEFT = 6;
@@ -108,10 +109,10 @@ public class XboxMapping {
                 R_TRIGGER = 5;
                 L_STICK_VERTICAL_AXIS = 1;
                 L_STICK_HORIZONTAL_AXIS = 0;
-                R_STICK_VERTICAL_AXIS = 4;
-                R_STICK_HORIZONTAL_AXIS = 3;
-                L3 = 9;
-                R3 = 10;
+                R_STICK_VERTICAL_AXIS = 3;
+                R_STICK_HORIZONTAL_AXIS = 2;
+                L3 = 13;
+                R3 = 14;
             } 
             else if (SharedLibraryLoader.isMac) 
             {

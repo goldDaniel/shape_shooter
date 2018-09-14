@@ -35,7 +35,7 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 300f;
+    static float SPEED_MAX = 250f;
     
     static ShapeRenderer debug = new ShapeRenderer();
     
@@ -61,7 +61,7 @@ public class Boid extends Entity
         
         float angle = MathUtils.random(MathUtils.PI*2);
         acceleration = new Vector2();
-        velocity = new Vector2(MathUtils.cos(angle), MathUtils.sin(angle));
+        velocity = new Vector2(MathUtils.cos(angle), MathUtils.sin(angle)).scl(SPEED_MAX);
         
         activeTimer = new Timer();
         
@@ -77,18 +77,26 @@ public class Boid extends Entity
         boids.add(this);
     }
     
+    /**
+     *  Returns direction vector based on position of all boids in range
+     * 
+     * @return 
+     */
     private Vector2 cohesion()
     {
         Vector2 result = new Vector2();
         int count = 0;
-        float range =72;
+        float range = 64;
         
         Vector2 sum = new Vector2();
         for(Boid b : boids)
         {
             float dist = position.dst(b.position);
             
-            if(dist > 0 && dist < range)
+            /**
+             * commented out as we currently want average of all boids
+             *
+             *///if(dist > 0 && dist < range)
             {
                 sum.add(b.position);
                 count++;
@@ -103,6 +111,11 @@ public class Boid extends Entity
         return result;
     }
     
+    /**
+     *  Returns direction vector based on velocity of all boids in range
+     * 
+     * @return 
+     */
     private Vector2 allignment()
     {
         Vector2 result = new Vector2();
@@ -132,6 +145,14 @@ public class Boid extends Entity
         return result;
     }
     
+    /**
+     *  Returns direction vector based on separation of all boids in range.
+     * 
+     * if a boid is in range, add a vector to the sum and give the opposite direction
+     * 
+     * 
+     * @return 
+     */
     private Vector2 separation()
     {
         Vector2 result = new Vector2();
@@ -205,6 +226,11 @@ public class Boid extends Entity
         
         if(active)
         {
+            float[] hsv = new float[3];
+            color.toHsv(hsv);
+            hsv[0] += 60f*delta;
+            color.fromHsv(hsv);
+            
             borderCheck(model);
             
             Vector2 separation = separation();
@@ -214,7 +240,7 @@ public class Boid extends Entity
             Vector2 seek = new Vector2();
             
             float dist = Float.MAX_VALUE;
-            float range = 512;
+            float range = 256;
             if(model.getEntityType(Player.class).size > 0)
             {
                 Vector2 target = model.getEntityType(Player.class).first().position;
@@ -232,23 +258,16 @@ public class Boid extends Entity
             acceleration.add(boundary);
             acceleration.add(seek);
             
-            //turn faster toward the target when near
-            if(dist < range)
-            {
-                acceleration.limit(SPEED_MAX/4f*delta);
-            }
-            else
-            {
-                acceleration.limit(SPEED_MAX/16f*delta);
-            }
+            
+            acceleration.limit(SPEED_MAX/64f*delta);
+            
+            
             velocity.add(acceleration);
             velocity.limit(SPEED_MAX*delta);
             
             position.add(velocity);
             
             acceleration.set(0, 0);
-        
-            
             
             model.applyRadialForce(position, 800f, 128);
         }
@@ -306,7 +325,7 @@ public class Boid extends Entity
         //immune until active
         if(active)
         {
-            int particles = 32;
+            int particles = 64;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -315,26 +334,44 @@ public class Boid extends Entity
                 
                 if(i % 2 == 0)
                 {
+                    
+                    float[] hsv = new float[3];
+                    
+                    Color.MAGENTA.toHsv(hsv);
+                    
+                    hsv[1] /= 4;
+                    
+                    Color c = new Color().fromHsv(hsv);
+                    
                     model.createParticle(
                             new Vector2(
                                 position.x + width/2,
                                 position.y + height/2),
                             angle,
-                            MathUtils.random(0.5f, 0.9f),
-                            -Globals.WIDTH/2f,
-                            Color.CYAN.cpy(),
-                            Color.MAGENTA.cpy(),
+                            MathUtils.random(0.5f, 0.7f),
+                            -Globals.WIDTH/4,
+                            Color.MAGENTA,
+                            Color.WHITE,
                             Particle.TYPE.SPIN);
+                    
+                    model.createParticle(
+                            new Vector2(
+                                position.x + width/2,
+                                position.y + height/2),
+                            angle,
+                            MathUtils.random(0.7f, 1.2f),
+                            -Globals.WIDTH/2f,
+                            Color.WHITE,
+                            Color.FIREBRICK,
+                            Particle.TYPE.NORMAL);
                 }
             }
 
-            for(int i = 0; i < 5; i++)
-            {
-                model.applyRadialForce(
-                getMid(), 
-                2000, 
-                256);
-            }
+            model.applyRadialForce(
+                    getMid(), 
+                    10000, 
+                    256);
+            
             Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
             isAlive = false;
         }

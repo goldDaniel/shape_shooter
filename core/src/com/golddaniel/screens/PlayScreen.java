@@ -14,16 +14,16 @@ import com.golddaniel.main.Globals;
 import com.golddaniel.main.MessageListener;
 import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldRenderer;
-import gold.daniel.level.Level;
+import com.golddaniel.main.XboxMapping;
+import gold.daniel.level.LevelModel;
 
 /**
- *
  * @author wrksttn
  */
 public class PlayScreen extends VScreen implements MessageListener
 {
 
-    Level level;
+    LevelModel level;
     WorldRenderer renderer;
 
     CollisionSystem cSystem;
@@ -40,7 +40,7 @@ public class PlayScreen extends VScreen implements MessageListener
         super(sm);
         
         
-        level = new Level();
+        level = new LevelModel(Gdx.files.internal("levels/testLevel.lvl"));
         renderer = new WorldRenderer();
         cSystem = new CollisionSystem();
         aSystem = new AudioSystem();
@@ -57,8 +57,8 @@ public class PlayScreen extends VScreen implements MessageListener
         
         uiCam = new OrthographicCamera();
         uiViewport = new FitViewport(Globals.WIDTH, Globals.HEIGHT, uiCam);
-        uiCam.position.x = Globals.WIDTH /2;
-        uiCam.position.y = Globals.HEIGHT /2;
+        uiCam.position.x = Globals.WIDTH  / 2;
+        uiCam.position.y = Globals.HEIGHT / 2;
         uiViewport.apply();
         
         Messenger.startNotifying();
@@ -69,26 +69,18 @@ public class PlayScreen extends VScreen implements MessageListener
     public void render(float delta)
     {   
         level.update(delta);
-        cSystem.update(level);
-        renderer.draw(level.getModel());
+        cSystem.update(level.getWorldModel());
+        renderer.draw(level.getWorldModel());
         
         s.setProjectionMatrix(uiViewport.getCamera().combined);
         
+        //draw UI 
         s.begin();
-        font.draw(s, "TIME:  " + level.getRemainingTime(), 
-                0, 
-                Globals.HEIGHT - 64);
-        font.draw(s, "SCORE:  " + level.getScore(), 
-                0, 
-                Globals.HEIGHT - 192);
         
-        if(level.getRemainingTime() == 0)
-        {
-            font.draw(s, "LEVEL END", 
-                Globals.WIDTH/2, 
-                Globals.HEIGHT/2);
-            level.killAll();
-        }
+        font.draw(s, 
+                  "REMAINGING TIME: " + level.getRemainingTime(), 
+                  0, Globals.HEIGHT);
+        
         s.end();
     }
 

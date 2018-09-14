@@ -63,7 +63,7 @@ public class WorldRenderer
         s = new SpriteBatch();
         
         bloom = new Bloom(viewport, 1f);
-        bloom.setBloomIntesity(6f);
+        bloom.setBloomIntesity(2f);
         bloom.setTreshold(0.4f);
     }
     
@@ -146,13 +146,13 @@ public class WorldRenderer
         {
             g.draw(s);
         }
-       
         
         for(Entity e : model.getAllEntities())
         {   
             if(!(e instanceof Player || e instanceof PhysicsGrid))
                 e.draw(s);
         }
+        
         //draw player on top
         if(model.player != null)
         {

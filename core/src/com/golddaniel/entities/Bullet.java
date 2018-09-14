@@ -32,8 +32,6 @@ import com.golddaniel.main.WorldModel;
  */
 public class Bullet extends Entity
 {
-
-   
     
     public static enum TYPE
     {
