@@ -21,6 +21,9 @@ import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.Boid;
+import com.golddaniel.entities.Cuber;
+import com.golddaniel.entities.PowerUp;
+import com.golddaniel.entities.RapidFire;
 
 /**
  *
@@ -57,9 +60,9 @@ public class CollisionSystem
                 }
             }
            
-            if(bouncer.isAlive() && model.getEntityType(Player.class).size > 0)
+            if(bouncer.isAlive() && model.getPlayer() != null)
             {
-                Rectangle playerRect = model.player.getBoundingBox();
+                Rectangle playerRect = model.getPlayer().getBoundingBox();
                 if(playerRect.overlaps(bouncerRect) || bouncerRect.overlaps(playerRect))
                 {
                     model.player.kill(model);
@@ -94,6 +97,44 @@ public class CollisionSystem
                 if(playerRect.overlaps(bouncerRect) || bouncerRect.overlaps(playerRect))
                 {
                     model.player.kill(model);
+                }
+            }
+        }
+        for(RapidFire rf : model.getEntityType(RapidFire.class))
+        {
+            Rectangle r= rf.getBoundingBox();
+            if(model.getPlayer() != null)
+            {
+                Rectangle p = model.getPlayer().getBoundingBox();
+                if(p.overlaps(r))
+                {
+                    rf.kill(model);
+                    model.getPlayer().applyPowerUp(PowerUp.RAPID_FIRE, 8f);
+                }
+            }
+        }
+        
+        for(Cuber cb : model.getEntityType(Cuber.class))
+        {
+            for(Bullet bullet : bullets)
+            {
+                Rectangle bulletRect = bullet.getBoundingBox();
+                
+                if(bullet.isAlive() && cb.isAlive())
+                {
+                    if(bulletRect.overlaps(cb.getBoundingBox()))
+                    {
+                        cb.kill(model);
+                        bullet.kill(model);
+                    }
+                }
+            }
+            if(model.getPlayer() != null)
+            {
+                Rectangle p = model.getPlayer().getBoundingBox();
+                if(p.overlaps(cb.getBoundingBox()))
+                {
+                    model.getPlayer().kill(model);
                 }
             }
         }

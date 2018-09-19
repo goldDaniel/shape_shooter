@@ -125,7 +125,7 @@ public class Particle<T> implements Pool.Poolable
         
         if(type == TYPE.SPIN)
         {
-            angle += MathUtils.random(180f, 360f) * delta * lifespan/START_LIFESPAN;
+            angle += MathUtils.random(180f, 270f) * delta * lifespan/START_LIFESPAN;
         }
         
         lerpColor();

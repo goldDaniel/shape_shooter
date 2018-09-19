@@ -2,7 +2,6 @@ package com.golddaniel.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.controllers.Controllers;
 import com.golddaniel.screens.*;
 
 /**
@@ -16,9 +15,8 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create () 
     {   
+        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
         //our controller manager will now work properly
-        Controllers.addListener(new ControllerManager());
-        
         sm = new ScreenManager();
         
         //initalize our screens with enums to access

@@ -15,7 +15,11 @@
  */
 package com.golddaniel.main;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
@@ -23,6 +27,7 @@ import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
+import com.golddaniel.entities.RapidFire;
 
 /**
  *
@@ -45,6 +50,11 @@ public class WorldModel
     PhysicsGrid g;
     
     boolean isUpdating;
+    
+    /*
+    // I really dont want score in here, but it will do for nows
+    */
+    int score;
     
     public WorldModel()
     {
@@ -69,10 +79,19 @@ public class WorldModel
             }
         };
         
+        
     }
     
     public void update(float delta)
     {
+        if(Gdx.input.isKeyJustPressed(Keys.SPACE))
+        {
+            Vector2 pos = new Vector2(
+                    MathUtils.random(WORLD_WIDTH/4f, WORLD_WIDTH*3f/4f), 
+                    MathUtils.random(WORLD_HEIGHT/4f, WORLD_HEIGHT*3f/4f));
+            
+            addEntity(new RapidFire(pos));
+        }
         for(Entity e : entities)
         {
             if(!e.isAlive())
@@ -106,7 +125,6 @@ public class WorldModel
             {
                 e.update(this, delta);
             }
-            
         }
     }
   
@@ -131,20 +149,12 @@ public class WorldModel
         maybe change?
         currently null checking as this is how we use grid, but 
         sometimes we dont have a grid, when we are testing
-    */
-    public void applyDIrectionalGridForce(Vector2 pos, Vector2 force, float radius)
-    {
-        if(g != null)
-            g.applyDirectionalForce(pos, force, radius);
-    }
-    
+    */    
     public void applyRadialForce(Vector2 pos, float force, float radius)
-    {
-        
+    {   
         if(g != null)
             g.applyRadialForce(pos, force, radius);
     }
-    
     //////////////////////////////////////////////////////////////////////////////
     
     public void createBullet(Vector2 pos, float dir, Bullet.TYPE type)
@@ -203,5 +213,16 @@ public class WorldModel
     public Player getPlayer()
     {
         return player;
+    }
+    
+    public void addToScore(int score)
+    {
+        assert(score > 0);
+        this.score += score;
+    }
+    
+    public int getScore()
+    {
+        return score;
     }
 }

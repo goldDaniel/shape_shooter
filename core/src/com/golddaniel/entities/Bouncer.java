@@ -240,9 +240,13 @@ public class Bouncer extends Entity
                 {
                     model.applyRadialForce(
                     getMid(), 
-                    16000, 
+                    18000, 
                     512);
                 }
+                
+                
+                model.addToScore(100);
+                
                 Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
                 isAlive = false;
             }

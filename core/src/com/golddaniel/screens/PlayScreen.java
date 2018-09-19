@@ -7,15 +7,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.golddaniel.main.ScreenManager;
-import com.golddaniel.main.AudioSystem;
-import com.golddaniel.main.CollisionSystem;
-import com.golddaniel.main.Globals;
-import com.golddaniel.main.MessageListener;
-import com.golddaniel.main.Messenger;
-import com.golddaniel.main.WorldRenderer;
-import com.golddaniel.main.XboxMapping;
-import gold.daniel.level.LevelModel;
+import com.golddaniel.main.*;
 
 /**
  * @author wrksttn
@@ -40,7 +32,7 @@ public class PlayScreen extends VScreen implements MessageListener
         super(sm);
         
         
-        level = new LevelModel(Gdx.files.internal("levels/testLevel.lvl"));
+        level = new LevelModel(Gdx.files.internal("levels/testLevel_1.lvl"));
         renderer = new WorldRenderer();
         cSystem = new CollisionSystem();
         aSystem = new AudioSystem();
@@ -80,6 +72,10 @@ public class PlayScreen extends VScreen implements MessageListener
         font.draw(s, 
                   "REMAINGING TIME: " + level.getRemainingTime(), 
                   0, Globals.HEIGHT);
+        font.draw(s, 
+                  "SCORE: " + level.getScore(), 
+                  0, 
+                  Globals.HEIGHT - 64f);
         
         s.end();
     }

@@ -17,6 +17,7 @@ package com.golddaniel.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -24,9 +25,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.badlogic.gdx.utils.Timer;
 import com.golddaniel.main.ControllerManager;
+import com.golddaniel.main.DS4Mapping;
 import com.golddaniel.main.Globals;
 import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
@@ -41,6 +43,7 @@ public class Player extends Entity
     TextureRegion tex;
     Vector2 velocity;
     
+    ControllerManager controller;
     
     float width;
     float height;
@@ -50,11 +53,15 @@ public class Player extends Entity
 
     float angle;
     
+    //weapon cooldown, should probably move into its own module
     float cooldown = 0;
     float COOLDOWN_MAX = 0.125f;
     
+    int extraStreams = 1;
+    
     public Player(WorldModel model)
     {
+        Controllers.addListener(controller = new ControllerManager());
         
         tex = new TextureRegion(new Texture("geometric/player.png"));
         velocity = new Vector2();
@@ -83,15 +90,13 @@ public class Player extends Entity
         float radius = width > height ? 
                             width/2 : height/2;
         
+        //please change how controller management works
         if(ControllerManager.controller != null)
         {
-            
             //MOVEMENT--------------------------------------------------
             Vector2 leftStick = new Vector2();
-            leftStick.x = ControllerManager.controller.
-                    getAxis(XboxMapping.L_STICK_HORIZONTAL_AXIS);
-            leftStick.y = -ControllerManager.controller.
-                    getAxis(XboxMapping.L_STICK_VERTICAL_AXIS);
+            leftStick.x = controller.getStickValue(DS4Mapping.L_STICK_HORIZONTAL_AXIS);
+            leftStick.y = -controller.getStickValue(DS4Mapping.L_STICK_VERTICAL_AXIS);
 
             if(SharedLibraryLoader.isWindows)
             {
@@ -118,18 +123,12 @@ public class Player extends Entity
             {
                 velocity.x = velocity.y = 0;
             }
-            
             //-----------------------------------------------------------
-            
-           
-            
+
             //SHOOTING---------------------------------------------------
             Vector2 rightStick = new Vector2();
-            rightStick.x = ControllerManager.controller.
-                    getAxis(XboxMapping.R_STICK_HORIZONTAL_AXIS);
-            rightStick.y = -ControllerManager.controller.
-                    getAxis(XboxMapping.R_STICK_VERTICAL_AXIS);
-
+            rightStick.x = controller.getStickValue(DS4Mapping.R_STICK_HORIZONTAL_AXIS);
+            rightStick.y = -controller.getStickValue(DS4Mapping.R_STICK_VERTICAL_AXIS);
             
             
             if(SharedLibraryLoader.isWindows)
@@ -215,12 +214,13 @@ public class Player extends Entity
             velocity.setLength(MAX_SPEED);
         }
         
-        model.applyRadialForce(getMid(), 4000, 256);
+        model.applyRadialForce(getMid(), 4000, 128);
         
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
         
        
+        //bound inside world rect
         if(position.x < 0) 
         {
             position.x = 0;
@@ -242,7 +242,7 @@ public class Player extends Entity
         cooldown -= delta;
     }
 
-    private void fireBullets(WorldModel model, Vector2 rightStick, float radius)
+    private void fireBullets(WorldModel model, Vector2 dir, float radius)
     {
         if(cooldown <= 0)
         {
@@ -251,32 +251,30 @@ public class Player extends Entity
             bulletPos.x = position.x + width/2f;
             bulletPos.y = position. y+ height/2f;
 
-
-
-            bulletPos.x += rightStick.x*radius;
-            bulletPos.y += rightStick.y*radius;
+            bulletPos.x += dir.x*radius;
+            bulletPos.y += dir.y*radius;
 
 
             Messenger.notify(Messenger.EVENT.PLAYER_FIRE);
             
-            float dif = 2f;            
+            float dif = 1.5f;            
             model.createBullet(bulletPos, 
-                               rightStick.angle(), 
+                               dir.angle(), 
                                Bullet.TYPE.LASER_1);
-            int extraBullets = 2;
-            for (int i = 0; i < extraBullets; i++)
+            
+            //adds this amount of bullets to each side
+            //i.e. extrabullets*2 gets added
+            for (int i = 0; i < extraStreams; i++)
             {
                 model.createBullet(bulletPos, 
-                               rightStick.angle() + dif*(i+1), 
+                               dir.angle() + dif*(i+1), 
                                Bullet.TYPE.LASER_1);
                 model.createBullet(bulletPos, 
-                               rightStick.angle() - dif*(i+1), 
+                               dir.angle() - dif*(i+1), 
                                Bullet.TYPE.LASER_1);
             }
-            
             cooldown = COOLDOWN_MAX;
-        }
-        
+        }       
     }
     
     public Vector2 getMid()
@@ -309,9 +307,8 @@ public class Player extends Entity
     @Override
     public void kill(WorldModel model)
     {  
-       isAlive = false;
-        System.out.println("KILL PLAYER");
-        int particles = 1024;
+        isAlive = false;
+        int particles = 2048;
         for (int i = 0; i < particles; i++)
         {
             //particle angle
@@ -334,35 +331,25 @@ public class Player extends Entity
                     Particle.TYPE.NORMAL);
         }
         model.killAllEntities();
-        int points = 64;
-        particles = 64;
-        for (int i = 0; i < points; i++)
+        model.applyRadialForce(getMid(), 256000, model.WORLD_WIDTH);   
+    }
+    
+    public void applyPowerUp(PowerUp type, float duration)
+    {
+        if(type == PowerUp.RAPID_FIRE)
         {
-            for (int j = 0; j < particles; j++)
-            {
-                float pAngle = (float)i/(float)particles*360f;
-                
-                Vector2 pos = new Vector2();
-                pos.x = MathUtils.random(model.WORLD_WIDTH);
-                pos.y = MathUtils.random(model.WORLD_HEIGHT);
-                
-                model.createParticle(
-                    pos, 
-                    pAngle, 
-                    MathUtils.random(0.6f, 2f), 
-                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH, 
-                    new Color(MathUtils.random(), 
-                        MathUtils.random(), 
-                        MathUtils.random(), 
-                        1f),
-                    new Color(MathUtils.random(), 
-                        MathUtils.random(), 
-                        MathUtils.random(), 
-                        1f),
-                        Particle.TYPE.SPIN);
-            }
+            extraStreams = 3;
+            COOLDOWN_MAX = 0.05f;
             
+            new Timer().scheduleTask(new Timer.Task()
+            {
+                @Override
+                public void run()
+                {
+                    extraStreams = 1;
+                    COOLDOWN_MAX = 0.125f;
+                }
+            }, duration);
         }
-        model.applyRadialForce(getMid(), 64000, model.WORLD_WIDTH);   
     }
 }

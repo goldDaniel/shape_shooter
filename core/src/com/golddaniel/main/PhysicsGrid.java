@@ -32,8 +32,8 @@ import com.golddaniel.entities.Entity;
  */
 public class PhysicsGrid extends Entity
 {    
-    private final float STIFFNESS = 16.5f;
-    private final float DAMPING = 10f;
+    private final float STIFFNESS = 12.5f;
+    private final float DAMPING = 16f;
     private final float INVERSE_MASS = 1f/0.2f;
     
     private class Spring
@@ -61,7 +61,6 @@ public class PhysicsGrid extends Entity
 
             if(len > TARGET_LENGTH)
             {
-                //normalize
                 displacement.setLength(len - TARGET_LENGTH);
 
                 Vector2 dv = end2.velocity.cpy().sub(end1.velocity);
@@ -76,6 +75,7 @@ public class PhysicsGrid extends Entity
     
     private class Point
     {
+        //position point is created at and have to spring back to
         Vector2 desiredPosition;
         
         Vector2 position;
@@ -101,7 +101,7 @@ public class PhysicsGrid extends Entity
             //calculations for said spring. Otherwise the grid effect
             //doesnt come back fast enough, also maintains the general shape 
             //of the grid
-            float stiffnessScale = 1f/16f;
+            float stiffnessScale = 1f/8f;
             
             // FORCE CALCULATIONS
             float springForceX = -STIFFNESS*stiffnessScale*(position.x - desiredPosition.x);
@@ -122,6 +122,7 @@ public class PhysicsGrid extends Entity
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
             
+            //not really accurate but it works
             velocity.scl(DAMPING*delta);
             if(velocity.len2() < MathUtils.FLOAT_ROUNDING_ERROR)
             {
@@ -198,15 +199,10 @@ public class PhysicsGrid extends Entity
         
         isAlive = true;
     }
-
+    
     @Override
     public void onNotify(Messenger.EVENT event)
     {
-    }
-
-    private float abs(float a)
-    {
-        return a > 0 ? a : -a;
     }
     
     public void update(float delta)
@@ -236,36 +232,16 @@ public class PhysicsGrid extends Entity
 
     public void applyRadialForce(Vector2 pos, float force, float radius)
     {
-        for (int i = 0; i < points.length; i++)
-        {
-            for (int j = 0; j < points[i].length; j++)
-            {
-                float dist = Vector2.dst(
-                        pos.x, pos.y,
-                        points[i][j].position.x, points[i][j].position.y);
-                if(dist < radius)
-                {
-                    Vector2 dir = points[i][j].position.cpy().sub(pos);
-                    dir.nor().scl(force);
-                    
-                    points[i][j].applyForce(dir.scl(1f - dist/radius));
-                }
-            }
-        }
-    }
-    
-    public void applyDirectionalForce(Vector2 pos, Vector2 force, float radius)
-    {
         for (Point[] pointArr : points)
         {
             for (Point point : pointArr)
             {
-                float dist = Vector2.dst(
-                                pos.x, pos.y, 
-                                point.position.x, point.position.y);
+                float dist = Vector2.dst(pos.x, pos.y, point.position.x, point.position.y);
                 if (dist < radius)
                 {
-                    point.applyForce(force.cpy().scl(1f- dist/radius));
+                    Vector2 dir = point.position.cpy().sub(pos);
+                    dir.nor().scl(force);
+                    point.applyForce(dir.scl(1f - dist/radius));
                 }
             }
         }
@@ -357,7 +333,6 @@ public class PhysicsGrid extends Entity
         sh.line(0, gridDimensions.y, gridDimensions.x, gridDimensions.y);
         sh.line(gridDimensions.x, gridDimensions.y, gridDimensions.x, 0);        
         Gdx.gl20.glLineWidth(1f);
-        
         
         sh.end();
         

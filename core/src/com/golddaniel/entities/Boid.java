@@ -240,7 +240,7 @@ public class Boid extends Entity
             Vector2 seek = new Vector2();
             
             float dist = Float.MAX_VALUE;
-            float range = 256;
+            float range = 512;
             if(model.getEntityType(Player.class).size > 0)
             {
                 Vector2 target = model.getEntityType(Player.class).first().position;
@@ -325,7 +325,7 @@ public class Boid extends Entity
         //immune until active
         if(active)
         {
-            int particles = 64;
+            int particles = 32;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -334,25 +334,17 @@ public class Boid extends Entity
                 
                 if(i % 2 == 0)
                 {
-                    
-                    float[] hsv = new float[3];
-                    
-                    Color.MAGENTA.toHsv(hsv);
-                    
-                    hsv[1] /= 4;
-                    
-                    Color c = new Color().fromHsv(hsv);
-                    
                     model.createParticle(
-                            new Vector2(
-                                position.x + width/2,
-                                position.y + height/2),
-                            angle,
-                            MathUtils.random(0.5f, 0.7f),
-                            -Globals.WIDTH/4,
-                            Color.MAGENTA,
-                            Color.WHITE,
-                            Particle.TYPE.SPIN);
+                        new Vector2(
+                            position.x + width/2,
+                            position.y + height/2),
+                        angle + 45*i,
+                        MathUtils.random(0.9f, 1.4f),
+                        -Globals.WIDTH/4,
+                        Color.MAGENTA,
+                        Color.WHITE,
+                        Particle.TYPE.SPIN);
+                    
                     
                     model.createParticle(
                             new Vector2(
@@ -369,8 +361,11 @@ public class Boid extends Entity
 
             model.applyRadialForce(
                     getMid(), 
-                    10000, 
+                    40000, 
                     256);
+            
+            
+            model.addToScore(25);
             
             Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
             isAlive = false;

@@ -74,6 +74,7 @@ public class WorldRenderer
     
     public void draw(WorldModel model)
     {
+        
         cam.position.x = model.WORLD_WIDTH/2f;
         cam.position.y = model.WORLD_HEIGHT/2f;
        
@@ -83,7 +84,6 @@ public class WorldRenderer
         float rotY = -0.01f;
         if(model.getEntityType(Player.class).size > 0)
         {
-            
             float ratio = model.player.position.x/model.WORLD_WIDTH;
            
             float desiredPos = model.WORLD_WIDTH*2f/3f - 
@@ -128,7 +128,8 @@ public class WorldRenderer
         s.setProjectionMatrix(cam.combined);
        
         
-        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
+        
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
         bloom.setClearColor(0.2f, 0.2f, 0.2f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         

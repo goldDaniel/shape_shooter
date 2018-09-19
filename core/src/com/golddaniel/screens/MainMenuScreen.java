@@ -17,10 +17,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.main.ControllerManager;
+import com.golddaniel.main.DS4Mapping;
 import com.golddaniel.main.Globals;
 import com.golddaniel.main.PhysicsGrid;
 import com.golddaniel.main.XboxMapping;
@@ -102,7 +102,7 @@ public class MainMenuScreen extends VScreen
 
         if(Gdx.input.isKeyJustPressed(Keys.ENTER) || 
                 ( (ControllerManager.controller != null && 
-                ControllerManager.controller.getButton(XboxMapping.START)) ))
+                ControllerManager.controller.getButton(DS4Mapping.OPTIONS)) ))
         {
             sm.setScreen(ScreenManager.STATE.LEVEL_SELECT);
         }
@@ -110,8 +110,8 @@ public class MainMenuScreen extends VScreen
         if(ControllerManager.controller != null)
         {
             
-            float x = ControllerManager.controller.getAxis(XboxMapping.R_STICK_HORIZONTAL_AXIS);
-            float y = -ControllerManager.controller.getAxis(XboxMapping.R_STICK_VERTICAL_AXIS);
+            float x = ControllerManager.controller.getAxis(DS4Mapping.R_STICK_HORIZONTAL_AXIS);
+            float y = -ControllerManager.controller.getAxis(DS4Mapping.R_STICK_VERTICAL_AXIS);
             
             if(abs(x) < 0.15f) x = 0;
             if(abs(y) < 0.15f) y = 0;

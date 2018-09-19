@@ -37,6 +37,16 @@ public class ControllerManager implements ControllerListener
         }
     }
     
+    public float getStickValue(int axisCode)
+    {
+        return controller.getAxis(axisCode);
+    }
+    
+    public boolean buttonDown(int buttonCode)
+    {
+        return controller.getButton(buttonCode);
+    }
+    
     public static boolean isControllerConnected(Controller controller)
     {
         return Controllers.getControllers().contains(controller, true);
@@ -65,14 +75,12 @@ public class ControllerManager implements ControllerListener
     @Override
     public boolean buttonDown(Controller cntrlr, int i)
     {
-        System.out.println(i);
         return true;
     }
 
     @Override
     public boolean buttonUp(Controller cntrlr, int i)
-    {
-        
+    {   
         return true;
     }
 
