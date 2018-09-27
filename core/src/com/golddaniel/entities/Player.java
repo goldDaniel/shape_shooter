@@ -27,12 +27,11 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.ControllerManager;
-import com.golddaniel.main.DS4Mapping;
+import com.golddaniel.controllers.ControllerMapping;
+import com.golddaniel.controllers.InputController;
 import com.golddaniel.main.Globals;
 import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
-import com.golddaniel.main.XboxMapping;
 
 /**
  *
@@ -40,10 +39,14 @@ import com.golddaniel.main.XboxMapping;
  */
 public class Player extends Entity
 {
+    
+    Color trailColor;
+    float hue;
+    
     TextureRegion tex;
     Vector2 velocity;
     
-    ControllerManager controller;
+    InputController controller;
     
     float width;
     float height;
@@ -59,9 +62,13 @@ public class Player extends Entity
     
     int extraStreams = 1;
     
+    Timer powerupTimer;
+    
     public Player(WorldModel model)
     {
-        Controllers.addListener(controller = new ControllerManager());
+        trailColor = Color.MAGENTA.cpy();
+        
+        Controllers.addListener(controller = new InputController());
         
         tex = new TextureRegion(new Texture("geometric/player.png"));
         velocity = new Vector2();
@@ -69,8 +76,11 @@ public class Player extends Entity
         width = 48;
         height = 48;
         
-        position = new Vector2( model.WORLD_WIDTH/2f  - width  / 2f, 
-                                model.WORLD_HEIGHT/2f - height /2f);
+        position = new Vector2(model.WORLD_WIDTH/2f  - width  / 2f, 
+                               model.WORLD_HEIGHT/2f - height / 2f);
+        
+        powerupTimer = new Timer();
+        
         isAlive = true;
     }
 
@@ -91,18 +101,19 @@ public class Player extends Entity
                             width/2 : height/2;
         
         //please change how controller management works
-        if(ControllerManager.controller != null)
+        if(InputController.controller != null)
         {
             //MOVEMENT--------------------------------------------------
             Vector2 leftStick = new Vector2();
-            leftStick.x = controller.getStickValue(DS4Mapping.L_STICK_HORIZONTAL_AXIS);
-            leftStick.y = -controller.getStickValue(DS4Mapping.L_STICK_VERTICAL_AXIS);
+            leftStick.x = controller.getAxis(ControllerMapping.L_STICK_HORIZONTAL_AXIS);
+            leftStick.y = -controller.getAxis(ControllerMapping.L_STICK_VERTICAL_AXIS);
 
             if(SharedLibraryLoader.isWindows)
             {
                 leftStick.y = -leftStick.y;
             }
             
+            //deadzone
             if(abs(leftStick.x) < 0.2f)
             {
                 leftStick.x = 0;
@@ -127,8 +138,8 @@ public class Player extends Entity
 
             //SHOOTING---------------------------------------------------
             Vector2 rightStick = new Vector2();
-            rightStick.x = controller.getStickValue(DS4Mapping.R_STICK_HORIZONTAL_AXIS);
-            rightStick.y = -controller.getStickValue(DS4Mapping.R_STICK_VERTICAL_AXIS);
+            rightStick.x = controller.getAxis(ControllerMapping.R_STICK_HORIZONTAL_AXIS);
+            rightStick.y = -controller.getAxis(ControllerMapping.R_STICK_VERTICAL_AXIS);
             
             
             if(SharedLibraryLoader.isWindows)
@@ -136,6 +147,7 @@ public class Player extends Entity
                 rightStick.y = -rightStick.y;
             }
             
+            //deadzone
             if(abs(rightStick.x) < 0.15f) rightStick.x = 0;
             if(abs(rightStick.y) < 0.15f) rightStick.y = 0;
 
@@ -143,8 +155,7 @@ public class Player extends Entity
             {
                 rightStick.nor();
                 
-                fireBullets(model, rightStick, radius);    
-                
+                fireBullets(model, rightStick, radius);
             }
             //-----------------------------------------------------------
         }
@@ -239,6 +250,50 @@ public class Player extends Entity
             position.y = model.WORLD_HEIGHT - radius*2;
         }
         
+        if(velocity.len2() > 0)
+        {
+            Color temp = trailColor.cpy();
+            temp.fromHsv(hue, 0.3f, 1f);
+            //spawn particles based off velocity
+            
+            //normalized direction opposite our velocity
+            Vector2 dir = velocity.cpy().scl(-1f).nor();
+
+            Vector2 pos = getMid();
+
+            pos.x += width/2*MathUtils.cosDeg(dir.angle() + 35);
+            pos.y += height/2*MathUtils.sinDeg(dir.angle() + 35);
+
+            
+            float angleVariation = 15f;
+            model.createParticle(
+                    pos, 
+                    dir.angle() + MathUtils.random(-angleVariation, angleVariation), 
+                    MathUtils.random(0.4f, 0.6f), 
+                    Globals.WIDTH/6f, 
+                    temp, 
+                    trailColor, 
+                    Particle.TYPE.TRAIL);
+            
+            pos = getMid();
+            
+            pos.x += width/2*MathUtils.cosDeg(dir.angle() - 60);
+            pos.y += height/2*MathUtils.sinDeg(dir.angle() - 60);
+            
+            model.createParticle(
+                    pos, 
+                    dir.angle() + MathUtils.random(-angleVariation, angleVariation), 
+                    MathUtils.random(0.4f, 0.6f), 
+                    Globals.WIDTH/6f, 
+                    temp, 
+                    trailColor, 
+                    Particle.TYPE.TRAIL);            
+        }
+        
+        hue += 90f*delta;
+        hue %= 360f;
+        trailColor.fromHsv(hue, 1f, 1f);
+        
         cooldown -= delta;
     }
 
@@ -318,8 +373,8 @@ public class Player extends Entity
                             position.x + width/2,
                             position.y + height/2), 
                     pAngle, 
-                    MathUtils.random(0.5f, 1.5f), 
-                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH/2, 
+                    MathUtils.random(0.2f, 0.5f), 
+                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH*2, 
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
                         MathUtils.random(), 
@@ -341,7 +396,12 @@ public class Player extends Entity
             extraStreams = 3;
             COOLDOWN_MAX = 0.05f;
             
-            new Timer().scheduleTask(new Timer.Task()
+            if(!powerupTimer.isEmpty())
+            {
+                powerupTimer.clear();
+            }
+            
+            powerupTimer.scheduleTask(new Timer.Task()
             {
                 @Override
                 public void run()

@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -41,11 +42,15 @@ public class WorldRenderer
     PerspectiveCamera cam;
     SpriteBatch s;
     
+    ShapeRenderer debug;
+    
     TextureRegion tex;
     
     Bloom bloom;
     
     float angle;
+    
+    
     
     public boolean doBloom = true;
     
@@ -61,6 +66,7 @@ public class WorldRenderer
         tex = new TextureRegion(new Texture("texture.png"));
         
         s = new SpriteBatch();
+        debug = new ShapeRenderer();
         
         bloom = new Bloom(viewport, 1f);
         bloom.setBloomIntesity(2f);

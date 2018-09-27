@@ -15,7 +15,10 @@
  */
 package com.golddaniel.main;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -23,11 +26,15 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.XmlReader;
 import com.badlogic.gdx.utils.XmlReader.Element;
+import com.golddaniel.controllers.ControllerMapping;
+import com.golddaniel.controllers.InputController;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Cuber;
 import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
+import com.golddaniel.entities.RapidFire;
 
 /**
  * Helps manage worldModel
@@ -50,7 +57,7 @@ public class LevelModel implements MessageListener
     ArrayMap<Integer, Array<Entity>> toSpawn;
     WorldModel worldModel;
     
-    Timer snakeSpawnTimer = new Timer();
+    Timer respawnTimer = new Timer();
     
     public LevelModel(FileHandle levelFile)
     {
@@ -176,7 +183,46 @@ public class LevelModel implements MessageListener
         
         if(worldModel.getPlayer() == null)
         {
-            worldModel.addEntity(new Player(worldModel));
+            if(respawnTimer.isEmpty())
+            {
+                respawnTimer.scheduleTask(new Timer.Task()
+                {
+                    @Override
+                    public void run()
+                    {
+                        worldModel.addEntity(new Player(worldModel));
+                        
+                        int particles = 128;
+                        for(int i = 0; i < particles; i++)
+                        {
+                            float angle = (float)i/(float)particles*360f;
+                            angle += MathUtils.random(-2.5f, 2.5f);
+
+                            worldModel.createParticle(
+                                new Vector2(
+                                        worldModel.WORLD_WIDTH/2f,
+                                        worldModel.WORLD_HEIGHT/2f), 
+                                angle, 
+                                MathUtils.random(0.1f, .3f), 
+                                Globals.WIDTH*2,
+                                Color.PINK.cpy(), 
+                                Color.CYAN.cpy(),
+                                Particle.TYPE.NORMAL);
+                            
+                            worldModel.createParticle(
+                                new Vector2(
+                                        worldModel.WORLD_WIDTH/2f,
+                                        worldModel.WORLD_HEIGHT/2f), 
+                                angle, 
+                                MathUtils.random(0.1f, .3f), 
+                                Globals.WIDTH,
+                                Color.LIME.cpy(), 
+                                Color.YELLOW.cpy(),
+                                Particle.TYPE.SPIN);
+                        }
+                    }
+                }, 0.8f);
+            }
         }
         
         if(levelType == LEVEL_TYPE.TIME_ATTACK)
@@ -187,30 +233,40 @@ public class LevelModel implements MessageListener
                 for(Entity e : toAdd)
                 {
                     worldModel.addEntity(e);
+                    
+                    
                 }
                 toSpawn.removeKey((int)stateTime);        
             }
         }
-        /*EXTREMELY TEMPORARY
-        //
-        //do work for endless levels in here. Should probably change 
-        //how the timer is used
-        */
-        else if(levelType == LEVEL_TYPE.ENDLESS && snakeSpawnTimer.isEmpty())
+        
+        if(InputController.controller != null)
         {
-            snakeSpawnTimer.scheduleTask(new Timer.Task()
+            if(InputController.controller.getButton(ControllerMapping.L1))
             {
-                @Override
-                public void run()
+                if(worldModel.getEntityType(RapidFire.class).size == 0)
                 {
-                    Vector2 pos = new Vector2();
-                    pos.x = MathUtils.random(400, 800);
-                    pos.y = MathUtils.random(400, 800);
-                    
-                    worldModel.addEntity(new Cuber(pos));
+                    Vector2 pos = new Vector2(
+                        MathUtils.random(worldModel.WORLD_WIDTH/4f, 
+                                          worldModel.WORLD_WIDTH * 3f/4f), 
+                        MathUtils.random(worldModel.WORLD_HEIGHT/4f, 
+                                         worldModel.WORLD_HEIGHT * 3f/4f));
+            
+                    worldModel.addEntity(new RapidFire(pos));
                 }
-            }, 5f);
+            }
         }
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
+        {
+            Vector2 pos = new Vector2(
+                        MathUtils.random(worldModel.WORLD_WIDTH/4f, 
+                                          worldModel.WORLD_WIDTH * 3f/4f), 
+                        MathUtils.random(worldModel.WORLD_HEIGHT/4f, 
+                                         worldModel.WORLD_HEIGHT * 3f/4f));
+            
+            worldModel.addEntity(new RapidFire(pos));
+        }
+        
         worldModel.update(delta);
     }
     

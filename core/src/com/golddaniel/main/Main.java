@@ -15,8 +15,7 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create () 
     {   
-        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        //our controller manager will now work properly
+        Gdx.input.setCursorCatched(true);
         sm = new ScreenManager();
         
         //initalize our screens with enums to access
@@ -38,6 +37,11 @@ public class Main extends ApplicationAdapter {
     @Override
     public void dispose () 
     {
+        //fixed issue on linux where you could not move mouse after
+        //closing the window
+        Gdx.input.setCursorCatched(false);
+        
+        
         sm.dispose();
     }
     

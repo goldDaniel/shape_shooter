@@ -66,7 +66,7 @@ public class Boid extends Entity
         activeTimer = new Timer();
         
         width = 32;
-        height = 32f;
+        height = 32;
         
         active = false;
         isAlive = true;
@@ -95,8 +95,9 @@ public class Boid extends Entity
             
             /**
              * commented out as we currently want average of all boids
-             *
-             *///if(dist > 0 && dist < range)
+             * to pull them together 
+             */
+            //if(dist > 0 && dist < range)
             {
                 sum.add(b.position);
                 count++;
@@ -239,12 +240,13 @@ public class Boid extends Entity
             Vector2 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             Vector2 seek = new Vector2();
             
-            float dist = Float.MAX_VALUE;
+            
             float range = 512;
             if(model.getEntityType(Player.class).size > 0)
             {
+                
                 Vector2 target = model.getEntityType(Player.class).first().position;
-                dist = target.dst(position);
+                float dist = target.dst(position);
                 
                 if(dist < range)
                 {
@@ -258,9 +260,7 @@ public class Boid extends Entity
             acceleration.add(boundary);
             acceleration.add(seek);
             
-            
             acceleration.limit(SPEED_MAX/64f*delta);
-            
             
             velocity.add(acceleration);
             velocity.limit(SPEED_MAX*delta);
@@ -271,15 +271,13 @@ public class Boid extends Entity
             
             model.applyRadialForce(position, 800f, 128);
         }
-        
     }
 
     private void borderCheck(WorldModel model)
     {
         if(position.x < 0)
         {
-            position.x = 0;
-            
+            position.x = 0;   
         }
         else if(position.x + width > model.WORLD_WIDTH)
         {
@@ -325,38 +323,36 @@ public class Boid extends Entity
         //immune until active
         if(active)
         {
-            int particles = 32;
+            int particles = 64;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
                 
                 angle += MathUtils.random(-2.5f, 2.5f);
                 
-                if(i % 2 == 0)
-                {
-                    model.createParticle(
+                model.createParticle(
+                    new Vector2(
+                        position.x + width/2,
+                        position.y + height/2),
+                    angle,
+                    MathUtils.random(0.2f, 0.4f),
+                    Globals.WIDTH/3,
+                    Color.MAGENTA,
+                    Color.WHITE,
+                    Particle.TYPE.SPIN);
+
+
+                model.createParticle(
                         new Vector2(
                             position.x + width/2,
                             position.y + height/2),
-                        angle + 45*i,
-                        MathUtils.random(0.9f, 1.4f),
-                        -Globals.WIDTH/4,
-                        Color.MAGENTA,
+                        angle,
+                        MathUtils.random(0.3f, 0.5f),
+                        Globals.WIDTH/2,
                         Color.WHITE,
-                        Particle.TYPE.SPIN);
-                    
-                    
-                    model.createParticle(
-                            new Vector2(
-                                position.x + width/2,
-                                position.y + height/2),
-                            angle,
-                            MathUtils.random(0.7f, 1.2f),
-                            -Globals.WIDTH/2f,
-                            Color.WHITE,
-                            Color.FIREBRICK,
-                            Particle.TYPE.NORMAL);
-                }
+                        Color.FIREBRICK,
+                        Particle.TYPE.NORMAL);
+
             }
 
             model.applyRadialForce(

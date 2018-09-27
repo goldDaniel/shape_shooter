@@ -36,6 +36,7 @@ public class Particle<T> implements Pool.Poolable
     {
         NORMAL,
         SPIN,
+        TRAIL,
     }
     
     Vector2 pos;
@@ -51,6 +52,7 @@ public class Particle<T> implements Pool.Poolable
     Color color;
     
     
+    float START_WIDTH;
     float width;
     float height;
     
@@ -61,7 +63,8 @@ public class Particle<T> implements Pool.Poolable
     
     TYPE type;
     
-    private static TextureRegion tex = new TextureRegion(new Texture("texture.png"));
+    private static TextureRegion rectTex = new TextureRegion(new Texture("texture.png"));
+    private static TextureRegion circleTex = new TextureRegion(new Texture("circle.png"));
     
     boolean isAlive;
     
@@ -94,14 +97,22 @@ public class Particle<T> implements Pool.Poolable
         
         this.type = type;
         
-        width = 64;
+        
         height = 4;
         
         if(type == TYPE.SPIN)
         {
-            width = 128;
+            START_WIDTH = 64;
         }
-        
+        else if(type == TYPE.TRAIL)
+        {
+            START_WIDTH = 8;
+            height = 8;
+        }
+        else
+        {
+            START_WIDTH = 128;
+        }
         isAlive = true;
     }
     
@@ -110,7 +121,7 @@ public class Particle<T> implements Pool.Poolable
         color.r = MathUtils.lerp(endColor.r, startColor.r, lifespan/START_LIFESPAN);
         color.g = MathUtils.lerp(endColor.g, startColor.g, lifespan/START_LIFESPAN);
         color.b = MathUtils.lerp(endColor.b, startColor.b, lifespan/START_LIFESPAN);
-        color.a = MathUtils.lerp(0.4f, 1f, lifespan/START_LIFESPAN);
+        color.a = MathUtils.lerp(0.3f, 1f, lifespan/START_LIFESPAN);
     }
     
     public void update(WorldModel world, float delta)
@@ -119,9 +130,16 @@ public class Particle<T> implements Pool.Poolable
         pos.y += MathUtils.sinDeg(angle)*speed*delta;
         
         
-        width = 128*lifespan/START_LIFESPAN;
-        
         speed = START_SPEED * lifespan/START_LIFESPAN;
+        
+        if(type == TYPE.NORMAL || type == TYPE.SPIN)
+        {
+            width = START_WIDTH*lifespan/START_LIFESPAN;
+        }
+        else
+        {
+            width = START_WIDTH;
+        }
         
         if(type == TYPE.SPIN)
         {
@@ -138,9 +156,28 @@ public class Particle<T> implements Pool.Poolable
     {
         s.enableBlending();
         s.setColor(color);
+        
+        float originX;
+        float originY;
+        
+        TextureRegion tex;
+        
+        if(type == TYPE.TRAIL)
+        {
+            originX = 0;
+            originY = 0;
+            tex = circleTex;
+        }
+        else
+        {
+            originX = width / 2;
+            originY = height / 2;
+            tex = rectTex;
+        }
+        
         s.draw(tex,
                 pos.x, pos.y,
-                width / 2, height / 2,
+                originX, originY,
                 width, height,
                 1, 1,
                 angle);

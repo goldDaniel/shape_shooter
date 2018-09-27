@@ -33,8 +33,8 @@ import com.golddaniel.entities.Entity;
 public class PhysicsGrid extends Entity
 {    
     private final float STIFFNESS = 12.5f;
-    private final float DAMPING = 16f;
-    private final float INVERSE_MASS = 1f/0.2f;
+    private final float DAMPING = 14f;
+    private final float INVERSE_MASS = 1f/0.3f;
     
     private class Spring
     {

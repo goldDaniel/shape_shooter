@@ -49,7 +49,7 @@ public class Cuber extends Entity
     public Cuber(Vector2 pos)
     {
         active = false;
-        health = 12;
+        health = 8;
         isAlive = true;
         position = new Vector2(pos);
         
@@ -177,6 +177,10 @@ public class Cuber extends Entity
                 dir.y = -dir.y;
             }
             
+            
+            Vector2 pPos = getMid();
+            
+            
             world.applyRadialForce(getMid(), 1000f, 192);
         }
         else
@@ -192,9 +196,7 @@ public class Cuber extends Entity
                     }
                 }, 2f);
             }
-        }
-        
-        
+        } 
     }
 
     @Override
@@ -215,11 +217,11 @@ public class Cuber extends Entity
         if(health <= 0)
         {
             isAlive = false;
-            model.applyRadialForce(getMid(), 12000f, 128);
+            model.applyRadialForce(getMid(), 128000f, 256);
             
             model.addToScore(225);
             
-            int particles = 64;
+            int particles = 32;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -244,9 +246,8 @@ public class Cuber extends Entity
                         Color.MAGENTA, 
                         Particle.TYPE.NORMAL);
             } 
-        }
-        
-        
+            Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
+        } 
     }
 
     @Override

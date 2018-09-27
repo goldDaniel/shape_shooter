@@ -2,6 +2,7 @@
 package com.golddaniel.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -55,13 +56,15 @@ public class PlayScreen extends VScreen implements MessageListener
         
         Messenger.startNotifying();
     }
-
     
     @Override
     public void render(float delta)
-    {   
-        level.update(delta);
-        cSystem.update(level.getWorldModel());
+    {
+        if(level.getRemainingTime() > 0)
+        {
+            level.update(delta);
+            cSystem.update(level.getWorldModel());
+        }
         renderer.draw(level.getWorldModel());
         
         s.setProjectionMatrix(uiViewport.getCamera().combined);
@@ -76,6 +79,17 @@ public class PlayScreen extends VScreen implements MessageListener
                   "SCORE: " + level.getScore(), 
                   0, 
                   Globals.HEIGHT - 64f);
+        
+        if(level.getRemainingTime() <= 0)
+        {
+            font.setColor(Color.LIME);
+            font.draw(
+                    s, 
+                    "LEVEL COMPLETE", 
+                    Globals.WIDTH/2f, 
+                    Globals.HEIGHT/2f);
+            font.setColor(Color.WHITE);
+        }
         
         s.end();
     }

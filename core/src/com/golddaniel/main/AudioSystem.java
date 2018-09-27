@@ -86,6 +86,8 @@ public class AudioSystem implements MessageListener
                 Gdx.audio.newSound(Gdx.files.internal("sounds/sfx_laser1.ogg")));
         soundEffects.put(SOUND.LASER_2, 
                 Gdx.audio.newSound(Gdx.files.internal("sounds/sfx_laser2.ogg")));
+        
+        
         soundEffects.put(SOUND.BOUNCER_DEATH, 
                 Gdx.audio.newSound(Gdx.files.internal("sounds/bouncer_death.mp3")));
         soundEffects.put(SOUND.TRACKER_DEATH, 

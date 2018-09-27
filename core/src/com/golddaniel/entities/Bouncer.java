@@ -104,9 +104,7 @@ public class Bouncer extends Entity
                 }, 2);
             }
         }
-        
-        
-        if(active)
+        else
         {
             if(prevHealth > health)
             {
@@ -144,16 +142,13 @@ public class Bouncer extends Entity
             position.y = model.WORLD_HEIGHT - height -1;
             dir.y  = -dir.y;
         }
-        //twice on purpose
-        model.applyRadialForce(getMid(), 600, 96);
-        model.applyRadialForce(getMid(), 600, 96);
+        
+        model.applyRadialForce(getMid(), 2000, 96);
     }
 
     @Override
     public void draw(SpriteBatch s)
-    {
-        
-        
+    {   
         if(active)
         { 
             color.a = 1f;
@@ -208,32 +203,28 @@ public class Bouncer extends Entity
 
                     angle += MathUtils.random(-2.5f, 2.5f);
                     
-                    if(i % 2 == 0)
-                    {
-                        model.createParticle(
-                                new Vector2(
-                                    position.x + width/2,
-                                    position.y + height/2), 
-                                angle, 
-                                MathUtils.random(0.3f, 0.4f), 
-                                Globals.WIDTH/4f, 
-                                Color.WHITE.cpy(), 
-                                Color.GREEN.cpy(),
-                                Particle.TYPE.SPIN);
-                    }
-                    else
-                    {
-                        model.createParticle(
+                    
+                    model.createParticle(
                             new Vector2(
-                                    position.x + width/2,
-                                    position.y + height/2), 
+                                position.x + width/2,
+                                position.y + height/2), 
                             angle, 
-                            MathUtils.random(0.2f, .8f), 
-                            Globals.WIDTH,
+                            MathUtils.random(0.3f, 0.5f), 
+                            Globals.WIDTH/4, 
                             Color.WHITE.cpy(), 
-                            Color.YELLOW.cpy(),
-                            Particle.TYPE.NORMAL);
-                    }
+                            Color.GREEN.cpy(),
+                            Particle.TYPE.SPIN);
+
+                    model.createParticle(
+                        new Vector2(
+                                position.x + width/2,
+                                position.y + height/2), 
+                        angle, 
+                        MathUtils.random(0.2f, 0.3f), 
+                        Globals.WIDTH*2f,
+                        Color.WHITE.cpy(), 
+                        Color.YELLOW.cpy(),
+                        Particle.TYPE.NORMAL);
                 }
 
                 for (int i = 0; i < 5; i++)
@@ -243,7 +234,6 @@ public class Bouncer extends Entity
                     18000, 
                     512);
                 }
-                
                 
                 model.addToScore(100);
                 

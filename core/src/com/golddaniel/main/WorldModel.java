@@ -15,11 +15,7 @@
  */
 package com.golddaniel.main;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
@@ -27,7 +23,6 @@ import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
-import com.golddaniel.entities.RapidFire;
 
 /**
  *
@@ -56,11 +51,6 @@ public class WorldModel
     */
     int score;
     
-    public WorldModel()
-    {
-        this(Globals.WIDTH, Globals.HEIGHT);
-    }
-    
     public WorldModel(float width, float height)
     {
         WORLD_WIDTH = width;
@@ -78,20 +68,11 @@ public class WorldModel
                 return new Particle(null,0, 0, null, null, 0, null);
             }
         };
-        
-        
     }
     
     public void update(float delta)
     {
-        if(Gdx.input.isKeyJustPressed(Keys.SPACE))
-        {
-            Vector2 pos = new Vector2(
-                    MathUtils.random(WORLD_WIDTH/4f, WORLD_WIDTH*3f/4f), 
-                    MathUtils.random(WORLD_HEIGHT/4f, WORLD_HEIGHT*3f/4f));
-            
-            addEntity(new RapidFire(pos));
-        }
+        
         for(Entity e : entities)
         {
             if(!e.isAlive())

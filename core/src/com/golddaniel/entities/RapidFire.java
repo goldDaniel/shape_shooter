@@ -18,6 +18,7 @@ package com.golddaniel.entities;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.golddaniel.main.Messenger;
@@ -29,11 +30,13 @@ import com.golddaniel.main.WorldModel;
  */
 public class RapidFire extends Entity
 {
-
+    
+    float hue;
     static Texture tex = new Texture("texture.png");
     
     public RapidFire(Vector2 pos)
     {
+        hue = MathUtils.random(0f, 360f);
         isAlive = true;
         position = new Vector2(pos);
     }
@@ -46,12 +49,14 @@ public class RapidFire extends Entity
     @Override
     public void update(WorldModel world, float delta)
     {
+        hue += 30f*delta;
+        hue %= 360f;
     }
 
     @Override
     public void draw(SpriteBatch s)
     {
-        s.setColor(Color.RED);
+        s.setColor(Color.RED.fromHsv(hue, 1f, 1f));
         s.draw(tex, position.x, position.y, 64, 64);
         s.setColor(Color.WHITE);
     }
