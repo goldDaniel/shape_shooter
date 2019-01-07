@@ -15,15 +15,13 @@
  */
 package com.golddaniel.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.golddaniel.main.Globals;
-import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -32,7 +30,10 @@ import com.golddaniel.main.WorldModel;
  */
 public class Bullet extends Entity
 {
-    
+
+    float width;
+    float height;
+
     public static enum TYPE
     {
         LASER_1,
@@ -57,45 +58,50 @@ public class Bullet extends Entity
     
     TextureRegion tex;
     
-    final float MAX_SPEED = Globals.WIDTH;
+    final float MAX_SPEED = 1f;
     
-    public Bullet(Vector2 position, float dir, TYPE type)
+    public Bullet(Vector3 position, float dir, TYPE type)
+    {
+        init(position, dir, type);
+    }
+    
+    public final void init(Vector3 position, float dir, TYPE type)
     {
         this.position = position.cpy();
         this.dir = dir;
         
-        
-        switch(type)
+        if(type != null)
         {
-            case LASER_1:
-                tex = LASER_1;
-                break;
-            case LASER_2:
-                tex = LASER_2;
-                break;
-            case LASER_3:
-                tex = LASER_3;
-                break;
-            case LASER_4:
-                tex = LASER_4;
-                break;
-            default:
-                tex = new TextureRegion();
-                Gdx.app.log("BULLET", "bullet type not valid");
-                break;
+            switch(type)
+            {
+                case LASER_1:
+                    tex = LASER_1;
+                    break;
+                case LASER_2:
+                    tex = LASER_2;
+                    break;
+                case LASER_3:
+                    tex = LASER_3;
+                    break;
+                case LASER_4:
+                    tex = LASER_4;
+                    break;
+            }
         }
-        
-        this.position.x -= tex.getRegionWidth()/2f;
-        this.position.y -= tex.getRegionHeight()/2f;
+        else
+        {
+           tex = new TextureRegion();
+        }
+
+        width = 0.01f;
+        height = 0.01f;
+
+        this.position.x -= width / 2f;
+        this.position.y -= height / 2f;
         
         isAlive = true;
     }
     
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
-    }
-
     @Override
     public void update(WorldModel model, float delta)
     {
@@ -110,25 +116,21 @@ public class Bullet extends Entity
            
             isAlive = false;
         }
-        
-        model.applyRadialForce(getMid(), 400, 256);
+
+        Vector3 pos = position.cpy();
+        pos.z = -0.01f;
+        model.applyRadialForce(pos, 2f * delta, 0.05f);
     }
 
-    private Vector2 getMid()
-    {
-        return new Vector2(
-                position.x + tex.getRegionWidth()/2, 
-                position.y + tex.getRegionHeight()/2);
-    }
     
     @Override
     public void draw(SpriteBatch s)
     {
         s.draw(tex, 
-                position.x, position.y, 
-                tex.getRegionWidth()/2, tex.getRegionHeight()/2, 
-                tex.getRegionWidth(), tex.getRegionHeight(), 
-                1, 1, 
+                position.x - width / 2f, position.y - height / 2f,
+                width / 2f, height /2f,
+                width, height,
+                1f, 1f,
                 dir);
     }
     
@@ -141,12 +143,8 @@ public class Bullet extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        float radius = tex.getRegionWidth() > tex.getRegionHeight() ? 
-                tex.getRegionWidth() : tex.getRegionHeight();
-        
-        
-        return new Rectangle(position.x, position.y, 
-            radius, radius);
+        return new Rectangle(position.x - width / 2f, position.y - height / 2f,
+            width, height);
     }
     
     @Override

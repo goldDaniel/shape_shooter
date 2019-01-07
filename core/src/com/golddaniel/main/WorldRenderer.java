@@ -17,6 +17,7 @@ package com.golddaniel.main;
 
 import bloom.Bloom;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -25,11 +26,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Entity;
-import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 
 /**
@@ -38,39 +42,29 @@ import com.golddaniel.entities.Player;
  */
 public class WorldRenderer
 {
+
     FitViewport viewport;
-    PerspectiveCamera cam;
+
     SpriteBatch s;
-    
-    ShapeRenderer debug;
     
     TextureRegion tex;
     
     Bloom bloom;
-    
-    float angle;
-    
-    
-    
+
     public boolean doBloom = true;
-    
-    
-    public WorldRenderer()
+
+
+    public WorldRenderer(WorldModel model)
     {
-        cam = new PerspectiveCamera(165f, Globals.WIDTH, Globals.HEIGHT);
-        viewport = new FitViewport(Globals.WIDTH, Globals.HEIGHT, cam);
-        viewport.apply();
-        cam.position.z = 105f;
-        cam.far = 200;
-        
         tex = new TextureRegion(new Texture("texture.png"));
         
         s = new SpriteBatch();
-        debug = new ShapeRenderer();
-        
-        bloom = new Bloom(viewport, 1f);
-        bloom.setBloomIntesity(2f);
-        bloom.setTreshold(0.4f);
+
+        this.viewport = model.viewport;
+
+        bloom = new Bloom(model.viewport, 0.75f);
+        bloom.setBloomIntesity(1f);
+        bloom.setTreshold(0.1f);
     }
     
     private float abs(float a)
@@ -80,84 +74,33 @@ public class WorldRenderer
     
     public void draw(WorldModel model)
     {
-        
-        cam.position.x = model.WORLD_WIDTH/2f;
-        cam.position.y = model.WORLD_HEIGHT/2f;
-       
-        Vector3 rotation = cam.direction;
-        
-        float rotX = -0.02f;
-        float rotY = -0.01f;
-        if(model.getEntityType(Player.class).size > 0)
+        if(Gdx.input.isKeyJustPressed(Keys.P))
         {
-            float ratio = model.player.position.x/model.WORLD_WIDTH;
-           
-            float desiredPos = model.WORLD_WIDTH*2f/3f - 
-                    model.WORLD_WIDTH*1f/3f * ratio;
-            
-            cam.position.x = MathUtils.lerp(cam.position.x, desiredPos, 0.025f);
-            
-            rotX += 0.04f* model.player.getBoundingBox().x/model.WORLD_WIDTH;
-            rotation.x = rotX;
+            doBloom = !doBloom;
+        }
 
-            
-            rotY += 0.02f* model.player.getBoundingBox().y/model.WORLD_HEIGHT;
-            rotation.y = rotY;
-        }
-        else
-        {
-            rotation.x = MathUtils.lerp(rotation.x, 0, 0.025f);
-            rotation.y = MathUtils.lerp(rotation.y, 0, 0.025f);
-            if(abs(rotation.x) < MathUtils.FLOAT_ROUNDING_ERROR)
-            {
-                rotation.x = 0;
-            }
-            if(abs(rotation.y) < MathUtils.FLOAT_ROUNDING_ERROR)
-            {
-                rotation.y = 0;
-            }
-            
-            cam.position.x = MathUtils.lerp(cam.position.x, model.WORLD_WIDTH/2f, 0.025f);
-            cam.position.y = MathUtils.lerp(cam.position.y, model.WORLD_HEIGHT/2f, 0.025f);
-            if(abs(cam.position.x) < MathUtils.FLOAT_ROUNDING_ERROR)
-            {
-                cam.position.x = 0;
-            }
-            if(abs(cam.position.y) < MathUtils.FLOAT_ROUNDING_ERROR)
-            {
-                cam.position.y = 0;
-            }
-        }
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+        bloom.setClearColor(0f, 0f, 0f, 1f);
         
-        cam.update();
-        
-        s.setProjectionMatrix(cam.combined);
-       
-        
-        
-        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1f);
-        bloom.setClearColor(0.2f, 0.2f, 0.2f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
+
+
         if(doBloom) bloom.capture();
-        
+
+        s.setProjectionMatrix(model.cam.combined);
+        s.enableBlending();
         s.begin();
-       
-        s.setColor(Color.BLACK);
-        s.draw(tex, 0, 0, model.WORLD_WIDTH, model.WORLD_HEIGHT);
-        s.setColor(Color.WHITE);
-        
-        //draw grid on bottom
-        Array<PhysicsGrid> gArr = model.getEntityType(PhysicsGrid.class);
-        for(PhysicsGrid g : gArr)
+
+        model.getGrid().draw(s);
+
+        for(int i = 0; i < model.getAllEntities().size; i++)
         {
-            g.draw(s);
-        }
-        
-        for(Entity e : model.getAllEntities())
-        {   
-            if(!(e instanceof Player || e instanceof PhysicsGrid))
+            Entity e = model.getAllEntities().get(i);
+            if(!(e instanceof  Player))
+            {
                 e.draw(s);
+            }
         }
         
         //draw player on top
@@ -165,10 +108,10 @@ public class WorldRenderer
         {
             model.player.draw(s);
         }
-        
-        for(Particle p : model.getAllParticles())
+
+        for(int i = 0; i < model.getAllParticles().size; i++)
         {
-            p.draw(s);
+            model.getAllParticles().get(i).draw(s);
         }
         
         s.end();
@@ -178,7 +121,6 @@ public class WorldRenderer
     public void resize(int width, int height)
     {
         viewport.update(width, height);
-        viewport.apply();   
-        cam.update();
+        viewport.apply();
     }
 }

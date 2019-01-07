@@ -20,10 +20,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
 import com.golddaniel.main.Globals;
-import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -39,23 +38,23 @@ public class Cuber extends Entity
     
     Timer dirTimer;
     
-    Vector2 dir;
+    Vector3 dir;
     
     int width;
     int height;
     
     boolean active;
     
-    public Cuber(Vector2 pos)
+    public Cuber(Vector3 pos)
     {
         active = false;
-        health = 8;
+        health = 9;
         isAlive = true;
-        position = new Vector2(pos);
+        position = new Vector3(pos);
         
         dirTimer = new Timer();
         
-        dir = new Vector2();
+        dir = new Vector3();
         
         width = height = 64;
         
@@ -77,14 +76,9 @@ public class Cuber extends Entity
         }
     }
 
-    @Override
-    public void onNotify(Messenger.EVENT event)
+    private Vector3 getMid()
     {
-    }
-
-    private Vector2 getMid()
-    {
-        return position.cpy().add(width/2f, height/2f);
+        return position.cpy().add(width/2f, height/2f, 0);
     }
     
     private float abs(float a)
@@ -99,18 +93,19 @@ public class Cuber extends Entity
         {
             if(dirTimer.isEmpty())
             {
-                dirTimer.scheduleTask(new Timer.Task()
+                dirTimer.scheduleTask(
+                new Timer.Task()
                 {
                     @Override
                     public void run()
                     {
                         if(world.getPlayer() != null)
                         {
-                            Vector2 pPos = world.getPlayer().position.cpy();
-                            
+                            Vector3 pPos = world.getPlayer().position.cpy();
+
                             float xDist = pPos.x - position.x;
                             float yDist = pPos.y - position.y;
-                            
+
                             if(abs(xDist) > abs(yDist))
                             {
                                 dir.y = 0;
@@ -176,11 +171,7 @@ public class Cuber extends Entity
                 position.y = world.WORLD_HEIGHT - height;
                 dir.y = -dir.y;
             }
-            
-            
-            Vector2 pPos = getMid();
-            
-            
+
             world.applyRadialForce(getMid(), 1000f, 192);
         }
         else
@@ -202,7 +193,12 @@ public class Cuber extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-        s.setColor(Color.LIME);
+        Color c = Color.LIME.cpy();
+        if(!active)
+        {
+            c.a = 0.4f;
+        }
+        s.setColor(c);
         
         s.draw(tex, position.x, position.y, width, height);
         
@@ -217,9 +213,7 @@ public class Cuber extends Entity
         if(health <= 0)
         {
             isAlive = false;
-            model.applyRadialForce(getMid(), 128000f, 256);
-            
-            model.addToScore(225);
+            model.applyRadialForce(getMid(), 10000f, 256);
             
             int particles = 32;
             for (int i = 0; i < particles; i++)
@@ -231,22 +225,19 @@ public class Cuber extends Entity
                 model.createParticle(
                         getMid(), 
                         angle, 
-                        MathUtils.random(0.25f, 0.55f), 
-                        Globals.WIDTH, 
-                        Color.MAGENTA, 
+                        MathUtils.random(0.5f, 0.65f), 
+                        1,
                         Color.LIME, 
-                        Particle.TYPE.SPIN);
+                        Color.WHITE);
                 
                 model.createParticle(
                         getMid(), 
                         angle, 
                         MathUtils.random(0.55f, 0.75f), 
-                        Globals.WIDTH/2, 
-                        Color.LIME, 
-                        Color.MAGENTA, 
-                        Particle.TYPE.NORMAL);
+                        1f/2f,
+                        Color.RED, 
+                        Color.PINK);
             } 
-            Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
         } 
     }
 
@@ -259,6 +250,11 @@ public class Cuber extends Entity
     @Override
     public void dispose()
     {
+    }
+
+    public boolean isActive()
+    {
+        return active;
     }
     
 }

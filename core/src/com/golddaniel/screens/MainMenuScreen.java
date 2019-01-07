@@ -6,6 +6,14 @@
 package com.golddaniel.screens;
 
 import bloom.Bloom;
+
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -18,10 +26,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.golddaniel.controllers.ControllerMapping;
-import com.golddaniel.controllers.InputController;
 import com.golddaniel.main.Globals;
 import com.golddaniel.main.PhysicsGrid;
 
@@ -35,49 +40,83 @@ public class MainMenuScreen extends VScreen
     FitViewport viewport;
     OrthographicCamera camera;
     SpriteBatch s;
-    
-    
-    Color titleColor;
-    float titleHue;
+
     BitmapFont font;
     
     PhysicsGrid g;
-    
-    Texture tex;
-            
-    Vector2 point;
-    
-    Bloom bloom;
-    
-    public MainMenuScreen(ScreenManager sm)
+
+    Skin uiSkin;
+    Stage uiStage;
+
+    public MainMenuScreen(final ScreenManager sm)
     {
         super(sm);
                 
         camera = new OrthographicCamera();
-        viewport = new FitViewport(Globals.WIDTH, Globals.HEIGHT, camera);
-        camera.position.x = Globals.WIDTH/2f;
-        camera.position.y = Globals.HEIGHT/2f;
+        viewport = new FitViewport(72, 128, camera);
         viewport.apply();
         s = new SpriteBatch();
         s.enableBlending();        
         
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-        parameter.size = 256;
+        parameter.size = 140;
         font = generator.generateFont(parameter); // font size 12 pixels
         generator.dispose();
-        
-        titleColor = new Color(1f, 1f, 1f, 1f);
-        
-        int spacing = 32;
-        g = new PhysicsGrid(new Vector2(Globals.WIDTH*2, Globals.HEIGHT*2), 
-                Globals.WIDTH*2/spacing, Globals.HEIGHT*2/spacing);
-        
-        tex = new Texture("texture.png");
-        
-        point = new Vector2(Globals.WIDTH/2f, Globals.HEIGHT/2f);
 
-        bloom = new Bloom(viewport, 1f);
+        uiSkin = new Skin(Gdx.files.internal("ui/neon/skin/neon-ui.json"));
+        uiStage = new Stage(viewport);
+
+        int spacing = 8;
+        g = new PhysicsGrid(new Vector2(72f*2, 128f*2), spacing);
+
+        Table table = new Table();
+        table.setFillParent(true);
+
+        table.setY(-128f/2f);
+        table.setX(-72f/2f);
+
+        uiStage.addActor(table);
+
+        final TextButton playBtn = new TextButton("PLAY", uiSkin, "default");
+
+        playBtn.getLabel().setFontScale(0.5f);
+
+        playBtn.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                sm.setScreen(ScreenManager.STATE.PLAY);
+            }
+        });
+
+        final TextButton optionsBtn = new TextButton("OPTIONS", uiSkin, "default");
+
+        optionsBtn.getLabel().setFontScale(0.5f);
+
+        optionsBtn.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+
+            }
+        });
+
+        final TextButton quitBtn = new TextButton("QUIT", uiSkin, "default");
+        quitBtn.getLabel().setFontScale(0.5f);
+
+        quitBtn.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                Gdx.app.exit();
+            }
+        });
+
+        table.add(playBtn);
+        table.row();
+        table.add(optionsBtn);
+        table.row();
+        table.add(quitBtn);
+
+
     }
 
     private float abs(float a)
@@ -90,63 +129,23 @@ public class MainMenuScreen extends VScreen
     {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
-        s.setProjectionMatrix(camera.combined);
-        
-        titleHue += 15f*delta;
-        titleHue %= 360f;
-        
-        g.setColor(titleColor.cpy().fromHsv(((titleHue + 180) % 360), 1f, 1f));
-        
-        titleColor.fromHsv(titleHue, 1f, 1f);
 
-        if(Gdx.input.isKeyJustPressed(Keys.ENTER) || 
-                ( (InputController.controller != null && 
-                InputController.controller.getButton(ControllerMapping.START)) ))
-        {
-            sm.setScreen(ScreenManager.STATE.LEVEL_SELECT);
-        }
-        
-        if(InputController.controller != null)
-        {
-            
-            float x = InputController.controller.getAxis(ControllerMapping.R_STICK_HORIZONTAL_AXIS);
-            float y = -InputController.controller.getAxis(ControllerMapping.R_STICK_VERTICAL_AXIS);
-            
-            
-            if(SharedLibraryLoader.isWindows)
-            {
-                y = -y;
-            }
-            
-            if(abs(x) < 0.15f) x = 0;
-            if(abs(y) < 0.15f) y = 0;
-            
-            Vector2 dir = new Vector2(x, y).nor();
-            point.add(dir.scl(600f*delta));
-            g.applyRadialForce(point, 1000f, 256);
-        }
-        
-        
+        Gdx.input.setInputProcessor(uiStage);
+
         g.update(delta);
         
-        camera.position.x = Globals.WIDTH/2f;
-        camera.position.y = Globals.HEIGHT/2f;
+        camera.position.x = 0f;
+        camera.position.y = 0f;
         camera.update();
-        
-        bloom.capture();
+
+        s.setProjectionMatrix(camera.combined);
         s.begin();
-        
         g.draw(s);
-        
-        font.setColor(titleColor);
-        font.draw(s, "SHAPE SHOOTER", 32, Globals.HEIGHT-64);
-        
-        font.setColor(Color.WHITE);
-        font.draw(s, "PRESS START", 192, Globals.HEIGHT/2f);
         s.end();
-        
-        bloom.render();
+
+        uiStage.act();
+        uiStage.getBatch().setProjectionMatrix(camera.combined);
+        uiStage.draw();
     }
 
     @Override

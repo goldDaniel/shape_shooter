@@ -1,19 +1,11 @@
 ## Java
 
+/android/assets/
+
 *.class
 *.war
 *.ear
 hs_err_pid*
-
-*.png
-*.jpg
-*.jpeg
-
-*.mp3
-*.ogg
-*.wav
-
-
 
 ## Robovm
 /ios/robovm-build/
@@ -71,8 +63,6 @@ com_crashlytics_export_strings.xml
 /ios/nbproject/private/
 /ios-moe/nbproject/private/
 
-/core/assets/levels/
-/core/assets/
 /build/
 /android/build/
 /core/build/

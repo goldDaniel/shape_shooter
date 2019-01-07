@@ -17,13 +17,12 @@ package com.golddaniel.main;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Cuber;
-import com.golddaniel.entities.PowerUp;
-import com.golddaniel.entities.RapidFire;
 
 /**
  *
@@ -31,7 +30,7 @@ import com.golddaniel.entities.RapidFire;
  */
 public class CollisionSystem
 {   
-    public void update(WorldModel model)
+    public static void update(WorldModel model)
     {
         if(model == null) return;
         Array<Bullet> bullets = model.getEntityType(Bullet.class);
@@ -100,41 +99,57 @@ public class CollisionSystem
                 }
             }
         }
-        for(RapidFire rf : model.getEntityType(RapidFire.class))
-        {
-            Rectangle r= rf.getBoundingBox();
-            if(model.getPlayer() != null)
-            {
-                Rectangle p = model.getPlayer().getBoundingBox();
-                if(p.overlaps(r))
-                {
-                    rf.kill(model);
-                    model.getPlayer().applyPowerUp(PowerUp.RAPID_FIRE, 8f);
-                }
-            }
-        }
         
         for(Cuber cb : model.getEntityType(Cuber.class))
         {
+            if(cb.isActive())
+            {
+                for(Bullet bullet : bullets)
+                {
+                    Rectangle bulletRect = bullet.getBoundingBox();
+
+                    if(bullet.isAlive() && cb.isAlive())
+                    {
+                        if(bulletRect.overlaps(cb.getBoundingBox()))
+                        {
+                            cb.kill(model);
+                            bullet.kill(model);
+                        }
+                    }
+                }
+            }
+                if(model.getPlayer() != null)
+                {
+                    Rectangle p = model.getPlayer().getBoundingBox();
+                    if(p.overlaps(cb.getBoundingBox()))
+                    {
+                        model.getPlayer().kill(model);
+                    }
+                }
+        }
+        for(BlackHole b : model.getEntityType(BlackHole.class))
+        {
+            if(!b.isActive()) continue;
+            
+            if(model.getPlayer() != null)
+            {
+                Rectangle p = model.getPlayer().getBoundingBox();
+                if(p.overlaps(b.getBoundingBox()))
+                {
+                    model.getPlayer().kill(model);
+                }
+            }
             for(Bullet bullet : bullets)
             {
                 Rectangle bulletRect = bullet.getBoundingBox();
                 
-                if(bullet.isAlive() && cb.isAlive())
+                if(bullet.isAlive() && b.isAlive())
                 {
-                    if(bulletRect.overlaps(cb.getBoundingBox()))
+                    if(bulletRect.overlaps(b.getBoundingBox()))
                     {
-                        cb.kill(model);
+                        b.kill(model);
                         bullet.kill(model);
                     }
-                }
-            }
-            if(model.getPlayer() != null)
-            {
-                Rectangle p = model.getPlayer().getBoundingBox();
-                if(p.overlaps(cb.getBoundingBox()))
-                {
-                    model.getPlayer().kill(model);
                 }
             }
         }

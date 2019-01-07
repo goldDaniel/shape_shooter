@@ -4,41 +4,61 @@ package com.golddaniel.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.golddaniel.entities.Boid;
+import com.golddaniel.entities.Player;
 import com.golddaniel.main.*;
 
 /**
  * @author wrksttn
  */
-public class PlayScreen extends VScreen implements MessageListener
+public class PlayScreen extends VScreen
 {
 
-    LevelModel level;
+    WorldModel model;
     WorldRenderer renderer;
-
-    CollisionSystem cSystem;
-    AudioSystem aSystem;
     
     BitmapFont font;
     SpriteBatch s;
     
     OrthographicCamera uiCam;
     FitViewport uiViewport;
-    
+
+    TextureRegion tex = new TextureRegion(new Texture("texture.png"));
+
+
     public PlayScreen(ScreenManager sm)
     {
         super(sm);
         
         
-        level = new LevelModel(Gdx.files.internal("levels/testLevel_1.lvl"));
-        renderer = new WorldRenderer();
-        cSystem = new CollisionSystem();
-        aSystem = new AudioSystem();
-        
-        
+        model = new WorldModel(0.46f, 0.82f);
+
+        model.addEntity(new Player());
+
+        PhysicsGrid g = new PhysicsGrid(
+                new Vector2(model.WORLD_WIDTH,
+                            model.WORLD_HEIGHT),
+                0.025f);
+        model.setGrid(g);
+
+        for(int i = 0; i < 20; i++)
+        {
+            model.addEntity(new Boid(new Vector3(-0.25f, 1.25f, 0)));
+            model.addEntity(new Boid(new Vector3( 0.25f, 1.25f, 0)));
+        }
+
+        renderer = new WorldRenderer(model);
+
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = 64;
@@ -49,49 +69,22 @@ public class PlayScreen extends VScreen implements MessageListener
         s = new SpriteBatch();
         
         uiCam = new OrthographicCamera();
-        uiViewport = new FitViewport(Globals.WIDTH, Globals.HEIGHT, uiCam);
-        uiCam.position.x = Globals.WIDTH  / 2;
-        uiCam.position.y = Globals.HEIGHT / 2;
+        uiViewport = new FitViewport(9, 16, uiCam);
+        uiCam.position.x = 0f;
+        uiCam.position.y = 0f;
         uiViewport.apply();
-        
-        Messenger.startNotifying();
     }
-    
+
     @Override
     public void render(float delta)
     {
-        if(level.getRemainingTime() > 0)
-        {
-            level.update(delta);
-            cSystem.update(level.getWorldModel());
-        }
-        renderer.draw(level.getWorldModel());
-        
-        s.setProjectionMatrix(uiViewport.getCamera().combined);
-        
-        //draw UI 
-        s.begin();
-        
-        font.draw(s, 
-                  "REMAINGING TIME: " + level.getRemainingTime(), 
-                  0, Globals.HEIGHT);
-        font.draw(s, 
-                  "SCORE: " + level.getScore(), 
-                  0, 
-                  Globals.HEIGHT - 64f);
-        
-        if(level.getRemainingTime() <= 0)
-        {
-            font.setColor(Color.LIME);
-            font.draw(
-                    s, 
-                    "LEVEL COMPLETE", 
-                    Globals.WIDTH/2f, 
-                    Globals.HEIGHT/2f);
-            font.setColor(Color.WHITE);
-        }
-        
-        s.end();
+        Gdx.input.setInputProcessor(null);
+
+        model.update(delta);
+        CollisionSystem.update(model);
+
+
+        renderer.draw(model);
     }
 
     @Override
@@ -109,11 +102,5 @@ public class PlayScreen extends VScreen implements MessageListener
     {
         uiViewport.update(width, height);
         renderer.resize(width, height);
-    }
-
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
-      
     }
 }

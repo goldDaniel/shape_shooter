@@ -16,8 +16,7 @@
 package com.golddaniel.entities;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.controllers.Controllers;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -25,12 +24,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.controllers.ControllerMapping;
-import com.golddaniel.controllers.InputController;
-import com.golddaniel.main.Globals;
-import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -39,377 +34,245 @@ import com.golddaniel.main.WorldModel;
  */
 public class Player extends Entity
 {
-    
-    Color trailColor;
     float hue;
     
     TextureRegion tex;
-    Vector2 velocity;
+    Vector3 velocity;
+
     
-    InputController controller;
-    
-    float width;
-    float height;
-    
-    final float ACCELERATION = Globals.WIDTH*4;
-    final float MAX_SPEED = Globals.WIDTH / 4f;
+    public float width;
+    public float height;
 
     float angle;
     
     //weapon cooldown, should probably move into its own module
     float cooldown = 0;
-    float COOLDOWN_MAX = 0.125f;
-    
-    int extraStreams = 1;
-    
-    Timer powerupTimer;
-    
-    public Player(WorldModel model)
+
+    public enum WEAPON_TYPE
     {
-        trailColor = Color.MAGENTA.cpy();
-        
-        Controllers.addListener(controller = new InputController());
-        
-        tex = new TextureRegion(new Texture("geometric/player.png"));
-        velocity = new Vector2();
-        
-        width = 48;
-        height = 48;
-        
-        position = new Vector2(model.WORLD_WIDTH/2f  - width  / 2f, 
-                               model.WORLD_HEIGHT/2f - height / 2f);
-        
-        powerupTimer = new Timer();
-        
-        isAlive = true;
+        RAPID,
+        SPREAD,
+        BEAM,
+        TWIN,
     }
 
-    @Override
-    public void onNotify(Messenger.EVENT event)
+    private WEAPON_TYPE weaponType;
+
+    public Player()
     {
+        tex = new TextureRegion(new Texture("geometric/player.png"));
+        velocity = new Vector3();
+        
+        width = 0.05f;
+        height = 0.05f;
+        
+        position = new Vector3(0, 0, 0);
+
+        
+        isAlive = true;
+
+        weaponType = WEAPON_TYPE.SPREAD;
     }
+
 
     private float abs(float a)
     {
         return a > 0 ? a : -a;
     }
 
-    @Override
+
     public void update(WorldModel model, float delta)
     {
-        float radius = width > height ? 
-                            width/2 : height/2;
-        
-        //please change how controller management works
-        if(InputController.controller != null)
+        if(Gdx.input.isKeyJustPressed(Input.Keys.U))
         {
-            //MOVEMENT--------------------------------------------------
-            Vector2 leftStick = new Vector2();
-            leftStick.x = controller.getAxis(ControllerMapping.L_STICK_HORIZONTAL_AXIS);
-            leftStick.y = -controller.getAxis(ControllerMapping.L_STICK_VERTICAL_AXIS);
-
-            if(SharedLibraryLoader.isWindows)
-            {
-                leftStick.y = -leftStick.y;
-            }
-            
-            //deadzone
-            if(abs(leftStick.x) < 0.2f)
-            {
-                leftStick.x = 0;
-            }
-            if(abs(leftStick.y) < 0.2f)
-            {
-                leftStick.y = 0;
-            }
-
-            if(leftStick.len2() > 0)
-            {
-                velocity.x += leftStick.x * ACCELERATION * delta;
-                velocity.y += leftStick.y * ACCELERATION * delta;
-                
-                angle = velocity.angle();
-            }
-            else
-            {
-                velocity.x = velocity.y = 0;
-            }
-            //-----------------------------------------------------------
-
-            //SHOOTING---------------------------------------------------
-            Vector2 rightStick = new Vector2();
-            rightStick.x = controller.getAxis(ControllerMapping.R_STICK_HORIZONTAL_AXIS);
-            rightStick.y = -controller.getAxis(ControllerMapping.R_STICK_VERTICAL_AXIS);
-            
-            
-            if(SharedLibraryLoader.isWindows)
-            {
-                rightStick.y = -rightStick.y;
-            }
-            
-            //deadzone
-            if(abs(rightStick.x) < 0.15f) rightStick.x = 0;
-            if(abs(rightStick.y) < 0.15f) rightStick.y = 0;
-
-            if(rightStick.len2() > 0.15f*0.15f)
-            {
-                rightStick.nor();
-                
-                fireBullets(model, rightStick, radius);
-            }
-            //-----------------------------------------------------------
+            weaponType = WEAPON_TYPE.SPREAD;
         }
-        else
+        else if(Gdx.input.isKeyJustPressed(Input.Keys.Y))
         {
-            Vector2 inputDir = new Vector2(0, 0);
-            
-            if(Gdx.input.isKeyPressed(Keys.W))
-            {
-                inputDir.y += 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.S))
-            {
-                inputDir.y -= 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.A))
-            {
-                inputDir.x -= 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.D))
-            {
-                inputDir.x += 1;
-            }
-            inputDir.nor();
-            
-            if(inputDir.len2() > 0)
-            {
-                velocity.x += inputDir.x * ACCELERATION * delta;
-                velocity.y += inputDir.y * ACCELERATION * delta;
-                
-                angle = velocity.angle();
-            }
-            else
-            {
-                velocity.x = velocity.y = 0;
-            }  
-            
-             
-            inputDir.x = inputDir.y = 0;
-            if(Gdx.input.isKeyPressed(Keys.UP))
-            {
-                inputDir.y += 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.DOWN))
-            {
-                inputDir.y -= 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.LEFT))
-            {
-                inputDir.x -= 1;
-            }
-            if(Gdx.input.isKeyPressed(Keys.RIGHT))
-            {
-                inputDir.x += 1;
-            }
-            inputDir.nor();
+            weaponType = WEAPON_TYPE.RAPID;
+        }
+        if(!isAlive) return;
 
-            if(inputDir.len2() > 0)
-            {   
-                fireBullets(model, inputDir, radius);   
-            }
-            
-        }
-        
-        if(velocity.len2() > MAX_SPEED*MAX_SPEED)
-        {
-            velocity.setLength(MAX_SPEED);
-        }
-        
-        model.applyRadialForce(getMid(), 4000, 128);
-        
+        angle += delta;
+
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
-        
+
+        position.z = 0.00f;
        
         //bound inside world rect
-        if(position.x < 0) 
+        if(position.x < -model.WORLD_WIDTH/2f)
         {
-            position.x = 0;
+            position.x = -model.WORLD_WIDTH/2f;
         }
-        else if(position.x > model.WORLD_WIDTH - radius*2) 
+        else if(position.x > model.WORLD_WIDTH/2)
         {
-            position.x = model.WORLD_WIDTH - radius*2;
-        }
-        
-        if(position.y < 0) 
-        {
-            position.y = 0;
-        }
-        else if(position.y > model.WORLD_HEIGHT - radius*2)
-        {
-            position.y = model.WORLD_HEIGHT - radius*2;
+            position.x = model.WORLD_WIDTH/2f;
         }
         
-        if(velocity.len2() > 0)
+        if(position.y < -model.WORLD_HEIGHT/2f)
         {
-            Color temp = trailColor.cpy();
-            temp.fromHsv(hue, 0.3f, 1f);
-            //spawn particles based off velocity
-            
-            //normalized direction opposite our velocity
-            Vector2 dir = velocity.cpy().scl(-1f).nor();
-
-            Vector2 pos = getMid();
-
-            pos.x += width/2*MathUtils.cosDeg(dir.angle() + 35);
-            pos.y += height/2*MathUtils.sinDeg(dir.angle() + 35);
-
-            
-            float angleVariation = 15f;
-            model.createParticle(
-                    pos, 
-                    dir.angle() + MathUtils.random(-angleVariation, angleVariation), 
-                    MathUtils.random(0.4f, 0.6f), 
-                    Globals.WIDTH/6f, 
-                    temp, 
-                    trailColor, 
-                    Particle.TYPE.TRAIL);
-            
-            pos = getMid();
-            
-            pos.x += width/2*MathUtils.cosDeg(dir.angle() - 60);
-            pos.y += height/2*MathUtils.sinDeg(dir.angle() - 60);
-            
-            model.createParticle(
-                    pos, 
-                    dir.angle() + MathUtils.random(-angleVariation, angleVariation), 
-                    MathUtils.random(0.4f, 0.6f), 
-                    Globals.WIDTH/6f, 
-                    temp, 
-                    trailColor, 
-                    Particle.TYPE.TRAIL);            
+            position.y = -model.WORLD_HEIGHT/2f;
         }
+        else if(position.y > model.WORLD_HEIGHT/2f)
+        {
+            position.y = model.WORLD_HEIGHT/2f;
+        }
+        
         
         hue += 90f*delta;
         hue %= 360f;
-        trailColor.fromHsv(hue, 1f, 1f);
         
         cooldown -= delta;
+
+        Vector3 pos = position.cpy();
+        pos.z = -0.01f;
+        model.applyRadialForce(pos, 45f * delta ,0.1f);
+
+        createParticleTrail(model);
+        fireBullets(model, new Vector3(0, 1, 0));
     }
 
-    private void fireBullets(WorldModel model, Vector2 dir, float radius)
+    private void createParticleTrail(WorldModel model)
+    {
+        Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
+        Color end = Color.RED.cpy().fromHsv(hue + 180f, 1f, 1f);
+        for (int i = 0; i < 10; i++)
+        {
+            Vector3 pos = new Vector3(position);
+            pos.x += MathUtils.cosDeg(-100f) * width / 2f;
+            pos.y += MathUtils.sinDeg(-100f) * height / 2f;
+
+            float dir = -90f + MathUtils.random(-15f, 15f);
+            float lifespan = 0.7f + MathUtils.random(-0.6f, 0.1f);
+            float speed = 0.4f + MathUtils.random(-0.1f, 0.1f);
+
+            model.createParticle(pos, dir, lifespan, speed, start, end);
+
+            pos.set(position);
+            pos.x += MathUtils.cosDeg(-80f) * width / 2f;
+            pos.y += MathUtils.sinDeg(-80f) * height / 2f;
+
+            dir = -90f + MathUtils.random(-15f, 15f);
+            lifespan = 0.7f + MathUtils.random(-0.6f, 0.1f);
+            speed = 0.4f + MathUtils.random(-0.2f, 0.2f);
+
+            model.createParticle(pos, dir, lifespan, speed, start, end);
+        }
+    }
+    
+    private void fireBullets(WorldModel model, Vector3 direction)
     {
         if(cooldown <= 0)
         {
-            Vector2 bulletPos = new Vector2();
+            Vector2 dir = new Vector2(direction.x, direction.y);
 
-            bulletPos.x = position.x + width/2f;
-            bulletPos.y = position. y+ height/2f;
+            Vector3 bulletPos = new Vector3();
+            bulletPos.x = position.x + 0.005f;
+            bulletPos.y = position.y + height /2f;
 
-            bulletPos.x += dir.x*radius;
-            bulletPos.y += dir.y*radius;
-
-
-            Messenger.notify(Messenger.EVENT.PLAYER_FIRE);
-            
-            float dif = 1.5f;            
-            model.createBullet(bulletPos, 
-                               dir.angle(), 
-                               Bullet.TYPE.LASER_1);
-            
-            //adds this amount of bullets to each side
-            //i.e. extrabullets*2 gets added
-            for (int i = 0; i < extraStreams; i++)
+            if(weaponType == WEAPON_TYPE.RAPID)
             {
-                model.createBullet(bulletPos, 
-                               dir.angle() + dif*(i+1), 
-                               Bullet.TYPE.LASER_1);
-                model.createBullet(bulletPos, 
-                               dir.angle() - dif*(i+1), 
-                               Bullet.TYPE.LASER_1);
+                dir.x += MathUtils.random(-0.25f, 0.25f);
+                dir.nor();
+
+                model.createBullet(bulletPos,
+                        dir.angle(),
+                        Bullet.TYPE.LASER_1);
+
+                cooldown = 0.045f;
             }
-            cooldown = COOLDOWN_MAX;
+            else if(weaponType == WEAPON_TYPE.SPREAD)
+            {
+                model.createBullet(bulletPos,
+                        dir.angle(),
+                        Bullet.TYPE.LASER_1);
+
+                float dif = 6.5f;
+                //adds this amount of bullets to each side
+                //i.e. extrabullets*2 gets added
+                for (int i = 0; i < 2; i++)
+                {
+                    model.createBullet(bulletPos,
+                            dir.angle() + dif*(i+1),
+                            Bullet.TYPE.LASER_1);
+                    model.createBullet(bulletPos,
+                            dir.angle() - dif*(i+1),
+                            Bullet.TYPE.LASER_1);
+                }
+                cooldown = 0.25f;
+            }
+            else if(weaponType == WEAPON_TYPE.TWIN)
+            {
+                bulletPos.x += width / 2f;
+
+                model.createBullet(bulletPos,
+                        dir.angle(),
+                        Bullet.TYPE.LASER_1);
+
+                bulletPos.x -= width;
+
+                model.createBullet(bulletPos,
+                        dir.angle(),
+                        Bullet.TYPE.LASER_1);
+
+                cooldown = 0.15f;
+            }
         }       
     }
-    
-    public Vector2 getMid()
-    {
-        return new Vector2(position.x + width/2, position.y + height/2);
-    }
-    
-    @Override
+
     public void draw(SpriteBatch s)
     {   
         s.draw(tex,
-                position.x, position.y,
+                position.x - width / 2f, position.y - height / 2f,
                 width / 2, height / 2,
                 width, height,
-                1, 1,
-                angle);
+                1f, 1f,
+                90f);
     }
-    
-    @Override
+
     public void dispose()
     {
     }
 
-    @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x, position.y, width, height);
+        return new Rectangle(position.x - width /2f, position.y - height /2f,
+                             width, height);
     }
-    
-    @Override
+
     public void kill(WorldModel model)
-    {  
+    {
+        if(model != null) return;
         isAlive = false;
-        int particles = 2048;
+        int particles = 2048*4;
         for (int i = 0; i < particles; i++)
         {
             //particle angle
             float pAngle = (float)i/(float)particles*360f;
             model.createParticle(
-                    new Vector2(
+                    new Vector3(
                             position.x + width/2,
-                            position.y + height/2), 
+                            position.y + height/2,
+                            0),
                     pAngle, 
-                    MathUtils.random(0.2f, 0.5f), 
-                    MathUtils.random(0.6f, 0.8f) * Globals.WIDTH*2, 
-                    new Color(MathUtils.random(), 
+                    MathUtils.random(0.2f, 0.5f),
+                    MathUtils.random(0.6f, 0.8f) * 2,
+                    new Color(MathUtils.random(),
                         MathUtils.random(), 
                         MathUtils.random(), 
                         1f),
                     new Color(MathUtils.random(), 
                         MathUtils.random(), 
                         MathUtils.random(), 
-                        1f),
-                    Particle.TYPE.NORMAL);
+                        1f)
+            );
         }
         model.killAllEntities();
-        model.applyRadialForce(getMid(), 256000, model.WORLD_WIDTH);   
     }
-    
-    public void applyPowerUp(PowerUp type, float duration)
+
+    public void setWeaponType(WEAPON_TYPE type)
     {
-        if(type == PowerUp.RAPID_FIRE)
-        {
-            extraStreams = 3;
-            COOLDOWN_MAX = 0.05f;
-            
-            if(!powerupTimer.isEmpty())
-            {
-                powerupTimer.clear();
-            }
-            
-            powerupTimer.scheduleTask(new Timer.Task()
-            {
-                @Override
-                public void run()
-                {
-                    extraStreams = 1;
-                    COOLDOWN_MAX = 0.125f;
-                }
-            }, duration);
-        }
+        this.weaponType = type;
     }
 }

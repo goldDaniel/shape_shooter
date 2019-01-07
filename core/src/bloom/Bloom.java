@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 
@@ -95,12 +96,12 @@ public class Bloom {
 	 * blending = false 32bits = true
      * @param viewport
 	 */
-	public Bloom(FitViewport viewport, float downScale) {
+	public Bloom(FitViewport viewport, float scale) {
             
                 this.viewport = viewport;
             
-		initialize((int)(Gdx.graphics.getWidth() * downScale), 
-                           (int)(Gdx.graphics.getHeight() * downScale),
+		initialize((int)(Gdx.graphics.getWidth() * scale), 
+                           (int)(Gdx.graphics.getHeight() * scale),
 				null, true, false, true);
 	}
 
@@ -140,8 +141,6 @@ public class Bloom {
 	 * @param FBO_H
 	 *            how big fbo is used for bloom texture, smaller = more blur and
 	 *            lot faster but aliasing can be problem
-	 * @param hasDepth
-	 *            do rendering need depth buffer
 	 * @param useBlending
 	 *            does fbo need alpha channel and is blending enabled when final
 	 *            image is rendered. This allow to combine background graphics

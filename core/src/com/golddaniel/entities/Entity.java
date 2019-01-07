@@ -3,23 +3,19 @@ package com.golddaniel.entities;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.golddaniel.main.MessageListener;
-import com.golddaniel.main.Messenger;
+import com.badlogic.gdx.math.Vector3;
 import com.golddaniel.main.WorldModel;
 
 /**
  *
  * @author wrksttn
  */
-public abstract class Entity implements MessageListener
+public abstract class Entity 
 {
-    public Vector2 position;
+    public Vector3 position;
     
     protected boolean isAlive;
-    @Override
-    public abstract void onNotify(Messenger.EVENT event);
-    
+   
     public abstract void update(WorldModel world, float delta);
     public abstract void draw(SpriteBatch s);
     

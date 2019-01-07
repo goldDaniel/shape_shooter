@@ -1,7 +1,11 @@
 
 package com.golddaniel.main;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.ArrayMap;
+import com.golddaniel.screens.PlayScreen;
 import com.golddaniel.screens.VScreen;
 
 /**
@@ -82,6 +86,13 @@ public class ScreenManager
     public void render(float delta)
     {   
         screenMap.get(currentState).render(delta);
+        
+        if(Gdx.input.isKeyJustPressed(Keys.R))
+        {
+            disposeScreen(STATE.PLAY);
+            initalizeScreen(STATE.PLAY, new PlayScreen(this));
+            setScreen(STATE.PLAY);
+        }
     }
     
     public void resize(int width, int height)

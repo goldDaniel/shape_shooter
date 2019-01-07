@@ -14,14 +14,13 @@ public class Main extends ApplicationAdapter {
     
     @Override
     public void create () 
-    {   
-        Gdx.input.setCursorCatched(true);
+    {
+
+        Gdx.input.setCursorCatched(false);
         sm = new ScreenManager();
         
         //initalize our screens with enums to access
-        sm.initalizeScreen(ScreenManager.STATE.SPLASH, new SplashScreen(sm));
         sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm));
-        sm.initalizeScreen(ScreenManager.STATE.LEVEL_SELECT, new LevelSelectScreen(sm));
         sm.initalizeScreen(ScreenManager.STATE.PLAY, new PlayScreen(sm));
         
         
@@ -39,7 +38,7 @@ public class Main extends ApplicationAdapter {
     {
         //fixed issue on linux where you could not move mouse after
         //closing the window
-        Gdx.input.setCursorCatched(false);
+        Gdx.graphics.setUndecorated(true);
         
         
         sm.dispose();

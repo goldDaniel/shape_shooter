@@ -6,12 +6,13 @@
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 package com.golddaniel.entities;
 
@@ -19,14 +20,13 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.golddaniel.main.Globals;
-import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -35,16 +35,14 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 250f;
-    
-    static ShapeRenderer debug = new ShapeRenderer();
-    
+    static float SPEED_MAX = 0.1f;
+   
     static Array<Boid> boids = new Array<Boid>();
     
     static TextureRegion tex = new TextureRegion(new Texture("geometric/player.png"));
     
-    Vector2 velocity;
-    Vector2 acceleration;
+    Vector3 velocity;
+    Vector3 acceleration;
     
     Timer activeTimer;
     
@@ -53,20 +51,22 @@ public class Boid extends Entity
     float width;
     float height;
     
+    int health = 3;
+    
     boolean active;
     
-    public Boid(Vector2 position)
+    public Boid(Vector3 position)
     {        
-        this.position = new Vector2(position);
+        this.position = new Vector3(position);
         
         float angle = MathUtils.random(MathUtils.PI*2);
-        acceleration = new Vector2();
-        velocity = new Vector2(MathUtils.cos(angle), MathUtils.sin(angle)).scl(SPEED_MAX);
+        acceleration = new Vector3();
+        velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
         
         activeTimer = new Timer();
         
-        width = 32;
-        height = 32;
+        width = 0.0125f;
+        height = 0.0125f;
         
         active = false;
         isAlive = true;
@@ -82,13 +82,13 @@ public class Boid extends Entity
      * 
      * @return 
      */
-    private Vector2 cohesion()
+    private Vector3 cohesion()
     {
-        Vector2 result = new Vector2();
+        Vector3 result = new Vector3();
         int count = 0;
-        float range = 64;
+        float range = 0.08f;
         
-        Vector2 sum = new Vector2();
+        Vector3 sum = new Vector3();
         for(Boid b : boids)
         {
             float dist = position.dst(b.position);
@@ -97,7 +97,7 @@ public class Boid extends Entity
              * commented out as we currently want average of all boids
              * to pull them together 
              */
-            //if(dist > 0 && dist < range)
+            if(dist > 0 && dist < range)
             {
                 sum.add(b.position);
                 count++;
@@ -115,15 +115,15 @@ public class Boid extends Entity
     /**
      *  Returns direction vector based on velocity of all boids in range
      * 
-     * @return 
+     * @return
      */
-    private Vector2 allignment()
+    private Vector3 allignment()
     {
-        Vector2 result = new Vector2();
-        float range = 96;
+        Vector3 result = new Vector3();
+        float range = 0.05f;
         int count = 0;
         
-        Vector2 sum = new Vector2();
+        Vector3 sum = new Vector3();
         for(Boid b : boids)
         {
             float dist = position.dst(b.position);
@@ -154,22 +154,22 @@ public class Boid extends Entity
      * 
      * @return 
      */
-    private Vector2 separation()
+    private Vector3 separation()
     {
-        Vector2 result = new Vector2();
+        Vector3 result = new Vector3();
     
         int count = 0;
         
-        float range = 64;
+        float range = 0.025f;
         
-        Vector2 sum = new Vector2();
+        Vector3 sum = new Vector3();
         for(Boid b : boids)
         {
             float dist = position.dst(b.position);
             
             if(dist > 0 && dist < range)
             {
-                Vector2 diff = position.cpy().sub(b.position);
+                Vector3 diff = position.cpy().sub(b.position);
                 diff.nor();
                 diff.scl(1f/dist);
                 sum.add(diff);
@@ -194,17 +194,12 @@ public class Boid extends Entity
         return result;
     }
     
-    private Vector2 seek(Vector2 target)
+    private Vector3 seek(Vector3 target)
     {
-        Vector2 desiredVelocity = target.cpy().sub(position);
+        Vector3 desiredVelocity = target.cpy().sub(position);
         desiredVelocity.setLength(SPEED_MAX);
         
         return desiredVelocity.sub(velocity).setLength(SPEED_MAX);
-    }
-    
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
     }
 
     @Override
@@ -221,7 +216,7 @@ public class Boid extends Entity
                     {
                         active = true;
                     }
-                }, 2);
+                }, 0);
             }
         }
         
@@ -234,23 +229,22 @@ public class Boid extends Entity
             
             borderCheck(model);
             
-            Vector2 separation = separation();
-            Vector2 allignment = allignment();
-            Vector2 cohesion   = cohesion();
-            Vector2 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
-            Vector2 seek = new Vector2();
+            Vector3 separation = separation();
+            Vector3 allignment = allignment();
+            Vector3 cohesion   = cohesion();
+            Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+            Vector3 seek = new Vector3();
             
-            
-            float range = 512;
+            float range = 0.15f;
             if(model.getEntityType(Player.class).size > 0)
             {
                 
-                Vector2 target = model.getEntityType(Player.class).first().position;
+                Vector3 target = model.getEntityType(Player.class).first().position;
                 float dist = target.dst(position);
                 
                 if(dist < range)
                 {
-                    seek.set(seek(target)).scl(dist/range);
+                    seek.set(seek(target));
                 }
             }
             
@@ -260,38 +254,40 @@ public class Boid extends Entity
             acceleration.add(boundary);
             acceleration.add(seek);
             
-            acceleration.limit(SPEED_MAX/64f*delta);
+            acceleration.limit(SPEED_MAX/8f*delta);
             
             velocity.add(acceleration);
             velocity.limit(SPEED_MAX*delta);
             
             position.add(velocity);
             
-            acceleration.set(0, 0);
-            
-            model.applyRadialForce(position, 800f, 128);
+            acceleration.set(0, 0,0);
+
+            Vector3 pos = position.cpy();
+            pos.z = -0.01f;
+            model.applyRadialForce(position, 3f * delta, 0.075f);
         }
     }
 
     private void borderCheck(WorldModel model)
     {
-        if(position.x < 0)
+        if(position.x < -model.WORLD_WIDTH / 2f)
         {
-            position.x = 0;   
+            position.x = -model.WORLD_WIDTH / 2f;
         }
-        else if(position.x + width > model.WORLD_WIDTH)
+        else if(position.x > model.WORLD_WIDTH / 2f)
         {
-            position.x = model.WORLD_WIDTH - height;
+            position.x = model.WORLD_WIDTH / 2f;
             
         }
         
-        if(position.y < 0)
+        if(position.y < -model.WORLD_HEIGHT /2f)
         {
-            position.y = 0;
+            position.y = -model.WORLD_HEIGHT /2f;
         }
-        else if(position.y + height > model.WORLD_HEIGHT)
+        else if(position.y > model.WORLD_HEIGHT / 2f)
         {
-            position.y = model.WORLD_HEIGHT - height;
+            position.y = model.WORLD_HEIGHT / 2f;
         }
     }
     
@@ -307,12 +303,15 @@ public class Boid extends Entity
             color.a = 0.55f;
         }
         s.setColor(color);
+
+        Vector2 dir = new Vector2(velocity.x, velocity.y);
+
         s.draw(tex,
-                    position.x, position.y,
+                    position.x - width / 2f, position.y - height /2f,
                     width / 2, height / 2,
                     width, height,
                     1, 1,
-                    velocity.angle());
+                    dir.angle());
         
         s.setColor(Color.WHITE);
     }
@@ -323,60 +322,66 @@ public class Boid extends Entity
         //immune until active
         if(active)
         {
-            int particles = 64;
-            for (int i = 0; i < particles; i++)
+            health--;
+            if(health <= 0)
             {
-                float angle = (float)i/(float)particles*360f;
-                
-                angle += MathUtils.random(-2.5f, 2.5f);
-                
-                model.createParticle(
-                    new Vector2(
-                        position.x + width/2,
-                        position.y + height/2),
-                    angle,
-                    MathUtils.random(0.2f, 0.4f),
-                    Globals.WIDTH/3,
-                    Color.MAGENTA,
-                    Color.WHITE,
-                    Particle.TYPE.SPIN);
+                int particles = 64;
+                for (int i = 0; i < particles; i++)
+                {
+                    float angle = (float)i/(float)particles*360f;
 
+                    angle += MathUtils.random(-2.5f, 2.5f);
 
-                model.createParticle(
-                        new Vector2(
+                    model.createParticle(
+                        new Vector3(
                             position.x + width/2,
-                            position.y + height/2),
+                            position.y + height/2,
+                            0),
                         angle,
-                        MathUtils.random(0.3f, 0.5f),
-                        Globals.WIDTH/2,
-                        Color.WHITE,
-                        Color.FIREBRICK,
-                        Particle.TYPE.NORMAL);
+                        MathUtils.random(0.4f, 0.5f),
+                        1f/3,
+                        Color.MAGENTA,
+                        Color.WHITE);
 
+
+                    model.createParticle(
+                            new Vector3(
+                                position.x + width/2,
+                                position.y + height/2,
+                                    0),
+                            angle,
+                            MathUtils.random(0.5f, 0.6f),
+                            1f/2,
+                            Color.WHITE,
+                            Color.FIREBRICK);
+
+                }
+
+                Vector3 pos = getMid();
+                pos.z = -0.01f;
+                model.applyRadialForce(
+                        pos,
+                        5,
+                        0.05f);
+
+
+
+                isAlive = false;
             }
-
-            model.applyRadialForce(
-                    getMid(), 
-                    40000, 
-                    256);
-            
-            
-            model.addToScore(25);
-            
-            Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
-            isAlive = false;
         }
     }
 
-    private Vector2 getMid()
+    private Vector3 getMid()
     {
-        return new Vector2(position.x + width / 2f, position.y + height / 2f);
+        return new Vector3(position.x + width / 2f, position.y + height / 2f, position.z);
     }
     
     @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x, position.y, width, height);
+        return new Rectangle(position.x - width / 2f,
+                             position.y - height / 2f,
+                                width, height);
     }
 
     @Override
@@ -385,56 +390,56 @@ public class Boid extends Entity
         boids.removeValue(this, true);
     }
 
-    private Vector2 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
+    private Vector3 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
     {
-        Vector2 result = new Vector2();
+        Vector3 result = new Vector3();
         
-        float range = 384;
+        float range = 0.05f;
         
-        Vector2 wallCheck = new Vector2();
-        
+        Vector3 wallCheck = new Vector3();
+
         //left wall
-        wallCheck.x = 0;
+        wallCheck.x = -WORLD_WIDTH/2f;
         wallCheck.y = position.y;
         float dist = position.dst(wallCheck);
         
         if(dist < range)
         {
-            result.add(SPEED_MAX*(1f - dist/range), 0);
+            result.add(SPEED_MAX*(1f - dist/range), 0, 0);
         }
         
         //right wall
-        wallCheck.x = WORLD_WIDTH;
+        wallCheck.x = WORLD_WIDTH / 2f;
         
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(-SPEED_MAX*(1f - dist/range), 0);
+            result.add(-SPEED_MAX*(1f - dist/range), 0, 0);
         }
         
         //bottom wall
         wallCheck.x = position.x;
-        wallCheck.y = 0;
+        wallCheck.y = -WORLD_HEIGHT / 2f;
         
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(0, SPEED_MAX*(1f - dist/range));
+            result.add(0, SPEED_MAX*(1f - dist/range), 0);
         }
         
         //top wall
-        wallCheck.y = WORLD_HEIGHT;
+        wallCheck.y = WORLD_HEIGHT / 2f;
         
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(0, -SPEED_MAX*(1f - dist/range));
+            result.add(0, -SPEED_MAX*(1f - dist/range), 0);
         }
         
         return result;
     }
     
-    public void setVelocity(Vector2 v)
+    public void setVelocity(Vector3 v)
     {
         velocity.set(v);
     }

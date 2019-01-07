@@ -13,28 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.golddaniel.entities.Entity;
 
 /**
  *
  * @author wrksttn
  */
-public class PhysicsGrid extends Entity
-{    
-    private final float STIFFNESS = 12.5f;
-    private final float DAMPING = 14f;
-    private final float INVERSE_MASS = 1f/0.3f;
+public class PhysicsGrid
+{
+    ImmediateModeRenderer20 immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
+
+    final float STIFFNESS = 4.5f;
+    final float DAMPING = 4f;
+    final float INVERSE_MASS = 1f/0.025f;
     
     private class Spring
     {
@@ -48,14 +52,14 @@ public class PhysicsGrid extends Entity
             this.end1 = end1;
             this.end2 = end2;
             
-            TARGET_LENGTH = Vector2.dst(
-                    end1.position.x, end1.position.y, 
-                    end2.position.x, end2.position.y);
+            TARGET_LENGTH = Vector3.dst(
+                    end1.position.x, end1.position.y, end1.position.z,
+                    end2.position.x, end2.position.y, end2.position.z);
         }
         
         public void update(float delta)
         {
-            Vector2 displacement = end1.position.cpy().sub(end2.position);
+            Vector3 displacement = end1.position.cpy().sub(end2.position);
 
             float len = displacement.len();
 
@@ -63,9 +67,11 @@ public class PhysicsGrid extends Entity
             {
                 displacement.setLength(len - TARGET_LENGTH);
 
-                Vector2 dv = end2.velocity.cpy().sub(end1.velocity);
+                Vector3 dv = end2.velocity.cpy().sub(end1.velocity);
 
-                Vector2 force = displacement.scl(STIFFNESS).sub(dv.scl(DAMPING));
+                dv.scl(delta*4f);
+
+                Vector3 force = displacement.scl(STIFFNESS).sub(dv.scl(DAMPING));
 
                 end2.applyForce(force.cpy());
                 end1.applyForce(force.scl(-1));
@@ -76,32 +82,31 @@ public class PhysicsGrid extends Entity
     private class Point
     {
         //position point is created at and have to spring back to
-        Vector2 desiredPosition;
+        Vector3 desiredPosition;
         
-        Vector2 position;
-        Vector2 velocity;
-        Vector2 acceleration;
+        Vector3 position;
+        Vector3 velocity;
+        Vector3 acceleration;
         
         float inverseMass;
-       
         
-        public Point(Vector2 position, float inverseMass)
+        public Point(Vector3 position, float inverseMass)
         {
             this.desiredPosition = position.cpy();
             this.position = position.cpy();
             this.inverseMass = inverseMass;
-            velocity = new Vector2();
-            acceleration = new Vector2();
+            velocity = new Vector3();
+            acceleration = new Vector3();
         }
         
         public void update(float delta)
         {
-            //there is an invisible spring that connects the inital
+            //there is an invisible spring that connects the initial
             //position to where the point currently is, these are the
             //calculations for said spring. Otherwise the grid effect
-            //doesnt come back fast enough, also maintains the general shape 
+            //doesn't come back fast enough, also maintains the general shape
             //of the grid
-            float stiffnessScale = 1f/8f;
+            float stiffnessScale = 1/3f;
             
             // FORCE CALCULATIONS
             float springForceX = -STIFFNESS*stiffnessScale*(position.x - desiredPosition.x);
@@ -112,77 +117,83 @@ public class PhysicsGrid extends Entity
             float dampingForceY = DAMPING * velocity.y;
             float forceY = springForceY - dampingForceY;
 
-            
-            applyForce(new Vector2(forceX, forceY));
+            float springForceZ = -STIFFNESS*stiffnessScale*(position.z - desiredPosition.z);
+            float dampingForceZ = DAMPING * velocity.z;
+            float forceZ = springForceZ - dampingForceZ;
+
+            applyForce(new Vector3(forceX, forceY, forceZ));
             
             velocity.x += acceleration.x * delta;
             velocity.y += acceleration.y * delta;
-            
+            velocity.z += acceleration.z * delta;
             
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
+            position.z += velocity.z * delta;
             
             //not really accurate but it works
             velocity.scl(DAMPING*delta);
             if(velocity.len2() < MathUtils.FLOAT_ROUNDING_ERROR)
             {
-                velocity.x = velocity.y = 0;
+                velocity.x = velocity.y = velocity.z = 0;
             }
         }
-        
-        public void applyForce(Vector2 force)
+
+        public void applyForce(Vector3 force)
         {
             acceleration.x += force.x*inverseMass;
             acceleration.y += force.y*inverseMass;
+            acceleration.z += force.z*inverseMass;
         }
     }
 
-    Color color;
-    float borderHue;
+    private Color color;
+    private float borderHue;
+
+    private ShapeRenderer sh;
+
+    private Vector2 gridDimensions;
+
+    private Array<Spring> springs;
+    private Point[][] points;
     
-    ShapeRenderer sh;
-    
-    Vector2 gridDimensions;
-    
-    Array<Spring> springs;
-    Point[][] points;
-    
-    int rows;
+    private int rows;
     int cols;
     
-    public boolean enableInterpolatedLines = true;
-    
-    public PhysicsGrid(Vector2 gridDimensions, int rows, int cols)
+    public boolean enableInterpolatedLines = false;
+
+
+    public PhysicsGrid(Vector2 gridDimensions, float spacing)
     {
-        this.rows = rows;
-        this.cols = cols;
-        
-        
+        this.rows = (int)(gridDimensions.x/spacing);
+        this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
-        
+        sh = new ShapeRenderer();
         color = Color.MAGENTA.cpy();
         color.a = 1f;
         
         points = new Point[rows + 1][cols + 1];
         
         springs = new Array<Spring>();
-        
+
         for(int i = 0; i < points.length; i++)
         {
             for (int j = 0; j < points[i].length; j++)
             {
                 float invMass = INVERSE_MASS;
-                if(i == 0 || i == points.length - 1 ||
-                   j == 0 || j == points[i].length - 1)
+                if (i == 0 || i == points.length - 1 ||
+                        j == 0 || j == points[i].length - 1)
                 {
                     invMass = 0;
                 }
+
                 points[i][j] = new Point(
-                    new Vector2(i*gridDimensions.x/rows, j*gridDimensions.y/cols), invMass);
+                        new Vector3(i * gridDimensions.x / rows - gridDimensions.x / 2f,
+                                j * gridDimensions.y / cols - gridDimensions.y / 2f,
+                                0),
+                        invMass);
             }
         }
-        
-        sh = new ShapeRenderer();
         
         for (int i = 0; i < points.length - 1; i++)
         {
@@ -195,18 +206,15 @@ public class PhysicsGrid extends Entity
                 springs.add(s2);
             }
         }
-        
-        
-        isAlive = true;
-    }
-    
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
     }
     
     public void update(float delta)
     {
+        if(Gdx.input.isKeyJustPressed(Keys.I))
+        {
+            enableInterpolatedLines = !enableInterpolatedLines;
+        }
+
         borderHue += 15f*delta;
         borderHue %= 360;
         
@@ -224,135 +232,200 @@ public class PhysicsGrid extends Entity
             }
         }
     }
-    @Override
-    public void update(WorldModel model, float delta)
-    {
-        update(delta);
-    }
 
-    public void applyRadialForce(Vector2 pos, float force, float radius)
+    public void applyRadialForce(Vector3 pos, float force, float radius)
     {
         for (Point[] pointArr : points)
         {
             for (Point point : pointArr)
             {
-                float dist = Vector2.dst(pos.x, pos.y, point.position.x, point.position.y);
+                float dist = Vector3.dst(pos.x, pos.y, pos.z,
+                                         point.position.x, point.position.y, point.position.z);
                 if (dist < radius)
                 {
-                    Vector2 dir = point.position.cpy().sub(pos);
-                    dir.nor().scl(force);
-                    point.applyForce(dir.scl(1f - dist/radius));
+                    Vector3 dir = point.position.cpy().sub(pos);
+                    dir.nor().scl(force * (1f - (dist/radius)*(dist/radius)));
+                    point.applyForce(dir);
                 }
             }
         }
     }
-    
-    @Override
+
+
+    private float abs(float a)
+    {
+        return a < 0 ? -a : a;
+    }
+
+
+
+
+    public void draw(SpriteBatch s)
+    {
+        s.end();
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        immediateRenderer.begin(s.getProjectionMatrix(), GL20.GL_TRIANGLES);
+
+
+        float scale = 12f;
+        for(int i = 0; i < points.length - 1; i++)
+        {
+            for (int j = 0; j < points[i].length - 1; j++)
+            {
+
+                immediateRenderer.color(0f, 0.4f, 0.4f, abs(points[i][j].position.z)*scale);
+                immediateRenderer.vertex(points[i][j].position.x,
+                        points[i][j].position.y,
+                        points[i][j].position.z);
+
+                immediateRenderer.color(0.4f, 0f, 0.4f, abs(points[i + 1][j].position.z)*scale);
+                immediateRenderer.vertex(points[i + 1][j].position.x,
+                        points[i + 1][j].position.y,
+                        points[i + 1][j].position.z);
+
+                immediateRenderer.color(0.4f, 0f, 0.4f, abs(points[i][j + 1].position.z)*scale);
+                immediateRenderer.vertex(points[i][j + 1].position.x,
+                                         points[i][j + 1].position.y,
+                                         points[i][j + 1].position.z);
+
+                immediateRenderer.color(0f, 0f, 0.4f, abs(points[i][j + 1].position.z)*scale);
+                immediateRenderer.vertex(points[i][j + 1].position.x,
+                        points[i][j + 1].position.y,
+                        points[i][j + 1].position.z);
+
+                immediateRenderer.color(0f, 0.4f, 0f, abs(points[i][j].position.z)*scale);
+                immediateRenderer.vertex(points[i + 1][j].position.x,
+                        points[i + 1][j].position.y,
+                        points[i + 1][j].position.z);
+
+                immediateRenderer.color(0.4f, 0f, 0f, abs(points[i + 1][j + 1].position.z)*scale);
+                immediateRenderer.vertex(points[i + 1][j + 1].position.x,
+                        points[i + 1][j + 1].position.y,
+                        points[i + 1][j + 1].position.z);
+            }
+        }
+
+        immediateRenderer.end();
+
+        sh.setProjectionMatrix(s.getProjectionMatrix());
+        sh.begin(ShapeRenderer.ShapeType.Line);
+        sh.setColor(color.fromHsv(borderHue, 1f, 1f));
+
+        //BORDER
+        Gdx.gl20.glLineWidth(4f);
+        sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
+        sh.line(-gridDimensions.x, -gridDimensions.y/2f, gridDimensions.x, -gridDimensions.y/2f);
+
+        sh.line(-gridDimensions.x/2f, -gridDimensions.y, -gridDimensions.x/2f, gridDimensions.y);
+        sh.line(gridDimensions.x/2f, -gridDimensions.y, gridDimensions.x/2f, gridDimensions.y);
+
+
+        sh.end();
+        Gdx.gl20.glLineWidth(1f);
+
+        s.begin();
+    }
+
+
+
+/*
     public void draw(SpriteBatch s)
     {
         s.end();
      
         Gdx.gl.glLineWidth(1f);
-        
         Gdx.gl.glEnable(GL20.GL_BLEND);
         
         
-        sh.setProjectionMatrix(s.getProjectionMatrix()); 
-        
+        sh.setProjectionMatrix(s.getProjectionMatrix());
         color = Color.TEAL.cpy();
         
         
         sh.begin(ShapeRenderer.ShapeType.Line);
         
-        for(int i = 0; i < points.length; i++)
+        //FOR NON INTERPOLATED LINES
+        float regularAlpha = 0.6f;
+        //FOR INTERPOLATED LINES
+       float interpolatedAlpha = 0.3f;
+        
+        for(int i = 0; i < points.length - 1; i++)
         {
-            for (int j = 0; j < points[i].length; j++)
+            for (int j = 0; j < points[i].length - 1; j++)
             {
-                if(i < points.length-1)
+                color.a = regularAlpha;
+                sh.setColor(color);
+                sh.line(points[i][j].position, points[i+1][j].position);
+
+                if(enableInterpolatedLines)
                 {
-                    color.a = 0.5f;
-                    sh.setColor(color);
-                    sh.line(points[i][j].position, points[i+1][j].position);
-                    
-                    if(enableInterpolatedLines)
+                    if(j < points[i].length - 1)
                     {
-                        if(j < points[i].length - 1)
-                        {
-                            color.a = 0.3f;
-                            Vector2 mid1 = new Vector2();
-                            mid1.x = points[i+1][j].position.x + points[i][j].position.x;
-                            mid1.x /= 2;
-                            mid1.y = points[i][j].position.y;
+                        color.a = interpolatedAlpha;
+                        Vector3 mid1 = new Vector3();
+                        mid1.x = points[i+1][j].position.x + points[i][j].position.x;
+                        mid1.x /= 2;
+                        mid1.y = points[i][j].position.y;
+                        mid1.z = points[i][j].position.z;
 
-                            Vector2 mid2 = new Vector2();
-                            mid2.x = points[i][j + 1].position.x + points[i+1][j + 1].position.x;
-                            mid2.x /= 2;
-                            mid2.y = points[i][j + 1].position.y;
 
-                            sh.setColor(color);
-                            sh.line(mid2, mid1);
-                        }
+                        Vector3 mid2 = new Vector3();
+                        mid2.x = points[i][j + 1].position.x + points[i+1][j + 1].position.x;
+                        mid2.x /= 2;
+                        mid2.y = points[i][j + 1].position.y;
+                        mid2.z = points[i][j].position.z;
+
+                        sh.setColor(color);
+                        sh.line(mid2, mid1);
                     }
                 }
-                
-                if(j < points[i].length-1)
+
+
+                color.a =  regularAlpha;
+                sh.setColor(color);
+                sh.line(points[i][j].position, points[i][j+1].position);
+
+                if(enableInterpolatedLines)
                 {
-                    color.a = 0.5f;
-                    sh.setColor(color);
-                    sh.line(points[i][j].position, points[i][j+1].position); 
-                    
-                    if(enableInterpolatedLines)
+                    if(i < points.length - 1)
                     {
-                        if(i < points.length - 1)
-                        {
-                            color.a = 0.3f;
-                            Vector2 mid1 = new Vector2();
-                            mid1.x = points[i][j].position.x;
-                            mid1.y = points[i][j].position.y + points[i][j + 1].position.y;
-                            mid1.y /= 2;
+                        color.a = interpolatedAlpha;
+                        Vector3 mid1 = new Vector3();
+                        mid1.x = points[i][j].position.x;
+                        mid1.y = points[i][j].position.y + points[i][j + 1].position.y;
+                        mid1.y /= 2;
+                        mid1.z = points[i][j].position.z;
 
-                            Vector2 mid2 = new Vector2();
-                            mid2.x = points[i+ 1][j].position.x;
-                            mid2.y = points[i+ 1][j].position.y + points[i + 1][j + 1].position.y;
-                            mid2.y /= 2;
+                        Vector3 mid2 = new Vector3();
+                        mid2.x = points[i+ 1][j].position.x;
+                        mid2.y = points[i+ 1][j].position.y + points[i + 1][j + 1].position.y;
+                        mid2.y /= 2;
+                        mid2.z = points[i][j].position.z;
 
-                            sh.setColor(color);
-                            sh.line(mid2, mid1);
-                        }
+                        sh.setColor(color);
+                        sh.line(mid2, mid1);
                     }
                 }
             }
         }
-        
         sh.setColor(color.fromHsv(borderHue, 1f, 1f));
         
         //BORDER
-        Gdx.gl20.glLineWidth(32f);
-        sh.line(0, 0, 0, gridDimensions.y);
-        sh.line(0, 0, gridDimensions.x, 0);
-        sh.line(0, gridDimensions.y, gridDimensions.x, gridDimensions.y);
-        sh.line(gridDimensions.x, gridDimensions.y, gridDimensions.x, 0);        
-        Gdx.gl20.glLineWidth(1f);
-        
+        Gdx.gl20.glLineWidth(4f);
+        sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
+        sh.line(-gridDimensions.x, -gridDimensions.y/2f, gridDimensions.x, -gridDimensions.y/2f);
+
+        sh.line(-gridDimensions.x/2f, -gridDimensions.y, -gridDimensions.x/2f, gridDimensions.y);
+        sh.line(gridDimensions.x/2f, -gridDimensions.y, gridDimensions.x/2f, gridDimensions.y);
+
+
         sh.end();
+        Gdx.gl20.glLineWidth(1f);
+
         
         s.begin();
     }
-
-    @Override
-    public void dispose()
-    {
-    }
-    
-    @Override
-    public Rectangle getBoundingBox()
-    {
-        return null;
-    }
-    
-    @Override
-    public void kill(WorldModel moidel) {}
-    
+*/
     public void setColor(Color color)
     {
         this.color = color;

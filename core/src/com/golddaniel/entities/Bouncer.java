@@ -22,9 +22,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
 import com.golddaniel.main.Globals;
-import com.golddaniel.main.Messenger;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -39,7 +39,7 @@ public class Bouncer extends Entity
     Color color;
     
     //should always be normalized
-    Vector2 dir;
+    Vector3 dir;
     float speed;
     
     int prevHealth;
@@ -52,7 +52,7 @@ public class Bouncer extends Entity
    
     Timer activeTimer;
     
-    public Bouncer(Vector2 pos, Vector2 dir)
+    public Bouncer(Vector3 pos, Vector3 dir)
     {
         width = 128;
         height = 32;
@@ -61,7 +61,7 @@ public class Bouncer extends Entity
         position.y += height/2;
         //normalize just in case a normal vector was not passed
         this.dir = dir.nor();
-        speed = Globals.WIDTH/2f;
+        speed = 1/2f;
         
         color = Color.YELLOW.cpy();
         
@@ -69,20 +69,15 @@ public class Bouncer extends Entity
         
         isAlive = true;
         
-        health = 5;
+        health = 7;
         prevHealth = health;
         
         activeTimer = new Timer();
     }
     
-    private Vector2 getMid()
+    private Vector3 getMid()
     {
-        return new Vector2(position.x + width/2, position.y + height/2);
-    }
-    
-    @Override
-    public void onNotify(Messenger.EVENT event)
-    {
+        return new Vector3(position.x + width/2, position.y + height/2, 0);
     }
 
     @Override
@@ -142,7 +137,7 @@ public class Bouncer extends Entity
             position.y = model.WORLD_HEIGHT - height -1;
             dir.y  = -dir.y;
         }
-        
+
         model.applyRadialForce(getMid(), 2000, 96);
     }
 
@@ -157,13 +152,16 @@ public class Bouncer extends Entity
         {
             color.a = 0.45f;
         }
-        s.setColor(color);       
+        s.setColor(color);
+
+
+
         s.draw(tex,
                     position.x, position.y,
                     width / 2, height / 2,
                     width, height,
                     1, 1,
-                    dir.angle());
+                    new Vector2(dir.x, dir.y).angle());
         
         s.setColor(Color.WHITE);
     }
@@ -205,39 +203,29 @@ public class Bouncer extends Entity
                     
                     
                     model.createParticle(
-                            new Vector2(
+                            new Vector3(
                                 position.x + width/2,
-                                position.y + height/2), 
+                                position.y + height/2,
+                                0),
                             angle, 
-                            MathUtils.random(0.3f, 0.5f), 
-                            Globals.WIDTH/4, 
+                            MathUtils.random(0.5f, 0.65f), 
+                            1f/4,
                             Color.WHITE.cpy(), 
-                            Color.GREEN.cpy(),
-                            Particle.TYPE.SPIN);
+                            Color.GREEN.cpy());
 
                     model.createParticle(
-                        new Vector2(
+                        new Vector3(
                                 position.x + width/2,
-                                position.y + height/2), 
+                                position.y + height/2,
+                                0),
                         angle, 
-                        MathUtils.random(0.2f, 0.3f), 
-                        Globals.WIDTH*2f,
+                        MathUtils.random(0.6f, 0.7f), 
+                        2f,
                         Color.WHITE.cpy(), 
-                        Color.YELLOW.cpy(),
-                        Particle.TYPE.NORMAL);
+                        Color.YELLOW.cpy());
                 }
 
-                for (int i = 0; i < 5; i++)
-                {
-                    model.applyRadialForce(
-                    getMid(), 
-                    18000, 
-                    512);
-                }
-                
-                model.addToScore(100);
-                
-                Messenger.notify(Messenger.EVENT.BOUNCER_DEAD);
+
                 isAlive = false;
             }
         }

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.golddaniel.entities;
+package com.golddaniel.particles;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
 import com.golddaniel.main.WorldModel;
 
@@ -31,11 +31,14 @@ import com.golddaniel.main.WorldModel;
  */
 public class Particle implements Pool.Poolable
 {
-
-    float width = 0.005f;
-    float height = 0.005f;
-
-    Vector3 pos;
+    public static enum TYPE
+    {
+        NORMAL,
+        SPIN,
+        TRAIL,
+    }
+    
+    Vector2 pos;
     float angle;
     
     float lifespan;
@@ -46,29 +49,37 @@ public class Particle implements Pool.Poolable
     Color startColor;
     Color endColor;
     Color color;
-
+    
+    
+    float START_WIDTH;
+    float width;
+    float height;
+    
     float speed;
     
     //would make final, but cannot due to poolable
     float START_SPEED;
-
+    
+    TYPE type;
+    
     //private static TextureRegion rectTex = new TextureRegion(new Texture("texture.png"));
     private static TextureRegion circleTex = new TextureRegion(new Texture("circle.png"));
     
     boolean isAlive;
     
     public Particle(
-            Vector3 pos, float dir, 
+            Vector2 pos, float dir, 
             float lifespan, Color startColor, Color endColor, 
-            float speed)
+            float speed, TYPE type)
     {
-        init(pos, dir, lifespan, startColor, endColor, speed);
+        init(pos, dir, lifespan, startColor, endColor, speed,type);
     }
     
      public void init(
-            Vector3 pos, float dir, 
+            Vector2 pos, float dir, 
             float lifespan, Color startColor, Color endColor, 
-            float speed)
+            float speed,
+            TYPE type)
     {
         this.pos = pos;
         this.angle = dir;
@@ -82,7 +93,25 @@ public class Particle implements Pool.Poolable
         color = new Color();
         
         this.START_SPEED = speed;
-
+        
+        this.type = type;
+        
+        
+        height = 4;
+        
+        if(type == TYPE.SPIN)
+        {
+            START_WIDTH = 64;
+        }
+        else if(type == TYPE.TRAIL)
+        {
+            START_WIDTH = 8;
+            height = 8;
+        }
+        else
+        {
+            START_WIDTH = 128;
+        }
         isAlive = true;
     }
     
@@ -91,7 +120,7 @@ public class Particle implements Pool.Poolable
         color.r = MathUtils.lerp(endColor.r, startColor.r, lifespan/START_LIFESPAN);
         color.g = MathUtils.lerp(endColor.g, startColor.g, lifespan/START_LIFESPAN);
         color.b = MathUtils.lerp(endColor.b, startColor.b, lifespan/START_LIFESPAN);
-        color.a = MathUtils.lerp(0.3f, 1f, lifespan/START_LIFESPAN);
+        color.a = MathUtils.lerp(0.05f, 1f, lifespan/START_LIFESPAN);
     }
     
     public void update(WorldModel world, float delta)
@@ -101,6 +130,20 @@ public class Particle implements Pool.Poolable
         
         
         speed = START_SPEED * lifespan/START_LIFESPAN;
+        
+        if(type == TYPE.NORMAL || type == TYPE.SPIN)
+        {
+            width = START_WIDTH*lifespan/START_LIFESPAN;
+        }
+        else
+        {
+            width = START_WIDTH;
+        }
+        
+        if(type == TYPE.SPIN)
+        {
+            angle += MathUtils.random(180f, 270f) * delta * lifespan/START_LIFESPAN;
+        }
         
         lerpColor();
         
@@ -113,11 +156,12 @@ public class Particle implements Pool.Poolable
         s.enableBlending();
         s.setColor(color);
 
+        
         s.draw(circleTex,
-                pos.x - width / 2f, pos.y - height / 2f,
-                width / 2f, height / 2f,
-                height, width,
-                1f, 1f,
+                pos.x, pos.y,
+                width/2f, height/2f,
+                width, height,
+                1, 1,
                 angle);
         s.setColor(Color.WHITE);
     }
@@ -135,13 +179,14 @@ public class Particle implements Pool.Poolable
     @Override
     public void reset()
     {
-        pos = new Vector3(-100, -100, 0);
+        pos = new Vector2(-100, -100);
         angle = 0;
         lifespan = -1;
         START_LIFESPAN = -1;
         
         startColor = endColor = color = null;
-
+        
+        width = height = 0;
         speed = START_SPEED = 0;
     }
 }
