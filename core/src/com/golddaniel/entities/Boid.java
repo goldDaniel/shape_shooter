@@ -35,7 +35,7 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 0.1f;
+    static float SPEED_MAX = 2.25f;
    
     static Array<Boid> boids = new Array<Boid>();
     
@@ -51,7 +51,7 @@ public class Boid extends Entity
     float width;
     float height;
     
-    int health = 3;
+    int health = 5;
     
     boolean active;
     
@@ -65,10 +65,10 @@ public class Boid extends Entity
         
         activeTimer = new Timer();
         
-        width = 0.0125f;
-        height = 0.0125f;
+        width = 0.5f;
+        height = 0.5f;
         
-        active = false;
+        active = true;
         isAlive = true;
         
         color = Color.CORAL.cpy();
@@ -86,7 +86,7 @@ public class Boid extends Entity
     {
         Vector3 result = new Vector3();
         int count = 0;
-        float range = 0.08f;
+        float range = 2f;
         
         Vector3 sum = new Vector3();
         for(Boid b : boids)
@@ -94,7 +94,7 @@ public class Boid extends Entity
             float dist = position.dst(b.position);
             
             /**
-             * commented out as we currently want average of all boids
+             * comment out if we currently want average of all boids
              * to pull them together 
              */
             if(dist > 0 && dist < range)
@@ -120,7 +120,7 @@ public class Boid extends Entity
     private Vector3 allignment()
     {
         Vector3 result = new Vector3();
-        float range = 0.05f;
+        float range = 2.5f;
         int count = 0;
         
         Vector3 sum = new Vector3();
@@ -160,7 +160,7 @@ public class Boid extends Entity
     
         int count = 0;
         
-        float range = 0.025f;
+        float range = 1.15f;
         
         Vector3 sum = new Vector3();
         for(Boid b : boids)
@@ -205,20 +205,6 @@ public class Boid extends Entity
     @Override
     public void update(WorldModel model, float delta)
     {
-        if(!active)
-        {
-            if(activeTimer.isEmpty())
-            {
-                activeTimer.scheduleTask(new Timer.Task()
-                {
-                    @Override
-                    public void run()
-                    {
-                        active = true;
-                    }
-                }, 0);
-            }
-        }
         
         if(active)
         {
@@ -235,7 +221,7 @@ public class Boid extends Entity
             Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             Vector3 seek = new Vector3();
             
-            float range = 0.15f;
+            float range = 1f;
             if(model.getEntityType(Player.class).size > 0)
             {
                 
@@ -264,8 +250,8 @@ public class Boid extends Entity
             acceleration.set(0, 0,0);
 
             Vector3 pos = position.cpy();
-            pos.z = -0.01f;
-            model.applyRadialForce(position, 3f * delta, 0.075f);
+            pos.z = -0.1f;
+            model.applyRadialForce(position, 150f * delta, width);
         }
     }
 
@@ -325,57 +311,51 @@ public class Boid extends Entity
             health--;
             if(health <= 0)
             {
-                int particles = 64;
+                int particles = 128;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
 
-                    angle += MathUtils.random(-2.5f, 2.5f);
+                    angle += MathUtils.random(-1.5f, 1.5f);
+
+                    Vector3 dim = new Vector3(0.55f, 0.05f, 0.15f);
+
+                    float speed = MathUtils.random(7f, 10f);
 
                     model.createParticle(
-                        new Vector3(
-                            position.x + width/2,
-                            position.y + height/2,
-                            0),
-                        angle,
-                        MathUtils.random(0.4f, 0.5f),
-                        1f/3,
-                        Color.MAGENTA,
-                        Color.WHITE);
+                        position.cpy(),
+                        new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                        dim,
+                        MathUtils.random(0.1f, 0.5f),
+                        Color.WHITE,
+                        Color.CYAN);
 
+                    speed = MathUtils.random(2f, 3f);
 
                     model.createParticle(
-                            new Vector3(
-                                position.x + width/2,
-                                position.y + height/2,
-                                    0),
-                            angle,
-                            MathUtils.random(0.5f, 0.6f),
-                            1f/2,
-                            Color.WHITE,
-                            Color.FIREBRICK);
-
+                            position.cpy(),
+                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            dim,
+                            MathUtils.random(0.1f, 0.5f),
+                            Color.MAGENTA,
+                            Color.WHITE);
                 }
 
-                Vector3 pos = getMid();
+                Vector3 pos = position.cpy();
                 pos.z = -0.01f;
                 model.applyRadialForce(
-                        pos,
-                        5,
-                        0.05f);
+                              pos,
+                        50,
+                        (width + height) * 2f);
 
 
 
+                active = false;
                 isAlive = false;
             }
         }
     }
 
-    private Vector3 getMid()
-    {
-        return new Vector3(position.x + width / 2f, position.y + height / 2f, position.z);
-    }
-    
     @Override
     public Rectangle getBoundingBox()
     {
@@ -394,7 +374,7 @@ public class Boid extends Entity
     {
         Vector3 result = new Vector3();
         
-        float range = 0.05f;
+        float range = 2f;
         
         Vector3 wallCheck = new Vector3();
 
@@ -438,12 +418,7 @@ public class Boid extends Entity
         
         return result;
     }
-    
-    public void setVelocity(Vector3 v)
-    {
-        velocity.set(v);
-    }
-    
+
     public boolean isActive()
     {
         return active;

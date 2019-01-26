@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -34,9 +35,9 @@ import com.badlogic.gdx.utils.Array;
  */
 public class PhysicsGrid
 {
-    ImmediateModeRenderer20 immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
 
-    final float STIFFNESS = 4.5f;
+
+    final float STIFFNESS = 3.5f;
     final float DAMPING = 4f;
     final float INVERSE_MASS = 1f/0.025f;
     
@@ -163,6 +164,8 @@ public class PhysicsGrid
     public boolean enableInterpolatedLines = false;
 
 
+    ImmediateModeRenderer20 immediateRenderer;
+
     public PhysicsGrid(Vector2 gridDimensions, float spacing)
     {
         this.rows = (int)(gridDimensions.x/spacing);
@@ -171,7 +174,7 @@ public class PhysicsGrid
         sh = new ShapeRenderer();
         color = Color.MAGENTA.cpy();
         color.a = 1f;
-        
+
         points = new Point[rows + 1][cols + 1];
         
         springs = new Array<Spring>();
@@ -206,6 +209,7 @@ public class PhysicsGrid
                 springs.add(s2);
             }
         }
+        immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
     }
     
     public void update(float delta)
@@ -251,69 +255,73 @@ public class PhysicsGrid
         }
     }
 
-
     private float abs(float a)
     {
         return a < 0 ? -a : a;
     }
 
-
-
-
     public void draw(SpriteBatch s)
     {
         s.end();
 
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        immediateRenderer.begin(s.getProjectionMatrix(), GL20.GL_TRIANGLES);
+        Gdx.gl.glLineWidth(1f);
 
+        sh.setProjectionMatrix(s.getProjectionMatrix());
+        sh.begin(ShapeRenderer.ShapeType.Line);
 
-        float scale = 12f;
-        for(int i = 0; i < points.length - 1; i++)
+        int counter = 0;
+        for(int i = 0; i < points.length - 1f; i++)
         {
-            for (int j = 0; j < points[i].length - 1; j++)
+            for (int j = 0; j < points[i].length - 1f; j++)
             {
+                counter += 4;
 
-                immediateRenderer.color(0f, 0.4f, 0.4f, abs(points[i][j].position.z)*scale);
-                immediateRenderer.vertex(points[i][j].position.x,
+                if(counter > 4000)
+                {
+                    counter = 0;
+                    sh.flush();
+                }
+
+                float dist = points[i][j].position.cpy().sub(points[i][j].desiredPosition).len();
+                Color lerp = Color.DARK_GRAY.cpy().lerp(Color.CYAN, dist);
+
+                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
+                sh.getRenderer().vertex(
+                        points[i][j].position.x,
                         points[i][j].position.y,
                         points[i][j].position.z);
 
-                immediateRenderer.color(0.4f, 0f, 0.4f, abs(points[i + 1][j].position.z)*scale);
-                immediateRenderer.vertex(points[i + 1][j].position.x,
+                dist = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition).len();
+                lerp = Color.DARK_GRAY.cpy().lerp(Color.MAGENTA, dist);
+
+                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
+                sh.getRenderer().vertex(
+                        points[i + 1][j].position.x,
                         points[i + 1][j].position.y,
                         points[i + 1][j].position.z);
 
-                immediateRenderer.color(0.4f, 0f, 0.4f, abs(points[i][j + 1].position.z)*scale);
-                immediateRenderer.vertex(points[i][j + 1].position.x,
-                                         points[i][j + 1].position.y,
-                                         points[i][j + 1].position.z);
 
-                immediateRenderer.color(0f, 0f, 0.4f, abs(points[i][j + 1].position.z)*scale);
-                immediateRenderer.vertex(points[i][j + 1].position.x,
+                dist = points[i][j].position.cpy().sub(points[i][j].desiredPosition).len();
+                lerp = Color.DARK_GRAY.cpy().lerp(Color.CYAN, dist);
+
+                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
+                sh.getRenderer().vertex(
+                        points[i][j].position.x,
+                        points[i][j].position.y,
+                        points[i][j].position.z);
+
+                dist = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition).len();
+                lerp = Color.DARK_GRAY.cpy().lerp(Color.MAGENTA, dist);
+
+                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
+                sh.getRenderer().vertex(
+                        points[i][j + 1].position.x,
                         points[i][j + 1].position.y,
                         points[i][j + 1].position.z);
-
-                immediateRenderer.color(0f, 0.4f, 0f, abs(points[i][j].position.z)*scale);
-                immediateRenderer.vertex(points[i + 1][j].position.x,
-                        points[i + 1][j].position.y,
-                        points[i + 1][j].position.z);
-
-                immediateRenderer.color(0.4f, 0f, 0f, abs(points[i + 1][j + 1].position.z)*scale);
-                immediateRenderer.vertex(points[i + 1][j + 1].position.x,
-                        points[i + 1][j + 1].position.y,
-                        points[i + 1][j + 1].position.z);
             }
         }
-
-        immediateRenderer.end();
-
-        sh.setProjectionMatrix(s.getProjectionMatrix());
-        sh.begin(ShapeRenderer.ShapeType.Line);
         sh.setColor(color.fromHsv(borderHue, 1f, 1f));
 
-        //BORDER
-        Gdx.gl20.glLineWidth(4f);
         sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
         sh.line(-gridDimensions.x, -gridDimensions.y/2f, gridDimensions.x, -gridDimensions.y/2f);
 
@@ -322,112 +330,7 @@ public class PhysicsGrid
 
 
         sh.end();
-        Gdx.gl20.glLineWidth(1f);
 
         s.begin();
     }
-
-
-
-/*
-    public void draw(SpriteBatch s)
-    {
-        s.end();
-     
-        Gdx.gl.glLineWidth(1f);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        
-        
-        sh.setProjectionMatrix(s.getProjectionMatrix());
-        color = Color.TEAL.cpy();
-        
-        
-        sh.begin(ShapeRenderer.ShapeType.Line);
-        
-        //FOR NON INTERPOLATED LINES
-        float regularAlpha = 0.6f;
-        //FOR INTERPOLATED LINES
-       float interpolatedAlpha = 0.3f;
-        
-        for(int i = 0; i < points.length - 1; i++)
-        {
-            for (int j = 0; j < points[i].length - 1; j++)
-            {
-                color.a = regularAlpha;
-                sh.setColor(color);
-                sh.line(points[i][j].position, points[i+1][j].position);
-
-                if(enableInterpolatedLines)
-                {
-                    if(j < points[i].length - 1)
-                    {
-                        color.a = interpolatedAlpha;
-                        Vector3 mid1 = new Vector3();
-                        mid1.x = points[i+1][j].position.x + points[i][j].position.x;
-                        mid1.x /= 2;
-                        mid1.y = points[i][j].position.y;
-                        mid1.z = points[i][j].position.z;
-
-
-                        Vector3 mid2 = new Vector3();
-                        mid2.x = points[i][j + 1].position.x + points[i+1][j + 1].position.x;
-                        mid2.x /= 2;
-                        mid2.y = points[i][j + 1].position.y;
-                        mid2.z = points[i][j].position.z;
-
-                        sh.setColor(color);
-                        sh.line(mid2, mid1);
-                    }
-                }
-
-
-                color.a =  regularAlpha;
-                sh.setColor(color);
-                sh.line(points[i][j].position, points[i][j+1].position);
-
-                if(enableInterpolatedLines)
-                {
-                    if(i < points.length - 1)
-                    {
-                        color.a = interpolatedAlpha;
-                        Vector3 mid1 = new Vector3();
-                        mid1.x = points[i][j].position.x;
-                        mid1.y = points[i][j].position.y + points[i][j + 1].position.y;
-                        mid1.y /= 2;
-                        mid1.z = points[i][j].position.z;
-
-                        Vector3 mid2 = new Vector3();
-                        mid2.x = points[i+ 1][j].position.x;
-                        mid2.y = points[i+ 1][j].position.y + points[i + 1][j + 1].position.y;
-                        mid2.y /= 2;
-                        mid2.z = points[i][j].position.z;
-
-                        sh.setColor(color);
-                        sh.line(mid2, mid1);
-                    }
-                }
-            }
-        }
-        sh.setColor(color.fromHsv(borderHue, 1f, 1f));
-        
-        //BORDER
-        Gdx.gl20.glLineWidth(4f);
-        sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
-        sh.line(-gridDimensions.x, -gridDimensions.y/2f, gridDimensions.x, -gridDimensions.y/2f);
-
-        sh.line(-gridDimensions.x/2f, -gridDimensions.y, -gridDimensions.x/2f, gridDimensions.y);
-        sh.line(gridDimensions.x/2f, -gridDimensions.y, gridDimensions.x/2f, gridDimensions.y);
-
-
-        sh.end();
-        Gdx.gl20.glLineWidth(1f);
-
-        
-        s.begin();
-    }
-*/
-    public void setColor(Color color)
-    {
-        this.color = color;
-    }           
 }

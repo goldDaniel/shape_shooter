@@ -41,10 +41,10 @@ public class BlackHole extends Entity
     
     private static ShapeRenderer sh = new ShapeRenderer();
     
-    final int MAX_HEALTH = 72;
+    final int MAX_HEALTH = 10;
     float health;
     
-    float MAX_RADIUS = 192;
+    float MAX_RADIUS = 5f;
     float radius;
     
     Color color;
@@ -88,14 +88,14 @@ public class BlackHole extends Entity
         }
         radius = MAX_RADIUS/8f + MAX_RADIUS*7f/8f * health/(float)MAX_HEALTH;
         
-        float force = 4200 * (1f + MathUtils.sinDeg(hue));
+        float force = 10f * delta * (1f + MathUtils.sinDeg(hue));
 
         world.applyRadialForce(
                 position,
                 force,
-                radius * (2.25f + MathUtils.sinDeg(hue)) * radius/MAX_RADIUS);
+                radius);
         
-        float range = radius * 5 * (1f + MathUtils.sinDeg(hue));
+        float range = radius * 2 * (1f + MathUtils.sinDeg(hue));
         Array<Bullet> bullets = world.getEntityType(Bullet.class);
         for(Bullet b : bullets)
         {
@@ -103,7 +103,7 @@ public class BlackHole extends Entity
             if(dist < range)
             {   
                 Vector3 steering = 
-                        b.position.cpy().sub(position).setLength(b.MAX_SPEED/2f);
+                        b.position.cpy().sub(position).setLength(b.speed/2f);
                 Vector2 dir = new Vector2(steering.x, steering.y);
 
                 b.dir = MathUtils.lerpAngleDeg(
@@ -125,30 +125,26 @@ public class BlackHole extends Entity
         s.setColor(Color.WHITE.cpy().fromHsv(hue, 1f, 1f));
         s.draw(
                 edge, 
-                position.x - radius, 
-                position.y - radius, 
+                position.x - radius / 2f,
+                position.y - radius / 2f,
+                radius / 2f, radius / 2f,
                 radius, radius,
-                radius*2, radius*2, 
-                2.25f + MathUtils.sinDeg(hue), 
-                2.25f + MathUtils.sinDeg(hue), 
+                0.5f + MathUtils.sinDeg(hue),
+                0.5f + MathUtils.sinDeg(hue),
                 hue);
-        s.end();
+
+        s.setColor(Color.CYAN);
+        s.draw(
+                edge,
+                position.x - radius / 2f,
+                position.y - radius / 2f,
+                radius / 2f, radius / 2f,
+                radius, radius,
+                1f,
+                1f,
+                hue);
+
         s.setColor(Color.WHITE);
-        
-        sh.setProjectionMatrix(s.getProjectionMatrix());
-        
-        sh.setColor(Color.BLACK);
-        sh.begin(ShapeRenderer.ShapeType.Filled);
-        sh.circle(position.x, position.y, radius);
-        sh.end();
-        
-        sh.setColor(color);
-        sh.begin(ShapeRenderer.ShapeType.Line);
-        sh.circle(position.x, position.y, radius);
-        sh.end();
-        
-        
-        s.begin();
     }
 
     @Override
@@ -157,10 +153,10 @@ public class BlackHole extends Entity
         if(!isActive) return;
         
         health--;
-        model.applyRadialForce(position, 1000, 512);
+        model.applyRadialForce(position, 2f, 0.025f);
         if(health < 0)
         {
-            model.applyRadialForce(position, 128000, 512);
+            model.applyRadialForce(position, 20, 0.05f);
             isAlive = false;
         }
         
@@ -172,13 +168,17 @@ public class BlackHole extends Entity
             Vector3 pos = position.cpy();
             pos.x += MathUtils.cosDeg(pAngle)*radius - radius/2f;
             pos.y += MathUtils.sinDeg(pAngle)*radius;
-            
+
+            Vector3 dim = new Vector3(0.01f, 0.1f, 0.01f);
+
+            Vector3 velocity = new Vector3(MathUtils.cosDeg(pAngle), MathUtils.sinDeg(pAngle), 0);
+
             model.createParticle(
-                pos, 
-                pAngle, 
-                MathUtils.random(0.2f, 0.6f), 
-                MathUtils.random(0.4f, 1f),
-                Color.MAGENTA, 
+                pos,
+                velocity,
+                dim,
+                MathUtils.random(0.2f, 0.6f),
+                Color.MAGENTA,
                 Color.CYAN);
         }
     }

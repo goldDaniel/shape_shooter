@@ -5,6 +5,7 @@
  */
 package com.golddaniel.screens;
 
+import com.golddaniel.main.Assets;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Screen;
 
@@ -14,6 +15,7 @@ import com.badlogic.gdx.Screen;
  */
 public abstract class VScreen implements Screen
 {
+    final Assets assets;
     final ScreenManager sm;
     boolean inTransition;
     
@@ -21,9 +23,10 @@ public abstract class VScreen implements Screen
      *
      * @param sm
      */
-    public VScreen(ScreenManager sm)
+    public VScreen(ScreenManager sm, Assets assets)
     {
         this.sm = sm;
+        this.assets = assets;
         inTransition = false;
     }
     
@@ -38,13 +41,13 @@ public abstract class VScreen implements Screen
     public abstract void show();
 
     @Override
-    public void resize(int width, int height){}
+    public abstract void resize(int width, int height);
 
     @Override
-    public void pause(){}
+    public abstract void pause();
 
     @Override
-    public void resume(){}
+    public abstract  void resume();
 
     @Override
     public abstract void hide();

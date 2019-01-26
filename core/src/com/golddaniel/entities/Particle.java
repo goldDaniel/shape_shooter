@@ -15,11 +15,21 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Pool;
 import com.golddaniel.main.WorldModel;
@@ -32,93 +42,83 @@ import com.golddaniel.main.WorldModel;
 public class Particle implements Pool.Poolable
 {
 
-    float width = 0.005f;
-    float height = 0.005f;
 
     Vector3 pos;
-    float angle;
-    
+    Vector3 velocity;
+    Vector3 dim;
+
     float lifespan;
-    
+
     //would make final, but cannot due to poolable
     float START_LIFESPAN;
-    
+
     Color startColor;
     Color endColor;
     Color color;
 
-    float speed;
-    
-    //would make final, but cannot due to poolable
-    float START_SPEED;
-
     //private static TextureRegion rectTex = new TextureRegion(new Texture("texture.png"));
     private static TextureRegion circleTex = new TextureRegion(new Texture("circle.png"));
-    
+
     boolean isAlive;
-    
+
+
     public Particle(
-            Vector3 pos, float dir, 
-            float lifespan, Color startColor, Color endColor, 
-            float speed)
+            Vector3 pos, Vector3 velocity, Vector3 dim,
+            float lifespan, Color startColor, Color endColor)
     {
-        init(pos, dir, lifespan, startColor, endColor, speed);
+        init(pos, velocity, dim, lifespan, startColor, endColor);
     }
-    
-     public void init(
-            Vector3 pos, float dir, 
-            float lifespan, Color startColor, Color endColor, 
-            float speed)
+
+    public void init(
+            Vector3 pos, Vector3 velocity, Vector3 dim,
+            float lifespan, Color startColor, Color endColor)
     {
         this.pos = pos;
-        this.angle = dir;
-        
+        this.velocity = velocity;
+        this.dim = dim;
+
         START_LIFESPAN = lifespan;
         this.lifespan = lifespan;
-        
+
         this.startColor = startColor;
         this.endColor = endColor;
-        
+
         color = new Color();
-        
-        this.START_SPEED = speed;
 
         isAlive = true;
     }
-    
+
     private void lerpColor()
     {
-        color.r = MathUtils.lerp(endColor.r, startColor.r, lifespan/START_LIFESPAN);
-        color.g = MathUtils.lerp(endColor.g, startColor.g, lifespan/START_LIFESPAN);
-        color.b = MathUtils.lerp(endColor.b, startColor.b, lifespan/START_LIFESPAN);
-        color.a = MathUtils.lerp(0.3f, 1f, lifespan/START_LIFESPAN);
+        color.r = MathUtils.lerp(endColor.r, startColor.r, lifespan / START_LIFESPAN);
+        color.g = MathUtils.lerp(endColor.g, startColor.g, lifespan / START_LIFESPAN);
+        color.b = MathUtils.lerp(endColor.b, startColor.b, lifespan / START_LIFESPAN);
+        color.a = MathUtils.lerp(0.01f, 1f, lifespan / START_LIFESPAN);
+
     }
-    
+
     public void update(WorldModel world, float delta)
     {
-        pos.x += MathUtils.cosDeg(angle)*speed*delta;
-        pos.y += MathUtils.sinDeg(angle)*speed*delta;
-        
-        
-        speed = START_SPEED * lifespan/START_LIFESPAN;
-        
+
+        pos.add(velocity.cpy().scl(delta));
+
         lerpColor();
-        
+
         lifespan -= delta;
-        if(lifespan <= 0) isAlive = false;
+        if (lifespan <= 0) isAlive = false;
     }
-    
+
     public void draw(SpriteBatch s)
     {
         s.enableBlending();
         s.setColor(color);
 
         s.draw(circleTex,
-                pos.x - width / 2f, pos.y - height / 2f,
-                width / 2f, height / 2f,
-                height, width,
+                pos.x - dim.x / 2f, pos.y - dim.y / 2f,
+                dim.x / 2f, dim.y / 2f,
+                dim.x, dim.y,
                 1f, 1f,
-                angle);
+                new Vector2(velocity.x, velocity.y).angle());
         s.setColor(Color.WHITE);
     }
 
@@ -135,13 +135,12 @@ public class Particle implements Pool.Poolable
     @Override
     public void reset()
     {
-        pos = new Vector3(-100, -100, 0);
-        angle = 0;
-        lifespan = -1;
-        START_LIFESPAN = -1;
-        
-        startColor = endColor = color = null;
+        pos.set(-1000, -1000, -1000);
+        velocity.set(0, 0, 0);
+        dim.set(0, 0, 0);
 
-        speed = START_SPEED = 0;
+
+
+        startColor = endColor = color = null;
     }
 }

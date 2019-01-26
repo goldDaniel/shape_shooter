@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -59,14 +60,14 @@ public class Bloom {
 
         
         /* (DANIEL)
-            added viewport to contructor
+            added viewport to constructor
             When this works normally, it renders to a quad that
             takes up the full screen rather than just a section
         
             this fixes that by ending the framebuffers with the viewport
             x, y, width, height for the screen
         */
-        FitViewport viewport;
+		ExtendViewport viewport;
         
          
 	/**
@@ -96,7 +97,7 @@ public class Bloom {
 	 * blending = false 32bits = true
      * @param viewport
 	 */
-	public Bloom(FitViewport viewport, float scale) {
+	public Bloom(ExtendViewport viewport, float scale) {
             
                 this.viewport = viewport;
             

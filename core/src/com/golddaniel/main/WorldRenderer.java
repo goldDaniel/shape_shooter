@@ -15,26 +15,23 @@
  */
 package com.golddaniel.main;
 
-import bloom.Bloom;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.FillViewport;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Player;
+
+import bloom.Bloom;
 
 /**
  *
@@ -43,28 +40,38 @@ import com.golddaniel.entities.Player;
 public class WorldRenderer
 {
 
-    FitViewport viewport;
+    ExtendViewport viewport;
 
     SpriteBatch s;
-    
+    ModelBatch m;
+
     TextureRegion tex;
     
     Bloom bloom;
 
-    public boolean doBloom = true;
+    Environment environment;
 
+    public boolean doBloom = false;
+
+    PointLight pLight;
 
     public WorldRenderer(WorldModel model)
     {
         tex = new TextureRegion(new Texture("texture.png"));
         
         s = new SpriteBatch();
+        m = new ModelBatch();
+
+        environment = new Environment();
+        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.35f, 0.35f, 0.35f, 1f));
+        environment.add(new DirectionalLight().set(0.5f, 0.5f, 0.5f, 1f, 1f, 0.5f));
+
 
         this.viewport = model.viewport;
 
         bloom = new Bloom(model.viewport, 0.75f);
         bloom.setBloomIntesity(1f);
-        bloom.setTreshold(0.1f);
+        bloom.setTreshold(0.01f);
     }
     
     private float abs(float a)
@@ -78,18 +85,12 @@ public class WorldRenderer
         {
             doBloom = !doBloom;
         }
-
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
-        bloom.setClearColor(0f, 0f, 0f, 1f);
-        
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
-
-
-        if(doBloom) bloom.capture();
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         s.setProjectionMatrix(model.cam.combined);
         s.enableBlending();
+
         s.begin();
 
         model.getGrid().draw(s);
@@ -97,12 +98,12 @@ public class WorldRenderer
         for(int i = 0; i < model.getAllEntities().size; i++)
         {
             Entity e = model.getAllEntities().get(i);
-            if(!(e instanceof  Player))
+            if(!(e instanceof Player))
             {
                 e.draw(s);
             }
         }
-        
+
         //draw player on top
         if(model.player != null)
         {
@@ -113,9 +114,8 @@ public class WorldRenderer
         {
             model.getAllParticles().get(i).draw(s);
         }
-        
+
         s.end();
-        if(doBloom)bloom.render();
     }
     
     public void resize(int width, int height)

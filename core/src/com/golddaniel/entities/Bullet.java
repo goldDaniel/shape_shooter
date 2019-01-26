@@ -58,17 +58,18 @@ public class Bullet extends Entity
     
     TextureRegion tex;
     
-    final float MAX_SPEED = 1f;
+    float speed;
     
-    public Bullet(Vector3 position, float dir, TYPE type)
+    public Bullet(Vector3 position, float speed, float dir, TYPE type)
     {
-        init(position, dir, type);
+        init(position, speed, dir, type);
     }
     
-    public final void init(Vector3 position, float dir, TYPE type)
+    public final void init(Vector3 position, float speed, float dir, TYPE type)
     {
         this.position = position.cpy();
         this.dir = dir;
+        this.speed = speed;
         
         if(type != null)
         {
@@ -93,8 +94,8 @@ public class Bullet extends Entity
            tex = new TextureRegion();
         }
 
-        width = 0.01f;
-        height = 0.01f;
+        width = 0.15f;
+        height = 0.15f;
 
         this.position.x -= width / 2f;
         this.position.y -= height / 2f;
@@ -105,33 +106,36 @@ public class Bullet extends Entity
     @Override
     public void update(WorldModel model, float delta)
     {
-        position.x += MAX_SPEED*MathUtils.cosDeg(dir)*delta;
-        position.y += MAX_SPEED*MathUtils.sinDeg(dir)*delta;
+        position.x += speed*MathUtils.cosDeg(dir)*delta;
+        position.y += speed*MathUtils.sinDeg(dir)*delta;
         
-        if(position.x < -tex.getRegionWidth() || position.x > model.WORLD_WIDTH ||
-           position.y < -tex.getRegionWidth() || position.y > model.WORLD_HEIGHT)
+        if(position.x < -model.WORLD_WIDTH|| position.x > model.WORLD_WIDTH ||
+           position.y < -model.WORLD_HEIGHT || position.y > model.WORLD_HEIGHT)
         {
-            position.x = MathUtils.clamp(position.x, 0, model.WORLD_WIDTH - tex.getRegionWidth());
-            position.y = MathUtils.clamp(position.y, 0, model.WORLD_HEIGHT - tex.getRegionWidth());
+            position.x = MathUtils.clamp(position.x, -model.WORLD_WIDTH, model.WORLD_WIDTH);
+            position.y = MathUtils.clamp(position.y, -model.WORLD_HEIGHT, model.WORLD_HEIGHT);
            
             isAlive = false;
         }
 
         Vector3 pos = position.cpy();
         pos.z = -0.01f;
-        model.applyRadialForce(pos, 2f * delta, 0.05f);
+        model.applyRadialForce(pos, 150 * delta, width*8);
     }
 
     
     @Override
     public void draw(SpriteBatch s)
     {
-        s.draw(tex, 
-                position.x - width / 2f, position.y - height / 2f,
-                width / 2f, height /2f,
-                width, height,
-                1f, 1f,
-                dir);
+        if(isAlive)
+        {
+            s.draw(tex,
+                    position.x - width / 2f, position.y - height / 2f,
+                    width / 2f, height / 2f,
+                    width, height,
+                    1f, 1f,
+                    dir);
+        }
     }
     
     @Override

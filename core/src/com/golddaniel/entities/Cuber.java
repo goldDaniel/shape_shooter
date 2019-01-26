@@ -222,21 +222,25 @@ public class Cuber extends Entity
 
                 angle += MathUtils.random(-2.5f, 2.5f);
 
-                model.createParticle(
-                        getMid(), 
-                        angle, 
-                        MathUtils.random(0.5f, 0.65f), 
-                        1,
-                        Color.LIME, 
-                        Color.WHITE);
-                
-                model.createParticle(
-                        getMid(), 
-                        angle, 
-                        MathUtils.random(0.55f, 0.75f), 
-                        1f/2f,
-                        Color.RED, 
-                        Color.PINK);
+                Vector3 dim = new Vector3(0.01f, 0.01f, 0.01f);
+
+//                model.createParticle(
+//                        getMid(),
+//                        dim,
+//                        angle,
+//                        MathUtils.random(0.5f, 0.65f),
+//                        1,
+//                        Color.LIME,
+//                        Color.WHITE);
+//
+//                model.createParticle(
+//                        getMid(),
+//                        dim,
+//                        angle,
+//                        MathUtils.random(0.55f, 0.75f),
+//                        1f/2f,
+//                        Color.RED,
+//                        Color.PINK);
             } 
         } 
     }

@@ -16,11 +16,16 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
@@ -35,13 +40,6 @@ import java.awt.*;
  */
 public class WorldModel
 {
-
-    private static enum WorldState
-    {
-
-
-    }
-
 
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
@@ -63,31 +61,45 @@ public class WorldModel
     
     boolean isUpdating;
 
-    FitViewport viewport;
+    ExtendViewport viewport;
     PerspectiveCamera cam;
 
-    Vector3 prevCursor = new Vector3();
     Vector3 cursor = new Vector3();
+
+    boolean mouseCam = false;
+    CameraInputController camController;
+
 
     public WorldModel(float width, float height)
     {
-        cam = new PerspectiveCamera(45, 2f, 2f);
-        viewport = new FitViewport(1080, 1920, cam);
+        float vWidth;
+        float vHeight;
+        if(SharedLibraryLoader.isAndroid)
+        {
+            vWidth = 1080;
+            vHeight = 1920;
+        }
+        else
+        {
+            vWidth = 1920;
+            vHeight = 1080;
+        }
+        cam = new PerspectiveCamera(67, vWidth, vHeight);
+        viewport = new ExtendViewport(vWidth, vHeight, cam);
+
         viewport.apply();
+
+        camController = new CameraInputController(cam);
 
         cursor.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 
         cam.position.x = 0;
-        cam.position.y = 0;
-        cam.position.z = 1f;
+        cam.position.y = 0.55f;
+        cam.position.z = 10f;
 
-        cam.up.x = 0f;
-        cam.up.y = 1f;
-        cam.up.z = 0f;
+        cam.lookAt(cam.position.x, cam.position.y, 0f);
 
-        cam.lookAt(0f, 0f, 0f);
-
-        cam.near = 0.25f;
+        cam.near = 1f;
         cam.far = 5000f;
 
         WORLD_WIDTH = width;
@@ -101,40 +113,40 @@ public class WorldModel
         particlePool = new Pool<Particle>(4096) {
             protected Particle newObject()
             {
-                return new Particle(null,0, 0, null, null, 0);
+                return new Particle(new Vector3(-1000,-1000,-1000),
+                                    new Vector3(0,0,0),
+                                    new Vector3(0,0,0),
+                            0, null, null);
             }
         };
         
         bulletPool = new Pool<Bullet>(512) {
             protected Bullet newObject()
             {
-                return new Bullet(Vector3.Zero, 0, null);
+                return new Bullet(Vector3.Zero, 0, 0, null);
             }
         };
+
     }
-    
+
     public void update(float delta)
     {
         isUpdating = true;
 
+        //should move input into another module////////////////////
+        if(SharedLibraryLoader.isAndroid)
+        {
+            float sensitivity = WORLD_HEIGHT / Gdx.graphics.getHeight();
 
-        cam.position.x = player.position.x * -0.25f;
-        cam.position.y = player.position.y * -0.125f;
-        cam.up.set(0, 1, 0);
-        cam.lookAt(0, 0, 0);
+            cursor.set(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
 
-        cam.update();
+            //sensitivity
+            cursor.scl(sensitivity);
 
+            player.position.add(cursor);
+        }
 
-        float sensitivity = WORLD_HEIGHT / Gdx.graphics.getHeight();
-
-        cursor.set(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
-
-        //sensitivity
-        cursor.scl(sensitivity);
-
-        player.position.add(cursor);
-
+        ///////////////////////////////////////////////////////////
 
         for(Entity e : entities)
         {
@@ -166,6 +178,42 @@ public class WorldModel
         }
 
         g.update(delta);
+
+
+        float subDivision = 1f/16f;
+
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
+        {
+            mouseCam = !mouseCam;
+        }
+
+        if(!mouseCam)
+        {
+            Gdx.input.setInputProcessor(null);
+
+            Vector3 target = new Vector3(player.position);
+
+            if (player.position.x < -WORLD_WIDTH * subDivision)target.x = -WORLD_WIDTH * subDivision;
+            if (player.position.x > WORLD_WIDTH * subDivision) target.x = WORLD_WIDTH * subDivision;
+
+            if (player.position.y < -WORLD_HEIGHT * subDivision) target.y = -WORLD_HEIGHT * subDivision;
+            if (player.position.y > WORLD_HEIGHT * subDivision) target.y = WORLD_HEIGHT * subDivision;
+
+            //maintain our rotation around Z axis before lookAt
+            cam.up.set(0f, 1f, 0f);
+
+            cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
+            cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
+            cam.position.z = MathUtils.lerp(cam.position.z, 10f, 0.05f);
+
+            cam.lookAt(cam.position.x, cam.position.y, 0f);
+        }
+        else
+        {
+            Gdx.input.setInputProcessor(camController);
+        }
+        cam.update();
 
         isUpdating = false;
     }
@@ -203,17 +251,17 @@ public class WorldModel
     }
     //////////////////////////////////////////////////////////////////////////////
     
-    public void createBullet(Vector3 pos, float dir, Bullet.TYPE type)
+    public void createBullet(Vector3 pos, float speed, float dir, Bullet.TYPE type)
     {
         Bullet b = bulletPool.obtain();
-        b.init(pos, dir, type);
+        b.init(pos, speed, dir, type);
         addEntity(b);
     }
     
-    public void createParticle(Vector3 pos, float dir, float lifespan, float speed, Color startColor, Color endColor)
+    public void createParticle(Vector3 pos, Vector3 vel, Vector3 dim, float lifespan, Color startColor, Color endColor)
     {
         Particle p = particlePool.obtain();
-        p.init(pos.cpy(), dir, lifespan, startColor, endColor, speed);
+        p.init(pos.cpy(), vel.cpy(), dim.cpy(), lifespan, startColor, endColor);
         particles.add(p);
     }
     

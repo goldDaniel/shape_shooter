@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FillViewport;
+import com.golddaniel.main.Assets;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -48,9 +49,9 @@ public class MainMenuScreen extends VScreen
     Skin uiSkin;
     Stage uiStage;
 
-    public MainMenuScreen(final ScreenManager sm)
+    public MainMenuScreen(final ScreenManager sm, Assets assets)
     {
-        super(sm);
+        super(sm, assets);
                 
         camera = new OrthographicCamera();
         viewport = new FitViewport(72, 128, camera);
@@ -164,7 +165,19 @@ public class MainMenuScreen extends VScreen
         viewport.update(width, height);
         viewport.apply();
     }
-    
+
+    @Override
+    public void pause()
+    {
+
+    }
+
+    @Override
+    public void resume()
+    {
+
+    }
+
     @Override 
     public void dispose()
     {

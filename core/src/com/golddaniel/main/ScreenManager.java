@@ -17,9 +17,8 @@ public class ScreenManager
     public enum STATE
     {
         PLAY,
-        LEVEL_SELECT,
+        LOADING,
         MAIN_MENU,
-        SPLASH,
     }
     
     STATE currentState;
@@ -86,13 +85,6 @@ public class ScreenManager
     public void render(float delta)
     {   
         screenMap.get(currentState).render(delta);
-        
-        if(Gdx.input.isKeyJustPressed(Keys.R))
-        {
-            disposeScreen(STATE.PLAY);
-            initalizeScreen(STATE.PLAY, new PlayScreen(this));
-            setScreen(STATE.PLAY);
-        }
     }
     
     public void resize(int width, int height)

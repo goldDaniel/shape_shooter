@@ -18,10 +18,12 @@ public class Main extends ApplicationAdapter {
 
         Gdx.input.setCursorCatched(false);
         sm = new ScreenManager();
-        
+
+        Assets assets = new Assets();
+
         //initalize our screens with enums to access
-        sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm));
-        sm.initalizeScreen(ScreenManager.STATE.PLAY, new PlayScreen(sm));
+        sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm, assets));
+        sm.initalizeScreen(ScreenManager.STATE.PLAY, new PlayScreen(sm, assets));
         
         
         sm.setScreen(ScreenManager.STATE.MAIN_MENU);

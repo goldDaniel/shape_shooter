@@ -200,29 +200,32 @@ public class Bouncer extends Entity
                     float angle = (float)i/(float)particles*360f;
 
                     angle += MathUtils.random(-2.5f, 2.5f);
-                    
-                    
-                    model.createParticle(
-                            new Vector3(
-                                position.x + width/2,
-                                position.y + height/2,
-                                0),
-                            angle, 
-                            MathUtils.random(0.5f, 0.65f), 
-                            1f/4,
-                            Color.WHITE.cpy(), 
-                            Color.GREEN.cpy());
 
-                    model.createParticle(
-                        new Vector3(
-                                position.x + width/2,
-                                position.y + height/2,
-                                0),
-                        angle, 
-                        MathUtils.random(0.6f, 0.7f), 
-                        2f,
-                        Color.WHITE.cpy(), 
-                        Color.YELLOW.cpy());
+                    Vector3 dim = new Vector3(0.01f, 0.01f, 0.01f);
+                    
+//                    model.createParticle(
+//                            new Vector3(
+//                                position.x + width/2,
+//                                position.y + height/2,
+//                                0),
+//                            dim,
+//                            angle,
+//                            MathUtils.random(0.5f, 0.65f),
+//                            1f/4,
+//                            Color.WHITE.cpy(),
+//                            Color.GREEN.cpy());
+//
+//                    model.createParticle(
+//                        new Vector3(
+//                                position.x + width/2,
+//                                position.y + height/2,
+//                                0),
+//                        dim,
+//                        angle,
+//                        MathUtils.random(0.6f, 0.7f),
+//                        2f,
+//                        Color.WHITE.cpy(),
+//                        Color.YELLOW.cpy());
                 }
 
 
