@@ -71,7 +71,16 @@ public class Player extends Entity implements ControllerListener
 
                 AXIS_RIGHT_HORIZONTAL = 1;
                 AXIS_RIGHT_VERTICAL = 0;
-            } else
+            }
+            else if(SharedLibraryLoader.isLinux)
+            {
+                AXIS_LEFT_HORIZONTAL = 0;
+                AXIS_LEFT_VERTICAL = 1;
+
+                AXIS_RIGHT_HORIZONTAL = 3;
+                AXIS_RIGHT_VERTICAL = 4;
+            }
+            else
             {
                 AXIS_LEFT_VERTICAL = -1;
                 AXIS_LEFT_HORIZONTAL = -1;
@@ -114,6 +123,12 @@ public class Player extends Entity implements ControllerListener
 
 
         final float DEADZONE = 0.2f;
+
+
+        if (value * value > DEADZONE * DEADZONE)
+        {
+            System.out.println(axisCode + " :  " + value);
+        }
 
         if (axisCode == PS4.AXIS_LEFT_HORIZONTAL)
         {
@@ -400,14 +415,13 @@ public class Player extends Entity implements ControllerListener
     {
         Vector2 dir = new Vector2(moveDir.x, moveDir.y);
 
-        s.setColor(Color.BLACK);
+        s.setColor(Color.WHITE);
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
                 width / 2, height / 2,
                 width, height,
                 1f, 1f,
                 dir.angle());
-        s.setColor(Color.WHITE);
     }
 
     public void dispose()

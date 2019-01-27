@@ -37,9 +37,9 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 4.5f;
+    final float STIFFNESS = 0.5f;
     final float DAMPING = 4f;
-    final float INVERSE_MASS = 1f/0.0125f;
+    final float INVERSE_MASS = 1f/0.025f;
     
     private class Spring
     {
@@ -219,7 +219,7 @@ public class PhysicsGrid
             enableInterpolatedLines = !enableInterpolatedLines;
         }
 
-        borderHue += 30f*delta;
+        borderHue += 90f*delta;
         
         color.fromHsv(borderHue, 1f, 1f);
 
@@ -323,7 +323,7 @@ public class PhysicsGrid
                 enabled = enabledInital.cpy();
                 enabled.fromHsv(((float)i * (float)j / (float)points.length * (float)points[i].length), 1f, 1f);
 
-                enabled.lerp(enabledInital, 0.5f);
+                enabled.lerp(enabledInital, 0.25f);
 
                 Vector3 normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
                 float dist = normal.len();
