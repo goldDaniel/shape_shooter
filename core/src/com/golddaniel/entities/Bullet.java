@@ -119,8 +119,7 @@ public class Bullet extends Entity
         }
 
         Vector3 pos = position.cpy();
-        pos.z = -0.01f;
-        model.applyRadialForce(pos, 150 * delta, width*8);
+        model.applyRadialForce(pos, 250 * delta, width * 2);
     }
 
     

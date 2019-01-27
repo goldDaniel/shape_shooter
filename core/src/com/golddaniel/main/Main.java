@@ -2,6 +2,8 @@ package com.golddaniel.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.controllers.Controller;
+import com.badlogic.gdx.controllers.Controllers;
 import com.golddaniel.screens.*;
 
 /**
@@ -27,6 +29,8 @@ public class Main extends ApplicationAdapter {
         
         
         sm.setScreen(ScreenManager.STATE.MAIN_MENU);
+
+
     }
 
     @Override

@@ -4,6 +4,7 @@ package com.golddaniel.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -14,6 +15,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Boid;
@@ -33,7 +36,7 @@ public class PlayScreen extends VScreen
     SpriteBatch s;
     
     OrthographicCamera uiCam;
-    FitViewport uiViewport;
+    ExtendViewport uiViewport;
 
     TextureRegion tex;
 
@@ -52,7 +55,7 @@ public class PlayScreen extends VScreen
         PhysicsGrid g = new PhysicsGrid(
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
-                    0.15f);
+                    0.2f);
         model.setGrid(g);
 
         for(int i = 0; i < 50; i++)
@@ -70,9 +73,21 @@ public class PlayScreen extends VScreen
         
         
         s = new SpriteBatch();
-        
-        uiCam = new OrthographicCamera();
-        uiViewport = new FitViewport(1080, 1920, uiCam);
+
+        float vWidth;
+        float vHeight;
+        if(SharedLibraryLoader.isAndroid)
+        {
+            vWidth = 1080;
+            vHeight = 1920;
+        }
+        else
+        {
+            vWidth = 1920;
+            vHeight = 1080;
+        }
+        uiCam = new OrthographicCamera(vWidth, vHeight);
+        uiViewport = new ExtendViewport(vWidth, vHeight, uiCam);
         uiCam.position.x = 0f;
         uiCam.position.y = 0f;
         uiViewport.apply();
@@ -111,11 +126,11 @@ public class PlayScreen extends VScreen
         else if(startTimer > 0)
         {
             //draw 1
-            font.draw(s, "I", -256, 0);
+            font.draw(s, "1", -256, 0);
         }
         else if(startTimer > -1)
         {
-            font.draw(s, "-GO-", -256, 0);
+            font.draw(s, "GO", -256, 0);
         }
         s.end();
     }

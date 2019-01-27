@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.golddaniel.main.Assets;
 import com.golddaniel.main.ScreenManager;
@@ -38,7 +39,7 @@ import com.golddaniel.main.PhysicsGrid;
 public class MainMenuScreen extends VScreen
 {
     
-    FitViewport viewport;
+    ExtendViewport viewport;
     OrthographicCamera camera;
     SpriteBatch s;
 
@@ -54,7 +55,7 @@ public class MainMenuScreen extends VScreen
         super(sm, assets);
                 
         camera = new OrthographicCamera();
-        viewport = new FitViewport(72, 128, camera);
+        viewport = new ExtendViewport(72, 128, camera);
         viewport.apply();
         s = new SpriteBatch();
         s.enableBlending();        

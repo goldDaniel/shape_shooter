@@ -264,17 +264,23 @@ public class PhysicsGrid
     {
         s.end();
 
-        Gdx.gl.glLineWidth(1f);
+        Gdx.gl.glLineWidth(2f);
 
         sh.setProjectionMatrix(s.getProjectionMatrix());
         sh.begin(ShapeRenderer.ShapeType.Line);
+
+
+        Color disabled = Color.BLACK.cpy();
+        Color enabledInital = color.cpy();
+
+        Color enabled;
 
         int counter = 0;
         for(int i = 0; i < points.length - 1f; i++)
         {
             for (int j = 0; j < points[i].length - 1f; j++)
             {
-                counter += 4;
+                counter += 6;
 
                 if(counter > 4000)
                 {
@@ -282,18 +288,27 @@ public class PhysicsGrid
                     sh.flush();
                 }
 
-                float dist = points[i][j].position.cpy().sub(points[i][j].desiredPosition).len();
-                Color lerp = Color.DARK_GRAY.cpy().lerp(Color.CYAN, dist);
+                enabled = enabledInital.cpy();
+                enabled.fromHsv(((float)i * (float)j / (float)points.length * (float)points[i].length), 1f, 1f);
 
+                enabled.lerp(enabledInital, 0.5f);
+
+                Vector3 normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                float dist = normal.len();
+                Color lerp = disabled.cpy().lerp(enabled, dist);
+
+                sh.getRenderer().normal(normal.x, normal.y, normal.z);
                 sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
                 sh.getRenderer().vertex(
                         points[i][j].position.x,
                         points[i][j].position.y,
                         points[i][j].position.z);
 
-                dist = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition).len();
-                lerp = Color.DARK_GRAY.cpy().lerp(Color.MAGENTA, dist);
+                normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                dist = normal.len();
+                lerp = disabled.cpy().lerp(enabled, dist);
 
+                sh.getRenderer().normal(normal.x, normal.y, normal.z);
                 sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
                 sh.getRenderer().vertex(
                         points[i + 1][j].position.x,
@@ -301,25 +316,30 @@ public class PhysicsGrid
                         points[i + 1][j].position.z);
 
 
-                dist = points[i][j].position.cpy().sub(points[i][j].desiredPosition).len();
-                lerp = Color.DARK_GRAY.cpy().lerp(Color.CYAN, dist);
-
+                sh.getRenderer().normal(normal.x, normal.y, normal.z);
                 sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
                 sh.getRenderer().vertex(
                         points[i][j].position.x,
                         points[i][j].position.y,
                         points[i][j].position.z);
 
-                dist = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition).len();
-                lerp = Color.DARK_GRAY.cpy().lerp(Color.MAGENTA, dist);
+                normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                dist = normal.len();
+                lerp = disabled.cpy().lerp(enabled, dist);
 
+                sh.getRenderer().normal(normal.x, normal.y, normal.z);
                 sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
                 sh.getRenderer().vertex(
                         points[i][j + 1].position.x,
                         points[i][j + 1].position.y,
                         points[i][j + 1].position.z);
+
             }
         }
+
+        sh.end();
+        sh.begin(ShapeRenderer.ShapeType.Line);
+
         sh.setColor(color.fromHsv(borderHue, 1f, 1f));
 
         sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
@@ -327,7 +347,6 @@ public class PhysicsGrid
 
         sh.line(-gridDimensions.x/2f, -gridDimensions.y, -gridDimensions.x/2f, gridDimensions.y);
         sh.line(gridDimensions.x/2f, -gridDimensions.y, gridDimensions.x/2f, gridDimensions.y);
-
 
         sh.end();
 

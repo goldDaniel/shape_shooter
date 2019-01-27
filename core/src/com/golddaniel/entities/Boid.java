@@ -240,7 +240,7 @@ public class Boid extends Entity
             acceleration.add(boundary);
             acceleration.add(seek);
             
-            acceleration.limit(SPEED_MAX/8f*delta);
+            acceleration.limit(SPEED_MAX/32f*delta);
             
             velocity.add(acceleration);
             velocity.limit(SPEED_MAX*delta);
@@ -264,7 +264,6 @@ public class Boid extends Entity
         else if(position.x > model.WORLD_WIDTH / 2f)
         {
             position.x = model.WORLD_WIDTH / 2f;
-            
         }
         
         if(position.y < -model.WORLD_HEIGHT /2f)
@@ -345,7 +344,7 @@ public class Boid extends Entity
                 pos.z = -0.01f;
                 model.applyRadialForce(
                               pos,
-                        50,
+                        20,
                         (width + height) * 2f);
 
 
@@ -374,7 +373,7 @@ public class Boid extends Entity
     {
         Vector3 result = new Vector3();
         
-        float range = 2f;
+        float range = 3f;
         
         Vector3 wallCheck = new Vector3();
 

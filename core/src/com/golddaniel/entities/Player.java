@@ -17,6 +17,10 @@ package com.golddaniel.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.controllers.Controller;
+import com.badlogic.gdx.controllers.ControllerListener;
+import com.badlogic.gdx.controllers.Controllers;
+import com.badlogic.gdx.controllers.PovDirection;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -34,12 +38,13 @@ import java.security.Key;
  *
  * @author wrksttn
  */
-public class Player extends Entity
+public class Player extends Entity implements ControllerListener
 {
     float hue;
     
     TextureRegion tex;
     Vector3 velocity;
+    Vector3 acceleration;
 
     public float width;
     public float height;
@@ -48,6 +53,103 @@ public class Player extends Entity
     
     //weapon cooldown, should probably move into its own module
     float cooldown = 0;
+
+    public class PS4 {
+
+        public static final int BUTTON_CROSS = 1;
+        public static final int BUTTON_SQUARE = 0;
+        public static final int BUTTON_TRIANGLE = 3;
+        public static final int BUTTON_CIRCLE = 2;
+        public static final int BUTTON_OPTIONS = 9;
+        public static final int BUTTON_SHARE = 8;
+        public static final int BUTTON_R1 = 5;
+        public static final int BUTTON_R2 = 7;
+        public static final int BUTTON_R3 = 11;
+        public static final int BUTTON_L1 = 4;
+        public static final int BUTTON_L2 = 6;
+        public static final int BUTTON_L3 = 10;
+        public static final int BUTTON_MOUSE = 13;
+        public static final int BUTTON_PS = 12;
+
+        public static final int AXIS_LEFT_HORIZONTAL = 0;
+        public static final int AXIS_LEFT_VERTICAL = 1;
+        public static final int AXIS_RIGHT_HORIZONTAL = 3;
+        public static final int AXIS_RIGHT_VERTICAL = 4;
+
+    }
+
+    @Override
+    public void connected(Controller controller)
+    {
+
+    }
+
+    @Override
+    public void disconnected(Controller controller)
+    {
+
+    }
+
+    @Override
+    public boolean buttonDown(Controller controller, int buttonCode)
+    {
+        System.out.println(buttonCode);
+        return false;
+    }
+
+    @Override
+    public boolean buttonUp(Controller controller, int buttonCode)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean axisMoved(Controller controller, int axisCode, float value)
+    {
+        final float DEADZONE = 0.05f;
+
+        if(axisCode == PS4.AXIS_LEFT_HORIZONTAL)
+        {
+            if(value*value > DEADZONE*DEADZONE) velocity.x = value;
+        else                                    velocity.x = 0;
+        }
+        else if(axisCode == PS4.AXIS_LEFT_VERTICAL)
+        {
+            if(value*value > DEADZONE*DEADZONE) velocity.y = -value;
+            else                                velocity.y = 0;
+        }
+        acceleration.nor();
+
+        return false;
+    }
+
+    @Override
+    public boolean povMoved(Controller controller, int povCode, PovDirection value)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean xSliderMoved(Controller controller, int sliderCode, boolean value)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean ySliderMoved(Controller controller, int sliderCode, boolean value)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean accelerometerMoved(Controller controller, int accelerometerCode, Vector3 value)
+    {
+        return false;
+    }
+
+
+
+
 
     public enum WEAPON_TYPE
     {
@@ -61,17 +163,21 @@ public class Player extends Entity
     public Player()
     {
         tex = new TextureRegion(new Texture("geometric/player.png"));
-        velocity = new Vector3();
-        
+
+
+
         width = 0.5f;
         height = 0.5f;
         
         position = new Vector3(0, 0, 0);
-
+        velocity = new Vector3();
+        acceleration = new Vector3();
         
         isAlive = true;
 
         weaponType = WEAPON_TYPE.SPREAD;
+
+        Controllers.addListener(this);
     }
 
 
@@ -98,40 +204,10 @@ public class Player extends Entity
 
         if(SharedLibraryLoader.isWindows || SharedLibraryLoader.isLinux)
         {
-            float speed = 5.5f;
+            float MAX_SPEED = 5.5f;
 
-            boolean input = false;
-
-            if(Gdx.input.isKeyPressed(Input.Keys.W))
-            {
-                input = true;
-                velocity.y += speed;
-            }
-            if(Gdx.input.isKeyPressed(Input.Keys.S))
-            {
-                input = true;
-                velocity.y -= speed;
-            }
-
-            if(Gdx.input.isKeyPressed(Input.Keys.A))
-            {
-                input = true;
-                velocity.x -= speed;
-            }
-            if(Gdx.input.isKeyPressed(Input.Keys.D))
-            {
-                input = true;
-                velocity.x += speed;
-            }
-
-            if(input)
-            {
-                velocity.limit(speed);
-            }
-            else
-            {
-                velocity.scl(10f * delta);
-            }
+            velocity.scl(MAX_SPEED);
+            if(velocity.len() > MAX_SPEED) velocity.nor().scl(MAX_SPEED);
 
 
             Vector2 shootDir = new Vector2();
