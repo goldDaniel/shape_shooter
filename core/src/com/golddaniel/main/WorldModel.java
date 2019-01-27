@@ -69,6 +69,7 @@ public class WorldModel
     boolean mouseCam = false;
     CameraInputController camController;
 
+    float sleepTimer = 0;
 
     public WorldModel(float width, float height)
     {
@@ -92,10 +93,9 @@ public class WorldModel
         camController = new CameraInputController(cam);
 
         cursor.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-
         cam.position.x = 0;
-        cam.position.y = 0.55f;
-        cam.position.z = 10f;
+        cam.position.y = 0;
+        cam.position.z = 30f;
 
         cam.lookAt(cam.position.x, cam.position.y, 0f);
 
@@ -131,7 +131,13 @@ public class WorldModel
 
     public void update(float delta)
     {
+        sleepTimer -= delta;
+        if(sleepTimer <= 0) sleepTimer = 0;
+        else                return;
+
         isUpdating = true;
+
+
 
         //should move input into another module////////////////////
         if(SharedLibraryLoader.isAndroid)
@@ -180,7 +186,7 @@ public class WorldModel
         g.update(delta);
 
 
-        float subDivision = 1f/16f;
+        float subDivision = 1f/8f;
 
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
@@ -205,7 +211,7 @@ public class WorldModel
 
             cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-            cam.position.z = MathUtils.lerp(cam.position.z, 10f, 0.05f);
+            cam.position.z = MathUtils.lerp(cam.position.z, 9f, 0.05f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
         }
@@ -304,6 +310,11 @@ public class WorldModel
         {
             e.dispose();
         }
+    }
+
+    public void sleep(float seconds)
+    {
+        sleepTimer += seconds;
     }
     
     public Player getPlayer()

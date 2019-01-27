@@ -26,7 +26,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -65,8 +64,8 @@ public class Boid extends Entity
         
         activeTimer = new Timer();
         
-        width = 0.5f;
-        height = 0.5f;
+        width = 0.25f;
+        height = 0.25f;
         
         active = true;
         isAlive = true;
@@ -344,7 +343,7 @@ public class Boid extends Entity
                 pos.z = -0.01f;
                 model.applyRadialForce(
                               pos,
-                        20,
+                        10,
                         (width + height) * 2f);
 
 

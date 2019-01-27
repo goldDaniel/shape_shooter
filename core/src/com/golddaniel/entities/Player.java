@@ -32,8 +32,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.golddaniel.main.WorldModel;
 
-import java.security.Key;
-
 /**
  *
  * @author wrksttn
@@ -41,40 +39,46 @@ import java.security.Key;
 public class Player extends Entity implements ControllerListener
 {
     float hue;
-    
+
     TextureRegion tex;
     Vector3 velocity;
-    Vector3 acceleration;
+    Vector3 moveDir;
+    Vector3 shootDir;
 
     public float width;
     public float height;
 
     float angle;
-    
+
     //weapon cooldown, should probably move into its own module
     float cooldown = 0;
 
-    public class PS4 {
+    public static class PS4
+    {
 
-        public static final int BUTTON_CROSS = 1;
-        public static final int BUTTON_SQUARE = 0;
-        public static final int BUTTON_TRIANGLE = 3;
-        public static final int BUTTON_CIRCLE = 2;
-        public static final int BUTTON_OPTIONS = 9;
-        public static final int BUTTON_SHARE = 8;
-        public static final int BUTTON_R1 = 5;
-        public static final int BUTTON_R2 = 7;
-        public static final int BUTTON_R3 = 11;
-        public static final int BUTTON_L1 = 4;
-        public static final int BUTTON_L2 = 6;
-        public static final int BUTTON_L3 = 10;
-        public static final int BUTTON_MOUSE = 13;
-        public static final int BUTTON_PS = 12;
 
-        public static final int AXIS_LEFT_HORIZONTAL = 0;
-        public static final int AXIS_LEFT_VERTICAL = 1;
-        public static final int AXIS_RIGHT_HORIZONTAL = 3;
-        public static final int AXIS_RIGHT_VERTICAL = 4;
+        public static final int AXIS_LEFT_HORIZONTAL;
+        public static final int AXIS_LEFT_VERTICAL;
+        public static final int AXIS_RIGHT_HORIZONTAL;
+        public static final int AXIS_RIGHT_VERTICAL;
+
+        static
+        {
+            if (SharedLibraryLoader.isWindows)
+            {
+                AXIS_LEFT_HORIZONTAL = 3;
+                AXIS_LEFT_VERTICAL = 2;
+
+                AXIS_RIGHT_HORIZONTAL = 1;
+                AXIS_RIGHT_VERTICAL = 0;
+            } else
+            {
+                AXIS_LEFT_VERTICAL = -1;
+                AXIS_LEFT_HORIZONTAL = -1;
+                AXIS_RIGHT_HORIZONTAL = -1;
+                AXIS_RIGHT_VERTICAL = -1;
+            }
+        }
 
     }
 
@@ -106,20 +110,52 @@ public class Player extends Entity implements ControllerListener
     @Override
     public boolean axisMoved(Controller controller, int axisCode, float value)
     {
-        final float DEADZONE = 0.05f;
 
-        if(axisCode == PS4.AXIS_LEFT_HORIZONTAL)
-        {
-            if(value*value > DEADZONE*DEADZONE) velocity.x = value;
-        else                                    velocity.x = 0;
-        }
-        else if(axisCode == PS4.AXIS_LEFT_VERTICAL)
-        {
-            if(value*value > DEADZONE*DEADZONE) velocity.y = -value;
-            else                                velocity.y = 0;
-        }
-        acceleration.nor();
 
+
+        final float DEADZONE = 0.2f;
+
+        if (axisCode == PS4.AXIS_LEFT_HORIZONTAL)
+        {
+            if (value * value > DEADZONE * DEADZONE)
+            {
+                moveDir.x = value;
+            } else
+            {
+                moveDir.x = 0;
+            }
+        }
+        if (axisCode == PS4.AXIS_LEFT_VERTICAL)
+        {
+            if (value * value > DEADZONE * DEADZONE)
+            {
+                moveDir.y = -value;
+            } else
+            {
+                moveDir.y = 0;
+            }
+        }
+
+        if (axisCode == PS4.AXIS_RIGHT_HORIZONTAL)
+        {
+            if (value * value > DEADZONE * DEADZONE)
+            {
+                shootDir.x = value;
+            } else
+            {
+                shootDir.x = 0;
+            }
+        }
+        if (axisCode == PS4.AXIS_RIGHT_VERTICAL)
+        {
+            if (value * value > DEADZONE * DEADZONE)
+            {
+                shootDir.y = -value;
+            } else
+            {
+                shootDir.y = 0;
+            }
+        }
         return false;
     }
 
@@ -171,7 +207,8 @@ public class Player extends Entity implements ControllerListener
         
         position = new Vector3(0, 0, 0);
         velocity = new Vector3();
-        acceleration = new Vector3();
+        moveDir = new Vector3();
+        shootDir = new Vector3();
         
         isAlive = true;
 
@@ -206,33 +243,20 @@ public class Player extends Entity implements ControllerListener
         {
             float MAX_SPEED = 5.5f;
 
-            velocity.scl(MAX_SPEED);
-            if(velocity.len() > MAX_SPEED) velocity.nor().scl(MAX_SPEED);
 
-
-            Vector2 shootDir = new Vector2();
-            if(Gdx.input.isKeyPressed(Input.Keys.UP))
+            if(moveDir.isZero())
             {
-                shootDir.y += 1f;
+                velocity.scl(0.9999f);
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.DOWN))
+            else
             {
-                shootDir.y -= 1f;
+                velocity.add(moveDir.cpy().scl(MAX_SPEED));
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            {
-                shootDir.x -= 1f;
-            }
-            if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            {
-                shootDir.x += 1f;
-            }
-
-            shootDir.nor();
+            velocity.limit(MAX_SPEED);
 
             if(shootDir.len2() > 0)
             {
-                fireBullets(model, new Vector3(shootDir, 0));
+                fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
             }
         }
 
@@ -242,6 +266,8 @@ public class Player extends Entity implements ControllerListener
         position.y += velocity.y * delta;
 
         position.z = 0.00f;
+
+        velocity.scl(5 * delta);
        
         //bound inside world rect
         if(position.x < -model.WORLD_WIDTH/2f)
@@ -270,7 +296,7 @@ public class Player extends Entity implements ControllerListener
 
         Vector3 pos = position.cpy();
         pos.z = -0.01f;
-        model.applyRadialForce(pos, 250 * delta ,width * 2.5f);
+        model.applyRadialForce(pos, 250 * delta ,width * 1.5f);
 
         createParticleTrail(model);
     }
@@ -283,7 +309,7 @@ public class Player extends Entity implements ControllerListener
         {
             Vector3 pos = new Vector3(position);
 
-            Vector2 dir = new Vector2(velocity.x, velocity.y);
+            Vector2 dir = new Vector2(moveDir.x, moveDir.y);
 
             pos.x -= MathUtils.cos(dir.angleRad()) * width / 2f;
             pos.y -= MathUtils.sin(dir.angleRad()) * height / 2f;
@@ -332,10 +358,10 @@ public class Player extends Entity implements ControllerListener
                         dir.angle(),
                         Bullet.TYPE.LASER_1);
 
-                float dif = 2.5f;
+                float dif = 1.5f;
                 //adds this amount of bullets to each side
                 //i.e. extrabullets*2 gets added
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     model.createBullet(bulletPos,
                             speed,
@@ -346,7 +372,7 @@ public class Player extends Entity implements ControllerListener
                             dir.angle() - dif*(i+1),
                             Bullet.TYPE.LASER_1);
                 }
-                cooldown = 0.125f;
+                cooldown = 0.08f;
             }
             else if(weaponType == WEAPON_TYPE.TWIN)
             {
@@ -372,13 +398,16 @@ public class Player extends Entity implements ControllerListener
 
     public void draw(SpriteBatch s)
     {
-        Vector2 dir = new Vector2(velocity.x, velocity.y);
+        Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+
+        s.setColor(Color.BLACK);
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
                 width / 2, height / 2,
                 width, height,
                 1f, 1f,
                 dir.angle());
+        s.setColor(Color.WHITE);
     }
 
     public void dispose()

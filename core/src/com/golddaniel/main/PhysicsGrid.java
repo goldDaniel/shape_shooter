@@ -37,9 +37,9 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 3.5f;
+    final float STIFFNESS = 4.5f;
     final float DAMPING = 4f;
-    final float INVERSE_MASS = 1f/0.025f;
+    final float INVERSE_MASS = 1f/0.0125f;
     
     private class Spring
     {
@@ -151,7 +151,7 @@ public class PhysicsGrid
     private Color color;
     private float borderHue;
 
-    private ShapeRenderer sh;
+    private ImmediateModeRenderer20 sh;
 
     private Vector2 gridDimensions;
 
@@ -159,7 +159,7 @@ public class PhysicsGrid
     private Point[][] points;
     
     private int rows;
-    int cols;
+    private int cols;
     
     public boolean enableInterpolatedLines = false;
 
@@ -171,7 +171,7 @@ public class PhysicsGrid
         this.rows = (int)(gridDimensions.x/spacing);
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
-        sh = new ShapeRenderer();
+        sh = new ImmediateModeRenderer20(500000, true, true, 0);
         color = Color.MAGENTA.cpy();
         color.a = 1f;
 
@@ -219,20 +219,43 @@ public class PhysicsGrid
             enableInterpolatedLines = !enableInterpolatedLines;
         }
 
-        borderHue += 15f*delta;
-        borderHue %= 360;
+        borderHue += 30f*delta;
         
         color.fromHsv(borderHue, 1f, 1f);
-        
-        for(Spring s : springs)
+
+        if(delta > 1f / 60f)
         {
-            s.update(delta);
-        }
-        for (Point[] pointArr : points)
-        {
-            for (Point point : pointArr)
+            float steps = delta / (1f / 60f);
+            float increment = 1f / 60f;
+
+            for(int i = 0; i < steps; i++)
             {
-                point.update(delta);
+                for(Spring s : springs)
+                {
+                    s.update(increment);
+                }
+                for (Point[] pointArr : points)
+                {
+                    for (Point point : pointArr)
+                    {
+                        point.update(increment);
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            for (Spring s : springs)
+            {
+                s.update(delta);
+            }
+            for (Point[] pointArr : points)
+            {
+                for (Point point : pointArr)
+                {
+                    point.update(delta);
+                }
             }
         }
     }
@@ -260,34 +283,43 @@ public class PhysicsGrid
         return a < 0 ? -a : a;
     }
 
+    boolean fill = true;
+
     public void draw(SpriteBatch s)
     {
         s.end();
 
         Gdx.gl.glLineWidth(2f);
 
-        sh.setProjectionMatrix(s.getProjectionMatrix());
-        sh.begin(ShapeRenderer.ShapeType.Line);
 
-
-        Color disabled = Color.BLACK.cpy();
+        Color disabled = color.cpy();
         Color enabledInital = color.cpy();
+
+        disabled.r /= 32f;
+        disabled.g /= 32f;
+        disabled.b /= 32f;
 
         Color enabled;
 
-        int counter = 0;
+        if(Gdx.input.isKeyJustPressed(Keys.P))
+        {
+            fill = !fill;
+        }
+
+        if(!fill)
+        {
+            sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
+        }
+        else
+        {
+            sh.begin(s.getProjectionMatrix(), GL20.GL_TRIANGLES);
+        }
+
+
         for(int i = 0; i < points.length - 1f; i++)
         {
             for (int j = 0; j < points[i].length - 1f; j++)
             {
-                counter += 6;
-
-                if(counter > 4000)
-                {
-                    counter = 0;
-                    sh.flush();
-                }
-
                 enabled = enabledInital.cpy();
                 enabled.fromHsv(((float)i * (float)j / (float)points.length * (float)points[i].length), 1f, 1f);
 
@@ -297,56 +329,142 @@ public class PhysicsGrid
                 float dist = normal.len();
                 Color lerp = disabled.cpy().lerp(enabled, dist);
 
-                sh.getRenderer().normal(normal.x, normal.y, normal.z);
-                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
-                sh.getRenderer().vertex(
-                        points[i][j].position.x,
-                        points[i][j].position.y,
-                        points[i][j].position.z);
 
-                normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
-                dist = normal.len();
-                lerp = disabled.cpy().lerp(enabled, dist);
+                if(!fill)
+                {
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j].position.x,
+                            points[i][j].position.y,
+                            points[i][j].position.z);
 
-                sh.getRenderer().normal(normal.x, normal.y, normal.z);
-                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
-                sh.getRenderer().vertex(
-                        points[i + 1][j].position.x,
-                        points[i + 1][j].position.y,
-                        points[i + 1][j].position.z);
+                    normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
 
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i + 1][j].position.x,
+                            points[i + 1][j].position.y,
+                            points[i + 1][j].position.z);
 
-                sh.getRenderer().normal(normal.x, normal.y, normal.z);
-                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
-                sh.getRenderer().vertex(
-                        points[i][j].position.x,
-                        points[i][j].position.y,
-                        points[i][j].position.z);
+                    normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
 
-                normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
-                dist = normal.len();
-                lerp = disabled.cpy().lerp(enabled, dist);
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j].position.x,
+                            points[i][j].position.y,
+                            points[i][j].position.z);
 
-                sh.getRenderer().normal(normal.x, normal.y, normal.z);
-                sh.getRenderer().color(lerp.r, lerp.g, lerp.b, lerp.a);
-                sh.getRenderer().vertex(
-                        points[i][j + 1].position.x,
-                        points[i][j + 1].position.y,
-                        points[i][j + 1].position.z);
+                    normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
 
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j + 1].position.x,
+                            points[i][j + 1].position.y,
+                            points[i][j + 1].position.z);
+                }
+                else
+                {
+                    normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j].position.x,
+                            points[i][j].position.y,
+                            points[i][j].position.z);
+
+                    normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i + 1][j].position.x,
+                            points[i + 1][j].position.y,
+                            points[i + 1][j].position.z);
+
+                    normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j + 1].position.x,
+                            points[i][j + 1].position.y,
+                            points[i][j + 1].position.z);
+
+                    normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i][j + 1].position.x,
+                            points[i][j + 1].position.y,
+                            points[i][j + 1].position.z);
+
+                    normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i + 1][j].position.x,
+                            points[i + 1][j].position.y,
+                            points[i + 1][j].position.z);
+
+                    normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
+                    dist = normal.len();
+                    lerp = disabled.cpy().lerp(enabled, dist);
+
+                    sh.normal(normal.x, normal.y, normal.z);
+                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.vertex(
+                            points[i + 1][j + 1].position.x,
+                            points[i + 1][j + 1].position.y,
+                            points[i + 1][j + 1].position.z);
+                }
             }
         }
 
         sh.end();
-        sh.begin(ShapeRenderer.ShapeType.Line);
+        sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
 
-        sh.setColor(color.fromHsv(borderHue, 1f, 1f));
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(-gridDimensions.x/2f, gridDimensions.y/2f, 0);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(gridDimensions.x/2f, gridDimensions.y/2f, 0);
 
-        sh.line(-gridDimensions.x, gridDimensions.y/2f, gridDimensions.x, gridDimensions.y/2f);
-        sh.line(-gridDimensions.x, -gridDimensions.y/2f, gridDimensions.x, -gridDimensions.y/2f);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(-gridDimensions.x/2f, -gridDimensions.y/2f, 0);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(gridDimensions.x/2f, -gridDimensions.y/2f, 0);
 
-        sh.line(-gridDimensions.x/2f, -gridDimensions.y, -gridDimensions.x/2f, gridDimensions.y);
-        sh.line(gridDimensions.x/2f, -gridDimensions.y, gridDimensions.x/2f, gridDimensions.y);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(-gridDimensions.x/2f, -gridDimensions.y/2f, 0);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(-gridDimensions.x/2f, gridDimensions.y/2f, 0);
+
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(gridDimensions.x/2f, -gridDimensions.y/2f, 0);
+        sh.color(color.fromHsv(borderHue, 1f, 1f));
+        sh.vertex(gridDimensions.x/2f, gridDimensions.y/2f, 0);
 
         sh.end();
 

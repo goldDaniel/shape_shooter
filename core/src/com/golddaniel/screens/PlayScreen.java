@@ -55,7 +55,7 @@ public class PlayScreen extends VScreen
         PhysicsGrid g = new PhysicsGrid(
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
-                    0.2f);
+                    0.25f);
         model.setGrid(g);
 
         for(int i = 0; i < 50; i++)
