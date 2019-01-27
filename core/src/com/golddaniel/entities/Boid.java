@@ -343,7 +343,7 @@ public class Boid extends Entity
                 pos.z = -0.01f;
                 model.applyRadialForce(
                               pos,
-                        10,
+                        25,
                         (width + height) * 2f);
 
 

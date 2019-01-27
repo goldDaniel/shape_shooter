@@ -37,8 +37,8 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 0.5f;
-    final float DAMPING = 4f;
+    final float STIFFNESS = 3f;
+    final float DAMPING = 6f;
     final float INVERSE_MASS = 1f/0.025f;
     
     private class Spring
@@ -295,9 +295,9 @@ public class PhysicsGrid
         Color disabled = color.cpy();
         Color enabledInital = color.cpy();
 
-        disabled.r /= 32f;
-        disabled.g /= 32f;
-        disabled.b /= 32f;
+        disabled.r /= 48f;
+        disabled.g /= 48f;
+        disabled.b /= 48f;
 
         Color enabled;
 
@@ -321,7 +321,9 @@ public class PhysicsGrid
             for (int j = 0; j < points[i].length - 1f; j++)
             {
                 enabled = enabledInital.cpy();
-                enabled.fromHsv(((float)i * (float)j / (float)points.length * (float)points[i].length), 1f, 1f);
+                enabled.fromHsv((float)i / (float)(points.length - 1) * 360f +
+                                    (float)j / (float)(points[i].length - 1) * 360f,
+                                1f, 1f);
 
                 enabled.lerp(enabledInital, 0.25f);
 

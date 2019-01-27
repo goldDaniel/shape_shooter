@@ -211,7 +211,7 @@ public class WorldModel
 
             cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-            cam.position.z = MathUtils.lerp(cam.position.z, 9f, 0.05f);
+            cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
         }

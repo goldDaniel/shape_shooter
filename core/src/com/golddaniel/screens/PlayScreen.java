@@ -48,17 +48,17 @@ public class PlayScreen extends VScreen
 
         tex = new TextureRegion(new Texture("texture.png"));
         
-        model = new WorldModel(27,12);
+        model = new WorldModel(16,9);
 
         model.addEntity(new Player());
 
         PhysicsGrid g = new PhysicsGrid(
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
-                    0.25f);
+                    0.1f);
         model.setGrid(g);
 
-        for(int i = 0; i < 50; i++)
+        for(int i = 0; i < 20; i++)
         {
             model.addEntity(new Boid(new Vector3(MathUtils.random(-5f, 5f), 5f, 0f)));
         }
