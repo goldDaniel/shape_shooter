@@ -28,6 +28,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Queue;
 
 /**
  *
@@ -38,9 +39,38 @@ public class PhysicsGrid
 
 
     final float STIFFNESS = 3f;
-    final float DAMPING = 6f;
-    final float INVERSE_MASS = 1f/0.025f;
-    
+    final float DAMPING = 5.5f;
+    final float INVERSE_MASS = 1f/0.0125f;
+
+    static private String createVertexShader () {
+        String shader =
+                "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
+                "attribute vec3 " + ShaderProgram.NORMAL_ATTRIBUTE   + ";\n" +
+                "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
+                "uniform mat4 u_projModelView;\n" +
+                "varying vec4 v_col;\n" +
+                "varying vec3 v_nor;\n" +
+                "void main() {\n" +
+                "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"+
+                "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
+                "   v_nor = " + ShaderProgram.NORMAL_ATTRIBUTE+ ";\n" +
+                "}\n";
+        return shader;
+    }
+
+    static private String createFragmentShader () {
+        String shader =
+                "#ifdef GL_ES\n" +
+                "precision mediump float;\n" +
+                "#endif\n" +
+                "varying vec4 v_col;\n" +
+                "varying vec3 v_nor;\n" +
+                "void main() {\n" +
+                    "gl_FragColor = v_col * 0.75f;\n" +
+                "}\n";
+        return shader;
+    }
+
     private class Spring
     {
         Point end1;
@@ -107,7 +137,7 @@ public class PhysicsGrid
             //calculations for said spring. Otherwise the grid effect
             //doesn't come back fast enough, also maintains the general shape
             //of the grid
-            float stiffnessScale = 1/3f;
+            float stiffnessScale = 1/4f;
             
             // FORCE CALCULATIONS
             float springForceX = -STIFFNESS*stiffnessScale*(position.x - desiredPosition.x);
@@ -160,10 +190,11 @@ public class PhysicsGrid
     
     private int rows;
     private int cols;
-    
+
     public boolean enableInterpolatedLines = false;
 
 
+    ShaderProgram shader;
     ImmediateModeRenderer20 immediateRenderer;
 
     public PhysicsGrid(Vector2 gridDimensions, float spacing)
@@ -171,7 +202,17 @@ public class PhysicsGrid
         this.rows = (int)(gridDimensions.x/spacing);
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
-        sh = new ImmediateModeRenderer20(500000, true, true, 0);
+
+        sh = new ImmediateModeRenderer20(2500000, true, true, 0);
+        shader = new ShaderProgram(createVertexShader(), createFragmentShader());
+
+        if(!shader.isCompiled())
+        {
+            Gdx.app.log("SHADER", shader.getLog());
+        }
+
+        sh.setShader(shader);
+
         color = Color.MAGENTA.cpy();
         color.a = 1f;
 
@@ -223,41 +264,41 @@ public class PhysicsGrid
         
         color.fromHsv(borderHue, 1f, 1f);
 
-        if(delta > 1f / 60f)
-        {
-            float steps = delta / (1f / 60f);
-            float increment = 1f / 60f;
-
-            for(int i = 0; i < steps; i++)
-            {
-                for(Spring s : springs)
-                {
-                    s.update(increment);
-                }
-                for (Point[] pointArr : points)
-                {
-                    for (Point point : pointArr)
-                    {
-                        point.update(increment);
-                    }
-                }
-            }
-
-        }
-        else
+        if(delta <= 1f / 40f)
         {
             for (Spring s : springs)
             {
                 s.update(delta);
             }
-            for (Point[] pointArr : points)
+            for(Point[] pArr : points)
             {
-                for (Point point : pointArr)
+                for(Point p : pArr)
                 {
-                    point.update(delta);
+                    p.update(delta);
                 }
             }
         }
+        else
+        {
+            float step = delta / 2f;
+
+            for(float i = 0; i < delta; i += step)
+            {
+                for (Spring s : springs)
+                {
+                    s.update(delta);
+                }
+                for (Point[] pArr : points)
+                {
+                    for (Point p : pArr)
+                    {
+                        p.update(delta);
+                    }
+                }
+            }
+        }
+
+
     }
 
     public void applyRadialForce(Vector3 pos, float force, float radius)
@@ -292,14 +333,12 @@ public class PhysicsGrid
         Gdx.gl.glLineWidth(2f);
 
 
-        Color disabled = color.cpy();
-        Color enabledInital = color.cpy();
+        Color disabled = Color.CYAN.cpy();
 
-        disabled.r /= 48f;
-        disabled.g /= 48f;
-        disabled.b /= 48f;
+        disabled.r /= 8f;
+        disabled.g /= 8f;
+        disabled.b /= 8f;
 
-        Color enabled;
 
         if(Gdx.input.isKeyJustPressed(Keys.P))
         {
@@ -316,21 +355,19 @@ public class PhysicsGrid
         }
 
 
-        for(int i = 0; i < points.length - 1f; i++)
+        for(int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < points[i].length - 1f; j++)
+            for (int j = 0; j < cols; j++)
             {
-                enabled = enabledInital.cpy();
+                Color enabled = color.cpy();
                 enabled.fromHsv((float)i / (float)(points.length - 1) * 360f +
-                                    (float)j / (float)(points[i].length - 1) * 360f,
-                                1f, 1f);
+                                (float)j / (float)(points[i].length - 1) * 360f,
+                        1f, 1f);
 
-                enabled.lerp(enabledInital, 0.25f);
 
                 Vector3 normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
                 float dist = normal.len();
                 Color lerp = disabled.cpy().lerp(enabled, dist);
-
 
                 if(!fill)
                 {
@@ -373,6 +410,7 @@ public class PhysicsGrid
                             points[i][j + 1].position.x,
                             points[i][j + 1].position.y,
                             points[i][j + 1].position.z);
+
                 }
                 else
                 {

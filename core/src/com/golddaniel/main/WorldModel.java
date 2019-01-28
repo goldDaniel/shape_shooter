@@ -17,6 +17,7 @@ package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
@@ -26,7 +27,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Particle;
@@ -66,10 +66,11 @@ public class WorldModel
 
     Vector3 cursor = new Vector3();
 
-    boolean mouseCam = false;
-    CameraInputController camController;
-
     float sleepTimer = 0;
+
+
+    public boolean editMode = false;
+
 
     public WorldModel(float width, float height)
     {
@@ -89,8 +90,6 @@ public class WorldModel
         viewport = new ExtendViewport(vWidth, vHeight, cam);
 
         viewport.apply();
-
-        camController = new CameraInputController(cam);
 
         cursor.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         cam.position.x = 0;
@@ -188,37 +187,25 @@ public class WorldModel
 
         float subDivision = 1f/8f;
 
+        Gdx.input.setInputProcessor(null);
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
-        {
-            mouseCam = !mouseCam;
-        }
+        Vector3 target = new Vector3(player.position);
 
-        if(!mouseCam)
-        {
-            Gdx.input.setInputProcessor(null);
+        if (player.position.x < -WORLD_WIDTH + WORLD_WIDTH * subDivision)target.x = -WORLD_WIDTH * subDivision;
+        if (player.position.x > WORLD_WIDTH - WORLD_WIDTH * subDivision) target.x = WORLD_WIDTH * subDivision;
 
-            Vector3 target = new Vector3(player.position);
+        if (player.position.y < -WORLD_HEIGHT * subDivision) target.y = -WORLD_HEIGHT * subDivision;
+        if (player.position.y > WORLD_HEIGHT * subDivision) target.y = WORLD_HEIGHT * subDivision;
 
-            if (player.position.x < -WORLD_WIDTH * subDivision)target.x = -WORLD_WIDTH * subDivision;
-            if (player.position.x > WORLD_WIDTH * subDivision) target.x = WORLD_WIDTH * subDivision;
+        //maintain our rotation around Z axis before lookAt
+        cam.up.set(0f, 1f, 0f);
 
-            if (player.position.y < -WORLD_HEIGHT * subDivision) target.y = -WORLD_HEIGHT * subDivision;
-            if (player.position.y > WORLD_HEIGHT * subDivision) target.y = WORLD_HEIGHT * subDivision;
+        cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
+        cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
+        cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
 
-            //maintain our rotation around Z axis before lookAt
-            cam.up.set(0f, 1f, 0f);
+        cam.lookAt(cam.position.x, cam.position.y, 0f);
 
-            cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
-            cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-            cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
-
-            cam.lookAt(cam.position.x, cam.position.y, 0f);
-        }
-        else
-        {
-            Gdx.input.setInputProcessor(camController);
-        }
         cam.update();
 
         isUpdating = false;
@@ -311,6 +298,8 @@ public class WorldModel
             e.dispose();
         }
     }
+
+    public Camera getCamera() { return cam; }
 
     public void sleep(float seconds)
     {

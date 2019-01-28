@@ -2,6 +2,7 @@
 package com.golddaniel.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -27,7 +29,7 @@ import com.golddaniel.main.*;
 /**
  * @author wrksttn
  */
-public class PlayScreen extends VScreen
+public class GameScreen extends VScreen
 {
     WorldModel model;
     WorldRenderer renderer;
@@ -42,20 +44,22 @@ public class PlayScreen extends VScreen
 
     float startTimer = 3f;
 
-    public PlayScreen(ScreenManager sm, Assets assets)
+    CameraInputController camController;
+
+    public GameScreen(ScreenManager sm, Assets assets)
     {
         super(sm, assets);
 
         tex = new TextureRegion(new Texture("texture.png"));
         
-        model = new WorldModel(16,9);
+        model = new WorldModel(20,10);
 
         model.addEntity(new Player());
 
         PhysicsGrid g = new PhysicsGrid(
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
-                    0.1f);
+                    0.2f);
         model.setGrid(g);
 
         for(int i = 0; i < 20; i++)
@@ -63,11 +67,12 @@ public class PlayScreen extends VScreen
             model.addEntity(new Boid(new Vector3(MathUtils.random(-5f, 5f), 5f, 0f)));
         }
 
+        camController = new CameraInputController(model.getCamera());
         renderer = new WorldRenderer(model);
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 512;
+        parameter.size = 128;
         font = generator.generateFont(parameter); 
         generator.dispose(); 
         
@@ -98,39 +103,63 @@ public class PlayScreen extends VScreen
     {
         Gdx.input.setInputProcessor(null);
 
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F1))
+        {
+            model.editMode = !model.editMode;
+        }
+
+
         if(startTimer > -1)
         {
             startTimer -= delta;
         }
         else
         {
-            model.update(delta);
-            CollisionSystem.update(model);
+            if(!model.editMode)
+            {
+                model.update(delta);
+                CollisionSystem.update(model);
+            }
+            else
+            {
+                Gdx.input.setInputProcessor(camController);
+            }
         }
 
         renderer.draw(model);
 
         font.setColor(Color.CYAN);
         s.setProjectionMatrix(uiCam.combined);
+        uiCam.position.set(0, 0, 0);
         s.begin();
+
+
+        if(model.editMode)
+        {
+            font.draw(s,
+                    "EDIT MODE",
+                    -uiViewport.getWorldWidth()/2f,
+                    uiViewport.getWorldHeight() / 2f);
+        }
+
         if(startTimer > 2)
         {
             //draw 3
-            font.draw(s, "3", -256, 0);
+            font.draw(s, "3", 0, 0);
         }
         else if(startTimer > 1)
         {
             //draw 2
-            font.draw(s, "2", -256, 0);
+            font.draw(s, "2", 0, 0);
         }
         else if(startTimer > 0)
         {
             //draw 1
-            font.draw(s, "1", -256, 0);
+            font.draw(s, "1", 0, 0);
         }
         else if(startTimer > -1)
         {
-            font.draw(s, "GO", -256, 0);
+            font.draw(s, "GO", 0, 0);
         }
         s.end();
     }

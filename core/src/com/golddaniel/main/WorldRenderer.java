@@ -16,7 +16,6 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -27,7 +26,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Player;
 
@@ -48,12 +46,7 @@ public class WorldRenderer
     TextureRegion tex;
     
     Bloom bloom;
-
-    Environment environment;
-
     public boolean doBloom = false;
-
-    PointLight pLight;
 
     public WorldRenderer(WorldModel model)
     {
@@ -62,16 +55,12 @@ public class WorldRenderer
         s = new SpriteBatch();
         m = new ModelBatch();
 
-        environment = new Environment();
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.35f, 0.35f, 0.35f, 1f));
-        environment.add(new DirectionalLight().set(0.5f, 0.5f, 0.5f, 1f, 1f, 0.5f));
-
 
         this.viewport = model.viewport;
 
-        bloom = new Bloom(model.viewport, 0.75f);
+        bloom = new Bloom(model.viewport, 2f);
         bloom.setBloomIntesity(1f);
-        bloom.setTreshold(0.01f);
+        bloom.setTreshold(0.95f);
     }
     
     private float abs(float a)
@@ -81,40 +70,37 @@ public class WorldRenderer
     
     public void draw(WorldModel model)
     {
-        if(Gdx.input.isKeyJustPressed(Keys.P))
-        {
-            doBloom = !doBloom;
-        }
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         s.setProjectionMatrix(model.cam.combined);
         s.enableBlending();
 
+
         s.begin();
-
-        model.getGrid().draw(s);
-
-        for(int i = 0; i < model.getAllEntities().size; i++)
         {
-            Entity e = model.getAllEntities().get(i);
-            if(!(e instanceof Player))
+            model.getGrid().draw(s);
+
+            for (int i = 0; i < model.getAllEntities().size; i++)
             {
-                e.draw(s);
+                Entity e = model.getAllEntities().get(i);
+                if (!(e instanceof Player))
+                {
+                    e.draw(s);
+                }
+            }
+
+            //draw player on top
+            if (model.player != null)
+            {
+                model.player.draw(s);
+            }
+
+            for (int i = 0; i < model.getAllParticles().size; i++)
+            {
+                model.getAllParticles().get(i).draw(s);
             }
         }
-
-        //draw player on top
-        if(model.player != null)
-        {
-            model.player.draw(s);
-        }
-
-        for(int i = 0; i < model.getAllParticles().size; i++)
-        {
-            model.getAllParticles().get(i).draw(s);
-        }
-
         s.end();
     }
     

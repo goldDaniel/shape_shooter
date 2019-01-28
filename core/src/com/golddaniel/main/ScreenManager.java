@@ -1,11 +1,7 @@
 
 package com.golddaniel.main;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.utils.ArrayMap;
-import com.golddaniel.screens.PlayScreen;
 import com.golddaniel.screens.VScreen;
 
 /**

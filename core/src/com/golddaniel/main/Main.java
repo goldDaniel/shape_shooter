@@ -2,8 +2,6 @@ package com.golddaniel.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.controllers.Controller;
-import com.badlogic.gdx.controllers.Controllers;
 import com.golddaniel.screens.*;
 
 /**
@@ -25,7 +23,7 @@ public class Main extends ApplicationAdapter {
 
         //initalize our screens with enums to access
         sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm, assets));
-        sm.initalizeScreen(ScreenManager.STATE.PLAY, new PlayScreen(sm, assets));
+        sm.initalizeScreen(ScreenManager.STATE.PLAY, new GameScreen(sm, assets));
         
         
         sm.setScreen(ScreenManager.STATE.MAIN_MENU);
