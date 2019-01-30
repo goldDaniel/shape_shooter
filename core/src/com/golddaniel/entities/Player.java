@@ -311,7 +311,7 @@ public class Player extends Entity implements ControllerListener
 
         Vector3 pos = position.cpy();
         pos.z = -0.01f;
-        model.applyRadialForce(pos, 250 * delta ,width * 2.5f);
+        model.applyRadialForce(pos, 250 * delta ,width * 1.5f);
 
         createParticleTrail(model);
     }

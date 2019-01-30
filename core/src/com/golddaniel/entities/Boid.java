@@ -205,7 +205,7 @@ public class Boid extends Entity
     {
         Vector3 result = new Vector3();
 
-        float range = 3f;
+        float range = 4f;
 
         Vector3 wallCheck = new Vector3();
 
@@ -299,7 +299,7 @@ public class Boid extends Entity
 
             Vector3 pos = position.cpy();
             pos.z = -0.1f;
-            model.applyRadialForce(position, 150f * delta, width);
+            model.applyRadialForce(position, 150f * delta, width * 2);
         }
     }
 

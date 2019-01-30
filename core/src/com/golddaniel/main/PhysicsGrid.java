@@ -75,10 +75,9 @@ public class PhysicsGrid
         "#ifdef GL_ES\n" +
         "precision mediump float;\n" +
         "#endif\n" +
-        "uniform float pulse;\n" +
         "varying vec4 v_col;\n" +
         "void main() {\n" +
-            "gl_FragColor = vec4(v_col.xyz, v_col.a + 0.1 * pulse);\n" +
+            "gl_FragColor = v_col;\n" +
         "}\n";
 
 
@@ -176,7 +175,7 @@ public class PhysicsGrid
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
             position.z += velocity.z * delta;
-            
+
             //not really accurate but it works
             velocity.scl(DAMPING*delta);
             if(velocity.len2() < MathUtils.FLOAT_ROUNDING_ERROR)
@@ -209,6 +208,8 @@ public class PhysicsGrid
     ShaderProgram shader;
     ImmediateModeRenderer20 immediateRenderer;
 
+    boolean fill = false;
+
     public PhysicsGrid(Vector2 gridDimensions, float spacing)
     {
         this.rows = (int)(gridDimensions.x/spacing);
@@ -226,7 +227,6 @@ public class PhysicsGrid
         sh.setShader(shader);
 
         color = Color.MAGENTA.cpy();
-        color.a = 1f;
 
         points = new Point[rows + 1][cols + 1];
         
@@ -271,36 +271,19 @@ public class PhysicsGrid
         
         color.fromHsv(borderHue, 1f, 1f);
 
-        if(delta > 1f/30f)
-        {
-            delta /= 8f;
+        float dt = delta / 4f;
 
-            for(float i = 0; i < 1f/60f; i += delta)
-            {
-                for (Spring s : springs)
-                {
-                    s.update(delta);
-                }
-                for (Point[] pArr : points)
-                {
-                    for (Point p : pArr)
-                    {
-                        p.update(delta);
-                    }
-                }
-            }
-        }
-        else
+        for(float i = 0; i < delta; i += dt)
         {
             for (Spring s : springs)
             {
-                s.update(delta);
+                s.update(dt);
             }
             for (Point[] pArr : points)
             {
                 for (Point p : pArr)
                 {
-                    p.update(delta);
+                    p.update(dt);
                 }
             }
         }
@@ -329,7 +312,7 @@ public class PhysicsGrid
         return a < 0 ? -a : a;
     }
 
-    boolean fill = true;
+
 
     public void draw(SpriteBatch s)
     {
@@ -351,10 +334,6 @@ public class PhysicsGrid
             fill = !fill;
         }
 
-        shader.begin();
-        shader.setUniformf("pulse", MathUtils.sinDeg(borderHue*8));
-        shader.end();
-
         if(!fill)
         {
             sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
@@ -374,14 +353,14 @@ public class PhysicsGrid
                                 (float)j / (float)(points[i].length - 1) * 90f,
                         1f, 1f);
 
-                enabled.a = 0.25f;
+                enabled.a = 1f;
                 {
                     Vector3 normal;
                     float dist;
                     Color lerp;
 
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -392,7 +371,7 @@ public class PhysicsGrid
                             points[i][j].position.z);
 
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -403,7 +382,7 @@ public class PhysicsGrid
                             points[i + 1][j].position.z);
 
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -414,7 +393,7 @@ public class PhysicsGrid
                             points[i][j + 1].position.z);
 
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -425,7 +404,7 @@ public class PhysicsGrid
                             points[i][j + 1].position.z);
 
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -436,7 +415,7 @@ public class PhysicsGrid
                             points[i + 1][j].position.z);
 
                     normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);

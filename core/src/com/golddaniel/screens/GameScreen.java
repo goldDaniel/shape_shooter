@@ -59,8 +59,9 @@ public class GameScreen extends VScreen
 
     TextureRegion tex;
 
-    float gridSpacing = 0.25f;
+    float gridSpacing = 0.5f;
     Label gridLabel;
+    Label timeLabel;
 
     PhysicsGrid g;
 
@@ -169,12 +170,17 @@ public class GameScreen extends VScreen
 
         table.row();
 
-        final Slider slider = new Slider(0.2f, 1.5f, 0.05f, true, skin);
-        slider.setAnimateDuration(0.1f);
-        slider.setValue(gridSpacing);
-        slider.addListener(new ChangeListener() {
+        gridLabel = new Label("SPACING: " + gridSpacing, skin);
+
+        final Slider gridSlider = new Slider(0.15f, 1f, 0.1f, false, skin);
+        gridSlider.setAnimateDuration(0.1f);
+        gridSlider.setValue(gridSpacing);
+        gridSlider.addListener(new ChangeListener() {
             public void changed (ChangeEvent event, Actor actor) {
-                gridSpacing = slider.getValue();
+                float spacing = gridSlider.getValue();
+
+                gridSpacing = MathUtils.round(spacing * 100f) / 100f;
+
                 g.dispose();
                 g = new PhysicsGrid(new Vector2(model.WORLD_WIDTH, model.WORLD_HEIGHT), gridSpacing);
                 model.setGrid(g);
@@ -182,10 +188,28 @@ public class GameScreen extends VScreen
                 gridLabel.setText("SPACING: " + gridSpacing);
             }
         });
-        table.add(slider);
-
-        gridLabel = new Label("SPACING: " + gridSpacing, skin);
+        table.add(gridSlider);
         table.add(gridLabel);
+
+        table.row();
+
+
+        timeLabel = new Label("TIMESCALE: " + Globals.TIMESCALE, skin);
+        final Slider timeSlider = new Slider(0.5f, 1.5f, 0.1f, false, skin);
+        timeSlider.setAnimateDuration(0.1f);
+        timeSlider.setValue(1);
+        timeSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
+                    Globals.TIMESCALE = MathUtils.round(timeSlider.getValue() * 10f) / 10f;
+
+
+
+                    timeLabel.setText("TIMESCALE: " + Globals.TIMESCALE);
+            }
+        });
+
+        table.add(timeSlider);
+        table.add(timeLabel);
 
         TextButton saveBtn = new TextButton("SAVE", skin);
         TextButton loadBtn = new TextButton("LOAD", skin);
@@ -206,20 +230,7 @@ public class GameScreen extends VScreen
             model.editMode = !model.editMode;
         }
 
-        t += delta;
-        if(t > 3)
-        {
-            t = 0;
 
-            for(int i = 0; i < 10; i++)
-            {
-                Vector3 pos = new Vector3();
-                pos.x = MathUtils.random(-model.WORLD_WIDTH / 2f, model.WORLD_WIDTH / 2f);
-                pos.y = MathUtils.random(-model.WORLD_HEIGHT / 2f, model.WORLD_HEIGHT / 2f);
-                pos.z = 0;
-                model.addEntity(new Boid(pos));
-            }
-        }
 
         model.update(delta);
         CollisionSystem.update(model);
@@ -240,6 +251,21 @@ public class GameScreen extends VScreen
         else
         {
             Gdx.input.setInputProcessor(null);
+
+            t += delta;
+            if(t > 3)
+            {
+                t = 0;
+
+                for(int i = 0; i < 10; i++)
+                {
+                    Vector3 pos = new Vector3();
+                    pos.x = MathUtils.random(-model.WORLD_WIDTH / 2f, model.WORLD_WIDTH / 2f);
+                    pos.y = MathUtils.random(-model.WORLD_HEIGHT / 2f, model.WORLD_HEIGHT / 2f);
+                    pos.z = 0;
+                    model.addEntity(new Boid(pos));
+                }
+            }
         }
     }
 
