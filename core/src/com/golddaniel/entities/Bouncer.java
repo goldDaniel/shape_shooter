@@ -54,14 +54,14 @@ public class Bouncer extends Entity
     
     public Bouncer(Vector3 pos, Vector3 dir)
     {
-        width = 128;
-        height = 32;
+        width = 1.5f;
+        height = 0.75f;
         this.position = pos;
         position.x += width/2;
         position.y += height/2;
         //normalize just in case a normal vector was not passed
         this.dir = dir.nor();
-        speed = 1/2f;
+        speed = 4f;
         
         color = Color.YELLOW.cpy();
         
@@ -69,15 +69,10 @@ public class Bouncer extends Entity
         
         isAlive = true;
         
-        health = 7;
+        health = 20;
         prevHealth = health;
         
         activeTimer = new Timer();
-    }
-    
-    private Vector3 getMid()
-    {
-        return new Vector3(position.x + width/2, position.y + height/2, 0);
     }
 
     @Override
@@ -117,28 +112,28 @@ public class Bouncer extends Entity
         }
         
         
-        if(position.x <= 0)
+        if(position.x <= -model.WORLD_WIDTH / 2f)
         {
-            position.x = 1;
+            position.x = -model.WORLD_WIDTH / 2f + 1;
             dir.x = -dir.x;
         }
-        else if(position.x >= model.WORLD_WIDTH - width)
+        else if(position.x >= model.WORLD_WIDTH / 2f - width)
         {
-            position.x = model.WORLD_WIDTH - width - 1;
+            position.x = model.WORLD_WIDTH / 2f - width - 1;
             dir.x = -dir.x;
         }
-        if(position.y <= 0)
+        if(position.y <= -model.WORLD_HEIGHT / 2f)
         {
-            position.y = 1;
+            position.y = -model.WORLD_HEIGHT / 2f + 1;
             dir.y = -dir.y;
         }
-        else if(position.y >= model.WORLD_HEIGHT - height)
+        else if(position.y >= model.WORLD_HEIGHT /2f - height)
         {
             position.y = model.WORLD_HEIGHT - height -1;
             dir.y  = -dir.y;
         }
 
-        model.applyRadialForce(getMid(), 2000, 96);
+        model.applyRadialForce(position, 150*delta, width);
     }
 
     @Override
@@ -157,7 +152,7 @@ public class Bouncer extends Entity
 
 
         s.draw(tex,
-                    position.x, position.y,
+                    position.x - width / 2f, position.y - height / 2f,
                     width / 2, height / 2,
                     width, height,
                     1, 1,
@@ -194,38 +189,32 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
-                int particles = 128;
+                int particles = 512;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
 
                     angle += MathUtils.random(-2.5f, 2.5f);
 
-                    Vector3 dim = new Vector3(0.01f, 0.01f, 0.01f);
-                    
-//                    model.createParticle(
-//                            new Vector3(
-//                                position.x + width/2,
-//                                position.y + height/2,
-//                                0),
-//                            dim,
-//                            angle,
-//                            MathUtils.random(0.5f, 0.65f),
-//                            1f/4,
-//                            Color.WHITE.cpy(),
-//                            Color.GREEN.cpy());
-//
-//                    model.createParticle(
-//                        new Vector3(
-//                                position.x + width/2,
-//                                position.y + height/2,
-//                                0),
-//                        dim,
-//                        angle,
-//                        MathUtils.random(0.6f, 0.7f),
-//                        2f,
-//                        Color.WHITE.cpy(),
-//                        Color.YELLOW.cpy());
+                    Vector3 dim = new Vector3(0.1f, 0.1f, 0.1f);
+
+                    model.createParticle(
+                            position.cpy(),
+                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            dim,
+                            MathUtils.random(0.1f, 0.5f),
+                            Color.YELLOW,
+                            Color.CYAN);
+
+                    speed = MathUtils.random(5f, 7f);
+
+                    model.createParticle(
+                            position.cpy(),
+                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            dim,
+                            MathUtils.random(0.1f, 0.5f),
+                            Color.YELLOW,
+                            Color.WHITE);
                 }
 
 

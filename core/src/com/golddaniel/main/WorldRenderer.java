@@ -16,15 +16,26 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Player;
@@ -43,15 +54,14 @@ public class WorldRenderer
     SpriteBatch s;
     ModelBatch m;
 
-    TextureRegion tex;
-    
     Bloom bloom;
-    public boolean doBloom = false;
+
+    Model skyboxModel;
+    ModelInstance skybox;
+
 
     public WorldRenderer(WorldModel model)
     {
-        tex = new TextureRegion(new Texture("texture.png"));
-        
         s = new SpriteBatch();
         m = new ModelBatch();
 
@@ -61,6 +71,19 @@ public class WorldRenderer
         bloom = new Bloom(model.viewport, 2f);
         bloom.setBloomIntesity(1f);
         bloom.setTreshold(0.95f);
+
+        Texture tex = new Texture(Gdx.files.internal("bkg2_back6.png"));
+
+        ModelBuilder modelBuilder = new ModelBuilder();
+        skyboxModel = modelBuilder.createSphere(
+                                    -128f, -128f, -128f,
+                                            8, 8,
+                                            new Material(TextureAttribute.createDiffuse(tex)),
+                                    VertexAttributes.Usage.Position |
+                                             VertexAttributes.Usage.Normal |
+                                             VertexAttributes.Usage.TextureCoordinates);
+
+        skybox = new ModelInstance(skyboxModel);
     }
     
     private float abs(float a)
@@ -73,9 +96,13 @@ public class WorldRenderer
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        s.setProjectionMatrix(model.cam.combined);
-        s.enableBlending();
 
+        m.begin(model.getCamera());
+        m.render(skybox);
+        m.end();
+
+        s.enableBlending();
+        s.setProjectionMatrix(model.cam.combined);
 
         s.begin();
         {
@@ -89,24 +116,26 @@ public class WorldRenderer
                     e.draw(s);
                 }
             }
-
+            for (int i = 0; i < model.getAllParticles().size; i++)
+            {
+                model.getAllParticles().get(i).draw(s);
+            }
             //draw player on top
             if (model.player != null)
             {
                 model.player.draw(s);
             }
 
-            for (int i = 0; i < model.getAllParticles().size; i++)
-            {
-                model.getAllParticles().get(i).draw(s);
-            }
+
+            s.end();
         }
-        s.end();
+
     }
     
     public void resize(int width, int height)
     {
         viewport.update(width, height);
         viewport.apply();
+
     }
 }

@@ -59,7 +59,7 @@ public class MainMenuScreen extends VScreen
         viewport.apply();
         s = new SpriteBatch();
         s.enableBlending();        
-        
+
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
         FreeTypeFontParameter parameter = new FreeTypeFontParameter();
         parameter.size = 140;
@@ -75,8 +75,6 @@ public class MainMenuScreen extends VScreen
         Table table = new Table();
         table.setFillParent(true);
 
-        table.setY(-128f/2f);
-        table.setX(-72f/2f);
 
         uiStage.addActor(table);
 
@@ -117,8 +115,6 @@ public class MainMenuScreen extends VScreen
         table.add(optionsBtn);
         table.row();
         table.add(quitBtn);
-
-
     }
 
     private float abs(float a)
@@ -135,9 +131,9 @@ public class MainMenuScreen extends VScreen
         Gdx.input.setInputProcessor(uiStage);
 
         g.update(delta);
-        
-        camera.position.x = 0f;
-        camera.position.y = 0f;
+
+
+        camera.position.x = camera.position.y = 0;
         camera.update();
 
         s.setProjectionMatrix(camera.combined);
@@ -145,8 +141,12 @@ public class MainMenuScreen extends VScreen
         g.draw(s);
         s.end();
 
+
+        camera.position.x = viewport.getWorldWidth() /2f;
+        camera.position.y = viewport.getWorldHeight() /2f;
+        camera.update();
+
         uiStage.act();
-        uiStage.getBatch().setProjectionMatrix(camera.combined);
         uiStage.draw();
     }
 

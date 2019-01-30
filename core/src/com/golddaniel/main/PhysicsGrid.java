@@ -20,15 +20,21 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
+
+import java.awt.MediaTracker;
 
 /**
  *
@@ -45,15 +51,12 @@ public class PhysicsGrid
     static private String createVertexShader () {
         String shader =
                 "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
-                "attribute vec3 " + ShaderProgram.NORMAL_ATTRIBUTE   + ";\n" +
                 "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
                 "uniform mat4 u_projModelView;\n" +
                 "varying vec4 v_col;\n" +
-                "varying vec3 v_nor;\n" +
                 "void main() {\n" +
                 "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"+
                 "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
-                "   v_nor = " + ShaderProgram.NORMAL_ATTRIBUTE+ ";\n" +
                 "}\n";
         return shader;
     }
@@ -64,9 +67,10 @@ public class PhysicsGrid
                 "precision mediump float;\n" +
                 "#endif\n" +
                 "varying vec4 v_col;\n" +
-                "varying vec3 v_nor;\n" +
                 "void main() {\n" +
-                    "gl_FragColor = v_col * 0.75f;\n" +
+                    "vec4 col = v_col;\n" +
+                    "col.a /= 4.0f;\n" +
+                    "gl_FragColor = col;\n" +
                 "}\n";
         return shader;
     }
@@ -191,9 +195,6 @@ public class PhysicsGrid
     private int rows;
     private int cols;
 
-    public boolean enableInterpolatedLines = false;
-
-
     ShaderProgram shader;
     ImmediateModeRenderer20 immediateRenderer;
 
@@ -255,34 +256,15 @@ public class PhysicsGrid
     
     public void update(float delta)
     {
-        if(Gdx.input.isKeyJustPressed(Keys.I))
-        {
-            enableInterpolatedLines = !enableInterpolatedLines;
-        }
-
         borderHue += 90f*delta;
         
         color.fromHsv(borderHue, 1f, 1f);
 
-        if(delta <= 1f / 40f)
+        if(delta > 1f/30f)
         {
-            for (Spring s : springs)
-            {
-                s.update(delta);
-            }
-            for(Point[] pArr : points)
-            {
-                for(Point p : pArr)
-                {
-                    p.update(delta);
-                }
-            }
-        }
-        else
-        {
-            float step = delta / 2f;
+            delta /= 8f;
 
-            for(float i = 0; i < delta; i += step)
+            for(float i = 0; i < 1f/60f; i += delta)
             {
                 for (Spring s : springs)
                 {
@@ -297,8 +279,20 @@ public class PhysicsGrid
                 }
             }
         }
-
-
+        else
+        {
+            for (Spring s : springs)
+            {
+                s.update(delta);
+            }
+            for (Point[] pArr : points)
+            {
+                for (Point p : pArr)
+                {
+                    p.update(delta);
+                }
+            }
+        }
     }
 
     public void applyRadialForce(Vector3 pos, float force, float radius)
@@ -329,16 +323,17 @@ public class PhysicsGrid
     public void draw(SpriteBatch s)
     {
         s.end();
-
         Gdx.gl.glLineWidth(2f);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 
-        Color disabled = Color.CYAN.cpy();
+        Color disabled = color.cpy();
 
-        disabled.r /= 8f;
-        disabled.g /= 8f;
-        disabled.b /= 8f;
-
+        disabled.r /= 32f;
+        disabled.g /= 32f;
+        disabled.b /= 32f;
+        disabled.a = 0.1f;
 
         if(Gdx.input.isKeyJustPressed(Keys.P))
         {
@@ -360,62 +355,17 @@ public class PhysicsGrid
             for (int j = 0; j < cols; j++)
             {
                 Color enabled = color.cpy();
-                enabled.fromHsv((float)i / (float)(points.length - 1) * 360f +
-                                (float)j / (float)(points[i].length - 1) * 360f,
+                enabled.fromHsv((float)i / (float)(points.length - 1) * 180f +
+                                (float)j / (float)(points[i].length - 1) * 180f,
                         1f, 1f);
 
-
-                Vector3 normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
-                float dist = normal.len();
-                Color lerp = disabled.cpy().lerp(enabled, dist);
-
-                if(!fill)
                 {
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
-                    sh.vertex(
-                            points[i][j].position.x,
-                            points[i][j].position.y,
-                            points[i][j].position.z);
-
-                    normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
-                    dist = normal.len();
-                    lerp = disabled.cpy().lerp(enabled, dist);
-
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
-                    sh.vertex(
-                            points[i + 1][j].position.x,
-                            points[i + 1][j].position.y,
-                            points[i + 1][j].position.z);
+                    Vector3 normal;
+                    float dist;
+                    Color lerp;
 
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
-                    dist = normal.len();
-                    lerp = disabled.cpy().lerp(enabled, dist);
-
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
-                    sh.vertex(
-                            points[i][j].position.x,
-                            points[i][j].position.y,
-                            points[i][j].position.z);
-
-                    normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
-                    dist = normal.len();
-                    lerp = disabled.cpy().lerp(enabled, dist);
-
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
-                    sh.vertex(
-                            points[i][j + 1].position.x,
-                            points[i][j + 1].position.y,
-                            points[i][j + 1].position.z);
-
-                }
-                else
-                {
-                    normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
-                    dist = normal.len();
+                    dist = normal.len2()*64;
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);
@@ -508,6 +458,12 @@ public class PhysicsGrid
 
         sh.end();
 
+
         s.begin();
+    }
+
+    public void dispose()
+    {
+        sh.dispose();
     }
 }

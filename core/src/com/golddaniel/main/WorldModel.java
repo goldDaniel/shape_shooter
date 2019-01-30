@@ -64,13 +64,15 @@ public class WorldModel
     ExtendViewport viewport;
     PerspectiveCamera cam;
 
-    Vector3 cursor = new Vector3();
-
     float sleepTimer = 0;
 
 
     public boolean editMode = false;
 
+    public Camera getCamera()
+    {
+        return cam;
+    }
 
     public WorldModel(float width, float height)
     {
@@ -91,7 +93,6 @@ public class WorldModel
 
         viewport.apply();
 
-        cursor.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         cam.position.x = 0;
         cam.position.y = 0;
         cam.position.z = 30f;
@@ -136,76 +137,86 @@ public class WorldModel
 
         isUpdating = true;
 
-
-
         //should move input into another module////////////////////
         if(SharedLibraryLoader.isAndroid)
         {
             float sensitivity = WORLD_HEIGHT / Gdx.graphics.getHeight();
 
-            cursor.set(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
+            Vector3 cursor = new Vector3(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
 
             //sensitivity
             cursor.scl(sensitivity);
 
             player.position.add(cursor);
         }
-
         ///////////////////////////////////////////////////////////
 
-        for(Entity e : entities)
+
+        if(!editMode)
         {
-            if(!e.isAlive())
+            Vector3 target = new Vector3(player.position);
+
+            for(Entity e : entities)
             {
-                e.dispose();
-                toRemove.add(e);
+                if(!e.isAlive())
+                {
+                    e.dispose();
+                    toRemove.add(e);
+                }
+                else
+                {
+                    e.update(this, delta);
+                }
             }
-            else
+
+            entities.removeAll(toRemove, true);
+            toRemove.clear();
+
+            for(Particle e : particles)
             {
-                e.update(this, delta);
+                if(!e.isAlive())
+                {
+                    e.dispose();
+                    particles.removeValue(e, true);
+                }
+                else
+                {
+                    e.update(this, delta);
+                }
             }
+
+            g.update(delta);
+
+            float subDivision = 1f/8f;
+
+            if (player.position.x < -WORLD_WIDTH + WORLD_WIDTH * subDivision)
+            {
+                target.x = -WORLD_WIDTH * subDivision;
+            }
+            if (player.position.x > WORLD_WIDTH - WORLD_WIDTH * subDivision)
+            {
+                target.x = WORLD_WIDTH * subDivision;
+            }
+
+            if (player.position.y < -WORLD_HEIGHT * subDivision)
+            {
+                target.y = -WORLD_HEIGHT * subDivision;
+            }
+            if (player.position.y > WORLD_HEIGHT * subDivision)
+            {
+                target.y = WORLD_HEIGHT * subDivision;
+            }
+
+
+            //maintain our rotation around Z axis before lookAt
+            cam.up.set(0f, 1f, 0f);
+
+            cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
+            cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
+            cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
+
+            cam.lookAt(cam.position.x, cam.position.y, 0f);
         }
-
-        entities.removeAll(toRemove, true);
-        toRemove.clear();
-
-        for(Particle e : particles)
-        {
-            if(!e.isAlive())
-            {
-                e.dispose();
-                particles.removeValue(e, true);
-            }
-            else
-            {
-                e.update(this, delta);
-            }
-        }
-
-        g.update(delta);
-
-
-        float subDivision = 1f/8f;
-
-        Gdx.input.setInputProcessor(null);
-
-        Vector3 target = new Vector3(player.position);
-
-        if (player.position.x < -WORLD_WIDTH + WORLD_WIDTH * subDivision)target.x = -WORLD_WIDTH * subDivision;
-        if (player.position.x > WORLD_WIDTH - WORLD_WIDTH * subDivision) target.x = WORLD_WIDTH * subDivision;
-
-        if (player.position.y < -WORLD_HEIGHT * subDivision) target.y = -WORLD_HEIGHT * subDivision;
-        if (player.position.y > WORLD_HEIGHT * subDivision) target.y = WORLD_HEIGHT * subDivision;
-
-        //maintain our rotation around Z axis before lookAt
-        cam.up.set(0f, 1f, 0f);
-
-        cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
-        cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-        cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
-
-        cam.lookAt(cam.position.x, cam.position.y, 0f);
-
         cam.update();
 
         isUpdating = false;
@@ -299,8 +310,6 @@ public class WorldModel
         }
     }
 
-    public Camera getCamera() { return cam; }
-
     public void sleep(float seconds)
     {
         sleepTimer += seconds;
@@ -316,7 +325,4 @@ public class WorldModel
         return g;
     }
     public void setGrid(PhysicsGrid g) { this.g = g; }
-
-    public Vector3 getCursor() { return cursor.cpy(); }
-
 }

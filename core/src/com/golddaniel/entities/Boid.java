@@ -201,6 +201,55 @@ public class Boid extends Entity
         return desiredVelocity.sub(velocity).setLength(SPEED_MAX);
     }
 
+    private Vector3 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
+    {
+        Vector3 result = new Vector3();
+
+        float range = 3f;
+
+        Vector3 wallCheck = new Vector3();
+
+        //left wall
+        wallCheck.x = -WORLD_WIDTH/2f;
+        wallCheck.y = position.y;
+        float dist = position.dst(wallCheck);
+
+        if(dist < range)
+        {
+            result.add(SPEED_MAX*(1f - dist/range), 0, 0);
+        }
+
+        //right wall
+        wallCheck.x = WORLD_WIDTH / 2f;
+
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(-SPEED_MAX*(1f - dist/range), 0, 0);
+        }
+
+        //bottom wall
+        wallCheck.x = position.x;
+        wallCheck.y = -WORLD_HEIGHT / 2f;
+
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(0, SPEED_MAX*(1f - dist/range), 0);
+        }
+
+        //top wall
+        wallCheck.y = WORLD_HEIGHT / 2f;
+
+        dist = position.dst(wallCheck);
+        if(dist < range)
+        {
+            result.add(0, -SPEED_MAX*(1f - dist/range), 0);
+        }
+
+        return result;
+    }
+
     @Override
     public void update(WorldModel model, float delta)
     {
@@ -368,54 +417,7 @@ public class Boid extends Entity
         boids.removeValue(this, true);
     }
 
-    private Vector3 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
-    {
-        Vector3 result = new Vector3();
-        
-        float range = 3f;
-        
-        Vector3 wallCheck = new Vector3();
 
-        //left wall
-        wallCheck.x = -WORLD_WIDTH/2f;
-        wallCheck.y = position.y;
-        float dist = position.dst(wallCheck);
-        
-        if(dist < range)
-        {
-            result.add(SPEED_MAX*(1f - dist/range), 0, 0);
-        }
-        
-        //right wall
-        wallCheck.x = WORLD_WIDTH / 2f;
-        
-        dist = position.dst(wallCheck);
-        if(dist < range)
-        {
-            result.add(-SPEED_MAX*(1f - dist/range), 0, 0);
-        }
-        
-        //bottom wall
-        wallCheck.x = position.x;
-        wallCheck.y = -WORLD_HEIGHT / 2f;
-        
-        dist = position.dst(wallCheck);
-        if(dist < range)
-        {
-            result.add(0, SPEED_MAX*(1f - dist/range), 0);
-        }
-        
-        //top wall
-        wallCheck.y = WORLD_HEIGHT / 2f;
-        
-        dist = position.dst(wallCheck);
-        if(dist < range)
-        {
-            result.add(0, -SPEED_MAX*(1f - dist/range), 0);
-        }
-        
-        return result;
-    }
 
     public boolean isActive()
     {
