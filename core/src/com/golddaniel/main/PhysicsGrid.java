@@ -50,28 +50,39 @@ public class PhysicsGrid
 
     static private String createVertexShader () {
         String shader =
-                "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
-                "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
-                "uniform mat4 u_projModelView;\n" +
-                "varying vec4 v_col;\n" +
-                "void main() {\n" +
-                "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"+
-                "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
-                "}\n";
+
+
+
+    "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
+    "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
+    "uniform mat4 u_projModelView;\n" +
+    "varying vec4 v_col;\n" +
+    "void main() {\n" +
+    "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"+
+    "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
+    "}\n";
+
+
+
         return shader;
     }
 
     static private String createFragmentShader () {
         String shader =
-                "#ifdef GL_ES\n" +
-                "precision mediump float;\n" +
-                "#endif\n" +
-                "varying vec4 v_col;\n" +
-                "void main() {\n" +
-                    "vec4 col = v_col;\n" +
-                    "col.a /= 4.0f;\n" +
-                    "gl_FragColor = col;\n" +
-                "}\n";
+
+
+
+        "#ifdef GL_ES\n" +
+        "precision mediump float;\n" +
+        "#endif\n" +
+        "uniform float pulse;\n" +
+        "varying vec4 v_col;\n" +
+        "void main() {\n" +
+            "gl_FragColor = vec4(v_col.xyz, v_col.a + 0.1 * pulse);\n" +
+        "}\n";
+
+
+
         return shader;
     }
 
@@ -340,6 +351,10 @@ public class PhysicsGrid
             fill = !fill;
         }
 
+        shader.begin();
+        shader.setUniformf("pulse", MathUtils.sinDeg(borderHue*8));
+        shader.end();
+
         if(!fill)
         {
             sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
@@ -355,17 +370,18 @@ public class PhysicsGrid
             for (int j = 0; j < cols; j++)
             {
                 Color enabled = color.cpy();
-                enabled.fromHsv((float)i / (float)(points.length - 1) * 180f +
-                                (float)j / (float)(points[i].length - 1) * 180f,
+                enabled.fromHsv((float)i / (float)(points.length - 1) * 90f +
+                                (float)j / (float)(points[i].length - 1) * 90f,
                         1f, 1f);
 
+                enabled.a = 0.25f;
                 {
                     Vector3 normal;
                     float dist;
                     Color lerp;
 
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
-                    dist = normal.len2()*64;
+                    dist = normal.len();
                     lerp = disabled.cpy().lerp(enabled, dist);
 
                     sh.normal(normal.x, normal.y, normal.z);

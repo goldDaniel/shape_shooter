@@ -66,6 +66,8 @@ public class GameScreen extends VScreen
 
     CameraInputController camController;
 
+    float t;
+
     public GameScreen(ScreenManager sm, Assets assets)
     {
         super(sm, assets);
@@ -202,6 +204,21 @@ public class GameScreen extends VScreen
         if(Gdx.input.isKeyJustPressed(Input.Keys.F1))
         {
             model.editMode = !model.editMode;
+        }
+
+        t += delta;
+        if(t > 3)
+        {
+            t = 0;
+
+            for(int i = 0; i < 10; i++)
+            {
+                Vector3 pos = new Vector3();
+                pos.x = MathUtils.random(-model.WORLD_WIDTH / 2f, model.WORLD_WIDTH / 2f);
+                pos.y = MathUtils.random(-model.WORLD_HEIGHT / 2f, model.WORLD_HEIGHT / 2f);
+                pos.z = 0;
+                model.addEntity(new Boid(pos));
+            }
         }
 
         model.update(delta);

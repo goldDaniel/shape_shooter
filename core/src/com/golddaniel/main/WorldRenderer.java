@@ -36,6 +36,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Player;
@@ -72,12 +73,12 @@ public class WorldRenderer
         bloom.setBloomIntesity(1f);
         bloom.setTreshold(0.95f);
 
-        Texture tex = new Texture(Gdx.files.internal("bkg2_back6.png"));
+        Texture tex = new Texture(Gdx.files.internal("skybox.jpg"));
 
         ModelBuilder modelBuilder = new ModelBuilder();
         skyboxModel = modelBuilder.createSphere(
-                                    -128f, -128f, -128f,
-                                            8, 8,
+                                     -256f, -256f, -256f,
+                                            128, 128,
                                             new Material(TextureAttribute.createDiffuse(tex)),
                                     VertexAttributes.Usage.Position |
                                              VertexAttributes.Usage.Normal |
@@ -90,7 +91,7 @@ public class WorldRenderer
     {
         return a > 0 ? a : -a;
     }
-    
+
     public void draw(WorldModel model)
     {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
