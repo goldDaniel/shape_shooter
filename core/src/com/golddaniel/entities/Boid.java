@@ -269,7 +269,7 @@ public class Boid extends Entity
             Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             Vector3 seek = new Vector3();
             
-            float range = 1f;
+            float range = 6f;
             if(model.getEntityType(Player.class).size > 0)
             {
                 

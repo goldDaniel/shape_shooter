@@ -19,6 +19,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -29,6 +30,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -63,11 +65,11 @@ public class GameScreen extends VScreen
     Label gridLabel;
     Label timeLabel;
 
+    Label eventLabel;
+
     PhysicsGrid g;
 
     CameraInputController camController;
-
-    float t;
 
     public GameScreen(ScreenManager sm, Assets assets)
     {
@@ -84,19 +86,6 @@ public class GameScreen extends VScreen
                                         model.WORLD_HEIGHT),
                                         gridSpacing);
         model.setGrid(g);
-
-//        for(int i = 0; i < 5; i++)
-//        {
-//            model.addEntity(new Bouncer(new Vector3(-model.WORLD_WIDTH/2f,
-//                                                    -model.WORLD_HEIGHT/2f + model.WORLD_HEIGHT * i / 5f,
-//                                                    0),
-//                                        new Vector3(1, 0, 0)));
-//        }
-//        for(int i = 0; i < 200; i++)
-//        {
-//            model.addEntity(new Boid(new Vector3(model.WORLD_WIDTH/2f, 0f ,0f)));
-//        }
-
 
         camController = new CameraInputController(model.getCamera());
 
@@ -144,6 +133,7 @@ public class GameScreen extends VScreen
         table.align(Align.topLeft);
 
         Label modeLabel = new Label("EDIT MODE", skin);
+        eventLabel = new Label("", skin);
         Label entityLabel = new Label("ENTITY TYPE   ", skin);
         Label actionLabel = new Label("ACTION TYPE", skin);
 
@@ -152,6 +142,7 @@ public class GameScreen extends VScreen
 
         table.row();
         table.add(modeLabel).align(Align.center).padBottom(5f);
+        table.add(eventLabel);
 
 
         table.row();
@@ -172,7 +163,7 @@ public class GameScreen extends VScreen
 
         gridLabel = new Label("SPACING: " + gridSpacing, skin);
 
-        final Slider gridSlider = new Slider(0.15f, 1f, 0.1f, false, skin);
+        final Slider gridSlider = new Slider(0.05f, 1f, 0.05f, false, skin);
         gridSlider.setAnimateDuration(0.1f);
         gridSlider.setValue(gridSpacing);
         gridSlider.addListener(new ChangeListener() {
@@ -212,7 +203,24 @@ public class GameScreen extends VScreen
         table.add(timeLabel);
 
         TextButton saveBtn = new TextButton("SAVE", skin);
+        saveBtn.addListener(new ClickListener()
+        {
+            @Override
+            public void clicked(InputEvent event, float x, float y)
+            {
+                eventLabel.setText("PLEASE IMPLEMENT SAVING");
+            };
+        });
+
         TextButton loadBtn = new TextButton("LOAD", skin);
+        loadBtn.addListener(new ClickListener()
+        {
+            @Override
+            public void clicked(InputEvent event, float x, float y)
+            {
+                eventLabel.setText("PLEASE IMPLEMENT LOADING");
+            };
+        });
 
         table.row();
         table.add(saveBtn).align(Align.top);
@@ -231,7 +239,6 @@ public class GameScreen extends VScreen
         }
 
 
-
         model.update(delta);
         CollisionSystem.update(model);
         renderer.draw(model);
@@ -241,31 +248,18 @@ public class GameScreen extends VScreen
         {
             s.setProjectionMatrix(uiCam.combined);
             Gdx.input.setInputProcessor(new InputMultiplexer(uiStage, camController));
-            uiStage.getViewport().getCamera().position.set(uiViewport.getWorldWidth()/2f,
-                                                           uiViewport.getWorldHeight()/2f,
+            uiStage.getViewport().getCamera().position.set(uiViewport.getWorldWidth()  / 2f,
+                                                           uiViewport.getWorldHeight() / 2f,
                                                            1);
             uiStage.act();
             uiStage.draw();
             camController.update();
+
+            Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         }
         else
         {
             Gdx.input.setInputProcessor(null);
-
-            t += delta;
-            if(t > 3)
-            {
-                t = 0;
-
-                for(int i = 0; i < 10; i++)
-                {
-                    Vector3 pos = new Vector3();
-                    pos.x = MathUtils.random(-model.WORLD_WIDTH / 2f, model.WORLD_WIDTH / 2f);
-                    pos.y = MathUtils.random(-model.WORLD_HEIGHT / 2f, model.WORLD_HEIGHT / 2f);
-                    pos.z = 0;
-                    model.addEntity(new Boid(pos));
-                }
-            }
         }
     }
 
