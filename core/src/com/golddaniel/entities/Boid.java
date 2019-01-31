@@ -34,7 +34,7 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 2.25f;
+    static float SPEED_MAX = 4.25f;
    
     static Array<Boid> boids = new Array<Boid>();
     
@@ -64,8 +64,8 @@ public class Boid extends Entity
         
         activeTimer = new Timer();
         
-        width = 0.25f;
-        height = 0.25f;
+        width = 0.5f;
+        height = 0.5f;
         
         active = true;
         isAlive = true;

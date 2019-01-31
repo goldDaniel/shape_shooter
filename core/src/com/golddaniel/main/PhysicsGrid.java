@@ -45,8 +45,8 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 3f;
-    final float DAMPING = 5.5f;
+    final float STIFFNESS = 2f;
+    final float DAMPING = 3.5f;
     final float INVERSE_MASS = 1f/0.0125f;
 
     static private String createVertexShader()
@@ -162,11 +162,13 @@ public class PhysicsGrid
             float forceZ = springForceZ - dampingForceZ;
 
             applyForce(new Vector3(forceX, forceY, forceZ));
-            
+
+
+
             velocity.x += acceleration.x * delta;
             velocity.y += acceleration.y * delta;
             velocity.z += acceleration.z * delta;
-            
+
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
             position.z += velocity.z * delta;
@@ -206,18 +208,12 @@ public class PhysicsGrid
 
     boolean fill = false;
 
-    private final Thread thread1;
-    private final Thread thread2;
-    private final Thread thread3;
-    private final Thread thread4;
-    private final PointRunnable runnable1;
-    private final PointRunnable runnable2;
-    private final PointRunnable runnable3;
-    private final PointRunnable runnable4;
+
+    Array<Thread> threads;
+    Array<PointRunnable> runnables;
 
     class PointRunnable implements Runnable
     {
-
         Array<Point> points;
         float dt;
 
@@ -235,13 +231,9 @@ public class PhysicsGrid
         public void run()
         {
            for(int i = 0; i < points.size; i++)
-            {
-                float delta = dt / 4f;
-                for(float a = 0; a < dt; a += delta)
-                {
-                    points.get(i).update(delta);
-                }
-            }
+           {
+               points.get(i).update(dt);
+           }
         }
     }
 
@@ -250,6 +242,10 @@ public class PhysicsGrid
         this.rows = (int)(gridDimensions.x/spacing);
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
+
+        threads = new Array<Thread>();
+        runnables = new Array<PointRunnable>();
+
 
         sh = new ImmediateModeRenderer20(2500000, true, true, 0);
         shader = new ShaderProgram(createVertexShader(), createFragmentShader());
@@ -298,68 +294,56 @@ public class PhysicsGrid
             }
         }
 
-        final Array<Point> points1 = new Array<Point>();
-        final Array<Point> points2 = new Array<Point>();
-        final Array<Point> points3 = new Array<Point>();
-        final Array<Point> points4 = new Array<Point>();
-
-        for(int i = 0; i < points.length/4; i++)
-        {
-            for(int j = 0; j < points[i].length; j++)
-            {
-                points1.add(points[i][j]);
-            }
-        }
-        for(int i = points.length/4; i < points.length*2/4; i++)
-        {
-            for(int j = 0; j < points[i].length; j++)
-            {
-                points2.add(points[i][j]);
-            }
-        }
-        for(int i = points.length*2/4; i < points.length*3/4; i++)
-        {
-            for(int j = 0; j < points[i].length; j++)
-            {
-                points3.add(points[i][j]);
-            }
-        }
-        for(int i = points.length*3/4; i < points.length; i++)
-        {
-            for(int j = 0; j < points[i].length; j++)
-            {
-                points4.add(points[i][j]);
-            }
-        }
-
-        thread1 = new Thread(runnable1 = new PointRunnable(points1));
-        thread2 = new Thread(runnable2 = new PointRunnable(points2));
-        thread3 = new Thread(runnable3 = new PointRunnable(points3));
-        thread4 = new Thread(runnable4 = new PointRunnable(points4));
+        buildThreads(threads, runnables, 16);
 
         immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
     }
-    
-    public void update(final float delta)
+
+    private void buildThreads(Array<Thread> threads, Array<PointRunnable> runnables, int threadCount)
+    {
+        Array<Point>[] pointArrays = new Array[threadCount];
+
+        for(int i = 0; i < pointArrays.length; i++)
+        {
+            pointArrays[i] = new Array<Point>();
+
+            for(int index = points.length*i/threadCount;
+                    index < points.length*(i + 1) / threadCount;
+                    index++)
+            {
+                for(int j = 0; j < points[i].length; j++)
+                {
+                    pointArrays[i].add(points[index][j]);
+                }
+            }
+
+            PointRunnable r = new PointRunnable(pointArrays[i]);
+            runnables.add(r);
+            threads.add(new Thread(r));
+        }
+    }
+
+    public void update( float delta)
     {
         borderHue += 45f*delta;
         
         color.fromHsv(borderHue, 1f, 1f);
+
+        delta = 1f/60f;
 
         for (Spring s : springs)
         {
             s.update(delta);
         }
 
-        runnable1.setDelta(delta);
-        runnable2.setDelta(delta);
-        runnable3.setDelta(delta);
-        runnable4.setDelta(delta);
-
-        thread1.run();
-        thread2.run();
-        thread3.run();
-        thread4.run();
+        for(PointRunnable r : runnables)
+        {
+            r.setDelta(delta);
+        }
+        for(Thread t : threads)
+        {
+            t.run();
+        }
     }
 
     public void applyRadialForce(Vector3 pos, float force, float radius)
@@ -373,7 +357,7 @@ public class PhysicsGrid
                 if (dist < radius)
                 {
                     Vector3 dir = point.position.cpy().sub(pos);
-                    dir.nor().scl(force * (1f - (dist/radius)*(dist/radius)));
+                    dir.nor().scl(force * (1f - (dist/radius)));
                     point.applyForce(dir);
                 }
             }
@@ -385,8 +369,6 @@ public class PhysicsGrid
         return a < 0 ? -a : a;
     }
 
-
-
     public void draw(SpriteBatch s)
     {
         s.end();
@@ -397,10 +379,10 @@ public class PhysicsGrid
 
         Color disabled = color.cpy();
 
-        disabled.r /= 16f;
-        disabled.g /= 16f;
-        disabled.b /= 16f;
-        disabled.a = 1f;
+        disabled.r /= 8f;
+        disabled.g /= 8f;
+        disabled.b /= 8f;
+        disabled.a = 0.05f;
 
         if(Gdx.input.isKeyJustPressed(Keys.P))
         {
@@ -423,6 +405,7 @@ public class PhysicsGrid
                 Color enabled = color.cpy();
 
                 float colorSpectrum = 1080f;
+                float alpha = 0.3f;
 
                 {
                     Vector3 normal;
@@ -432,7 +415,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
                                     (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
@@ -448,7 +431,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
                                     (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
@@ -464,7 +447,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
                                     (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
@@ -480,7 +463,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
                                     (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
@@ -496,7 +479,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
                                     (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);
@@ -511,7 +494,7 @@ public class PhysicsGrid
                     enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
                                     (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
-                    enabled.a = 1f;
+                    enabled.a = alpha;
                     normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(enabled, dist);

@@ -64,10 +64,11 @@ public class GameScreen extends VScreen
     float gridSpacing = 0.2f;
     Label gridLabel;
     Label timeLabel;
-    Label eventLabel;
     SelectBox<String> entityList;
 
     PhysicsGrid g;
+
+    boolean runSim;
 
     CameraInputController camController;
 
@@ -77,7 +78,7 @@ public class GameScreen extends VScreen
 
         tex = new TextureRegion(new Texture("texture.png"));
         
-        model = new WorldModel(18,10);
+        model = new WorldModel(32,8);
 
         model.addEntity(new Player());
 
@@ -86,7 +87,7 @@ public class GameScreen extends VScreen
                                         model.WORLD_HEIGHT),
                                         gridSpacing);
 
-        for(int i = 0; i < 50; i++)
+    for(int i = 0; i < 20; i++)
         {
             model.addEntity(new Boid(new Vector3(-model.WORLD_WIDTH/2f,
                                                  -model.WORLD_HEIGHT/2f + i * model.WORLD_HEIGHT,
@@ -143,7 +144,6 @@ public class GameScreen extends VScreen
         table.align(Align.topLeft);
 
         Label modeLabel = new Label("EDIT MODE", skin);
-        eventLabel = new Label("", skin);
         Label entityLabel = new Label("ENTITY TYPE   ", skin);
         Label actionLabel = new Label("ACTION TYPE", skin);
 
@@ -152,7 +152,6 @@ public class GameScreen extends VScreen
 
         table.row();
         table.add(modeLabel).align(Align.center).padBottom(5f);
-        table.add(eventLabel);
 
 
         table.row();
@@ -196,7 +195,7 @@ public class GameScreen extends VScreen
 
 
         timeLabel = new Label("TIMESCALE: " + Globals.TIMESCALE, skin);
-        final Slider timeSlider = new Slider(0.5f, 1.5f, 0.1f, false, skin);
+        final Slider timeSlider = new Slider(0.1f, 1.5f, 0.1f, false, skin);
         timeSlider.setAnimateDuration(0.1f);
         timeSlider.setValue(1);
         timeSlider.addListener(new ChangeListener()
@@ -211,30 +210,20 @@ public class GameScreen extends VScreen
         table.add(timeSlider);
         table.add(timeLabel);
 
-        TextButton saveBtn = new TextButton("SAVE", skin);
+        final TextButton saveBtn = new TextButton(runSim + "", skin);
         saveBtn.addListener(new ClickListener()
         {
             @Override
             public void clicked(InputEvent event, float x, float y)
             {
-                eventLabel.setText("PLEASE IMPLEMENT SAVING");
+                runSim = !runSim;
+                saveBtn.setText(runSim + "");
             };
         });
 
-        TextButton loadBtn = new TextButton("LOAD", skin);
-        loadBtn.addListener(new ClickListener()
-        {
-            @Override
-            public void clicked(InputEvent event, float x, float y)
-            {
-                eventLabel.setText("PLEASE IMPLEMENT LOADING");
-            };
-        });
 
         table.row();
         table.add(saveBtn).align(Align.top);
-        table.row();
-        table.add(loadBtn).align(Align.top);
 
         stage.addActor(table);
     }
@@ -245,28 +234,39 @@ public class GameScreen extends VScreen
         if(Gdx.input.isKeyJustPressed(Input.Keys.F1))
         {
             model.editMode = !model.editMode;
+            runSim = false;
         }
 
 
-        model.update(delta);
-        CollisionSystem.update(model);
-        renderer.draw(model);
-
-
+        //NOTE
         if(model.editMode)
         {
-            s.setProjectionMatrix(uiCam.combined);
             Gdx.input.setInputProcessor(new InputMultiplexer(uiStage, camController));
+
+            uiStage.act();
+
+            if(runSim)
+            {
+                model.update(delta);
+                CollisionSystem.update(model);
+            }
+            s.setProjectionMatrix(uiCam.combined);
             uiStage.getViewport().getCamera().position.set(uiViewport.getWorldWidth()  / 2f,
                                                            uiViewport.getWorldHeight() / 2f,
                                                            1);
-            uiStage.act();
+
+            renderer.draw(model);
             uiStage.draw();
         }
         else
         {
             Gdx.input.setInputProcessor(null);
+
+            model.update(delta);
+            CollisionSystem.update(model);
+            renderer.draw(model);
         }
+
     }
 
     @Override

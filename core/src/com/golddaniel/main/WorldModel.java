@@ -152,68 +152,69 @@ public class WorldModel
         ///////////////////////////////////////////////////////////
 
 
+
+        Vector3 target = new Vector3(player.position);
+
+        for(Entity e : entities)
+        {
+            if(!e.isAlive())
+            {
+                e.dispose();
+                toRemove.add(e);
+            }
+            else
+            {
+                e.update(this, delta);
+            }
+        }
+
+        entities.removeAll(toRemove, true);
+        toRemove.clear();
+
+        for(Particle e : particles)
+        {
+            if(!e.isAlive())
+            {
+                e.dispose();
+                particles.removeValue(e, true);
+            }
+            else
+            {
+                e.update(this, delta);
+            }
+        }
+
+        g.update(delta);
+
+        if (player.position.x < -WORLD_WIDTH)
+        {
+            target.x = -WORLD_WIDTH / 2f;
+        }
+        if (player.position.x > WORLD_WIDTH / 2f)
+        {
+            target.x = WORLD_WIDTH / 2f;
+        }
+
+        if (player.position.y < -WORLD_HEIGHT / 2f)
+        {
+            target.y = -WORLD_HEIGHT / 2f;
+        }
+        if (player.position.y > WORLD_HEIGHT / 2f)
+        {
+            target.y = WORLD_HEIGHT / 2f;
+        }
+
         if(!editMode)
         {
-            Vector3 target = new Vector3(player.position);
-
-            for(Entity e : entities)
-            {
-                if(!e.isAlive())
-                {
-                    e.dispose();
-                    toRemove.add(e);
-                }
-                else
-                {
-                    e.update(this, delta);
-                }
-            }
-
-            entities.removeAll(toRemove, true);
-            toRemove.clear();
-
-            for(Particle e : particles)
-            {
-                if(!e.isAlive())
-                {
-                    e.dispose();
-                    particles.removeValue(e, true);
-                }
-                else
-                {
-                    e.update(this, delta);
-                }
-            }
-
-            g.update(delta);
-
-            float subDivision = 1f/4f;
-
-            if (player.position.x < -WORLD_WIDTH / 2f * subDivision)
-            {
-                target.x = -WORLD_WIDTH / 2f* subDivision;
-            }
-            if (player.position.x > WORLD_WIDTH / 2f * subDivision)
-            {
-                target.x = WORLD_WIDTH / 2f * subDivision;
-            }
-
-            if (player.position.y < -WORLD_HEIGHT / 2f * subDivision)
-            {
-                target.y = -WORLD_HEIGHT / 2f * subDivision;
-            }
-            if (player.position.y > WORLD_HEIGHT / 2f * subDivision)
-            {
-                target.y = WORLD_HEIGHT / 2f* subDivision;
-            }
-
-
             //maintain our rotation around Z axis before lookAt
             cam.up.set(0f, 1f, 0f);
 
             cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-            cam.position.z = MathUtils.lerp(cam.position.z, 7f, 0.05f);
+            cam.position.z = MathUtils.lerp(
+                                cam.position.z,
+                        (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 4f,
+                       0.05f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
         }
@@ -228,6 +229,11 @@ public class WorldModel
         {
             entities.add(e);
         }
+    }
+
+    private float abs(float a)
+    {
+        return a > 0 ? a : -a;
     }
 
     public void addEntity(Player p)
