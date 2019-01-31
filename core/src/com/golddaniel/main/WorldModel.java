@@ -187,24 +187,24 @@ public class WorldModel
 
             g.update(delta);
 
-            float subDivision = 1f/8f;
+            float subDivision = 1f/4f;
 
-            if (player.position.x < -WORLD_WIDTH + WORLD_WIDTH * subDivision)
+            if (player.position.x < -WORLD_WIDTH / 2f * subDivision)
             {
-                target.x = -WORLD_WIDTH * subDivision;
+                target.x = -WORLD_WIDTH / 2f* subDivision;
             }
-            if (player.position.x > WORLD_WIDTH - WORLD_WIDTH * subDivision)
+            if (player.position.x > WORLD_WIDTH / 2f * subDivision)
             {
-                target.x = WORLD_WIDTH * subDivision;
+                target.x = WORLD_WIDTH / 2f * subDivision;
             }
 
-            if (player.position.y < -WORLD_HEIGHT * subDivision)
+            if (player.position.y < -WORLD_HEIGHT / 2f * subDivision)
             {
-                target.y = -WORLD_HEIGHT * subDivision;
+                target.y = -WORLD_HEIGHT / 2f * subDivision;
             }
-            if (player.position.y > WORLD_HEIGHT * subDivision)
+            if (player.position.y > WORLD_HEIGHT / 2f * subDivision)
             {
-                target.y = WORLD_HEIGHT * subDivision;
+                target.y = WORLD_HEIGHT / 2f* subDivision;
             }
 
 

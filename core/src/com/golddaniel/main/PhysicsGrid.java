@@ -170,6 +170,7 @@ public class PhysicsGrid
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
             position.z += velocity.z * delta;
+            position.z = abs(position.z);
 
             //not really accurate but it works
             velocity.scl(DAMPING*delta);
@@ -205,18 +206,14 @@ public class PhysicsGrid
 
     boolean fill = false;
 
-    final Thread thread1;
-    final Thread thread2;
-    final Thread thread3;
-    final Thread thread4;
-    final PointRunnable runnable1;
-    final PointRunnable runnable2;
-    final PointRunnable runnable3;
-    final PointRunnable runnable4;
-    final Array<Point> points1 = new Array<Point>();
-    final Array<Point> points2 = new Array<Point>();
-    final Array<Point> points3 = new Array<Point>();
-    final Array<Point> points4 = new Array<Point>();
+    private final Thread thread1;
+    private final Thread thread2;
+    private final Thread thread3;
+    private final Thread thread4;
+    private final PointRunnable runnable1;
+    private final PointRunnable runnable2;
+    private final PointRunnable runnable3;
+    private final PointRunnable runnable4;
 
     class PointRunnable implements Runnable
     {
@@ -237,11 +234,13 @@ public class PhysicsGrid
         @Override
         public void run()
         {
-            for(int i = 0; i < points.size; i++)
+           for(int i = 0; i < points.size; i++)
             {
                 float delta = dt / 4f;
                 for(float a = 0; a < dt; a += delta)
+                {
                     points.get(i).update(delta);
+                }
             }
         }
     }
@@ -299,6 +298,10 @@ public class PhysicsGrid
             }
         }
 
+        final Array<Point> points1 = new Array<Point>();
+        final Array<Point> points2 = new Array<Point>();
+        final Array<Point> points3 = new Array<Point>();
+        final Array<Point> points4 = new Array<Point>();
 
         for(int i = 0; i < points.length/4; i++)
         {
@@ -333,12 +336,13 @@ public class PhysicsGrid
         thread2 = new Thread(runnable2 = new PointRunnable(points2));
         thread3 = new Thread(runnable3 = new PointRunnable(points3));
         thread4 = new Thread(runnable4 = new PointRunnable(points4));
+
         immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
     }
     
     public void update(final float delta)
     {
-        borderHue += 90f*delta;
+        borderHue += 45f*delta;
         
         color.fromHsv(borderHue, 1f, 1f);
 
@@ -351,7 +355,6 @@ public class PhysicsGrid
         runnable2.setDelta(delta);
         runnable3.setDelta(delta);
         runnable4.setDelta(delta);
-
 
         thread1.run();
         thread2.run();
@@ -397,7 +400,7 @@ public class PhysicsGrid
         disabled.r /= 16f;
         disabled.g /= 16f;
         disabled.b /= 16f;
-        disabled.a = 0.5f;
+        disabled.a = 1f;
 
         if(Gdx.input.isKeyJustPressed(Keys.P))
         {
@@ -413,20 +416,21 @@ public class PhysicsGrid
             sh.begin(s.getProjectionMatrix(), GL20.GL_TRIANGLES);
         }
 
-
         for(int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
             {
                 Color enabled = color.cpy();
 
+                float colorSpectrum = 1080f;
+
                 {
                     Vector3 normal;
                     float dist;
                     Color lerp;
 
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * 180f +
-                                    (float)j / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
+                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
@@ -441,8 +445,8 @@ public class PhysicsGrid
                             points[i][j].position.z);
 
 
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * 180f +
-                                    (float)j / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
+                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
@@ -457,8 +461,8 @@ public class PhysicsGrid
                             points[i + 1][j].position.z);
 
 
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * 180f +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
+                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
@@ -473,8 +477,8 @@ public class PhysicsGrid
                             points[i][j + 1].position.z);
 
 
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * 180f +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
+                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
@@ -489,8 +493,8 @@ public class PhysicsGrid
                             points[i][j + 1].position.z);
 
 
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * 180f +
-                                    (float)j / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
+                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
@@ -504,8 +508,8 @@ public class PhysicsGrid
                             points[i + 1][j].position.y,
                             points[i + 1][j].position.z);
 
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * 180f +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * 180f,
+                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
+                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
                             1f, 1f);
                     enabled.a = 1f;
                     normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
@@ -546,7 +550,6 @@ public class PhysicsGrid
         sh.vertex(gridDimensions.x/2f, gridDimensions.y/2f, 0);
 
         sh.end();
-
 
         s.begin();
     }

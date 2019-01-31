@@ -61,11 +61,11 @@ public class GameScreen extends VScreen
 
     TextureRegion tex;
 
-    float gridSpacing = 0.5f;
+    float gridSpacing = 0.2f;
     Label gridLabel;
     Label timeLabel;
-
     Label eventLabel;
+    SelectBox<String> entityList;
 
     PhysicsGrid g;
 
@@ -85,10 +85,20 @@ public class GameScreen extends VScreen
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
                                         gridSpacing);
+
+        for(int i = 0; i < 50; i++)
+        {
+            model.addEntity(new Boid(new Vector3(-model.WORLD_WIDTH/2f,
+                                                 -model.WORLD_HEIGHT/2f + i * model.WORLD_HEIGHT,
+                                                 0)));
+            model.addEntity(new Boid(new Vector3(model.WORLD_WIDTH/2f,
+                                                 -model.WORLD_HEIGHT/2f + i * model.WORLD_HEIGHT,
+                                                 0)));
+        }
+
         model.setGrid(g);
 
         camController = new CameraInputController(model.getCamera());
-
         renderer = new WorldRenderer(model);
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
@@ -152,7 +162,7 @@ public class GameScreen extends VScreen
         SelectBox<String> actionList = new SelectBox<String>(skin);
         actionList.setItems("SPAWN", "SELECT");
 
-        SelectBox<String> entityList = new SelectBox<String>(skin);
+        entityList = new SelectBox<String>(skin);
         entityList.setItems("Boid", "Bouncer", "Cuber", "BlackHole", "Turret");
 
         table.row();
@@ -189,12 +199,11 @@ public class GameScreen extends VScreen
         final Slider timeSlider = new Slider(0.5f, 1.5f, 0.1f, false, skin);
         timeSlider.setAnimateDuration(0.1f);
         timeSlider.setValue(1);
-        timeSlider.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
+        timeSlider.addListener(new ChangeListener()
+        {
+            public void changed (ChangeEvent event, Actor actor)
+            {
                     Globals.TIMESCALE = MathUtils.round(timeSlider.getValue() * 10f) / 10f;
-
-
-
                     timeLabel.setText("TIMESCALE: " + Globals.TIMESCALE);
             }
         });
@@ -253,9 +262,6 @@ public class GameScreen extends VScreen
                                                            1);
             uiStage.act();
             uiStage.draw();
-            camController.update();
-
-            Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         }
         else
         {
