@@ -64,8 +64,8 @@ public class Boid extends Entity
         
         activeTimer = new Timer();
         
-        width = 0.5f;
-        height = 0.5f;
+        width = 0.25f;
+        height = 0.25f;
         
         active = true;
         isAlive = true;
@@ -394,8 +394,6 @@ public class Boid extends Entity
                               pos,
                         25,
                         (width + height) * 2f);
-
-
 
                 active = false;
                 isAlive = false;

@@ -29,6 +29,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.golddaniel.main.WorldModel;
 
@@ -242,8 +243,6 @@ public class Player extends Entity implements ControllerListener
     public void update(WorldModel model, float delta)
     {
 
-
-
         if(Gdx.input.isKeyJustPressed(Input.Keys.U))
         {
             weaponType = WEAPON_TYPE.SPREAD;
@@ -258,21 +257,66 @@ public class Player extends Entity implements ControllerListener
         {
             float MAX_SPEED = 5.5f;
 
+            moveDir.setZero();
+            if(Gdx.input.isKeyPressed(Input.Keys.D))
+            {
+                moveDir.x += 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.A))
+            {
+                moveDir.x -= 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.W))
+            {
+                moveDir.y += 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.S))
+            {
+                moveDir.y -= 1;
+            }
 
-            if(moveDir.isZero())
-            {
-                velocity.scl(0.9999f);
-            }
-            else
-            {
-                velocity.add(moveDir.cpy().scl(MAX_SPEED));
-            }
+            velocity.add(moveDir.cpy().scl(MAX_SPEED));
             velocity.limit(MAX_SPEED);
+
+
+            shootDir.setZero();
+            if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+            {
+                shootDir.x += 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
+            {
+                shootDir.x -= 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.UP))
+            {
+                shootDir.y += 1;
+            }
+            if(Gdx.input.isKeyPressed(Input.Keys.DOWN))
+            {
+                shootDir.y -= 1;
+            }
 
             if(shootDir.len2() > 0)
             {
                 fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
             }
+        }
+        else if(SharedLibraryLoader.isAndroid)
+        {
+            //should move input into another module////////////////////
+            if(SharedLibraryLoader.isAndroid)
+            {
+                float sensitivity = model.WORLD_HEIGHT / Gdx.graphics.getHeight();
+
+                Vector3 cursor = new Vector3(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
+
+                //sensitivity
+                cursor.scl(sensitivity);
+
+                position.add(cursor);
+            }
+            ///////////////////////////////////////////////////////////
         }
 
         angle += delta;
@@ -302,8 +346,7 @@ public class Player extends Entity implements ControllerListener
         {
             position.y = model.WORLD_HEIGHT/2f;
         }
-        
-        
+
         hue += 90f*delta;
         hue %= 360f;
         

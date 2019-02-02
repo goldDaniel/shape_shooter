@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -43,10 +44,11 @@ public class WorldModel
 
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
-    
+
     Array<Entity> entities;
+
+    ArrayMap<Integer, Array<Entity>> toSpawn;
     Array<Entity> toRemove;
-    
     
     //we create lots of particles, so lets create a pool
     Array<Particle> particles;
@@ -64,8 +66,8 @@ public class WorldModel
     ExtendViewport viewport;
     PerspectiveCamera cam;
 
+    float elapsedTime = 0;
     float sleepTimer = 0;
-
 
     public boolean editMode = false;
 
@@ -74,8 +76,9 @@ public class WorldModel
         return cam;
     }
 
-    public WorldModel(float width, float height)
+    public WorldModel(float width, float height, ArrayMap<Integer, Array<Entity>> toSpawn)
     {
+        this.toSpawn = toSpawn;
         float vWidth;
         float vHeight;
         if(SharedLibraryLoader.isAndroid)
@@ -110,7 +113,7 @@ public class WorldModel
         
         particles = new Array<Particle>();
         
-        particlePool = new Pool<Particle>(4096) {
+        particlePool = new Pool<Particle>(8192) {
             protected Particle newObject()
             {
                 return new Particle(new Vector3(-1000,-1000,-1000),
@@ -129,6 +132,11 @@ public class WorldModel
 
     }
 
+    public int getElapsedTime()
+    {
+        return (int)elapsedTime;
+    }
+
     public void update(float delta)
     {
         sleepTimer -= delta;
@@ -137,20 +145,18 @@ public class WorldModel
 
         isUpdating = true;
 
-        //should move input into another module////////////////////
-        if(SharedLibraryLoader.isAndroid)
+
+        elapsedTime += delta;
+
+        if(toSpawn.containsKey((int)elapsedTime))
         {
-            float sensitivity = WORLD_HEIGHT / Gdx.graphics.getHeight();
-
-            Vector3 cursor = new Vector3(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
-
-            //sensitivity
-            cursor.scl(sensitivity);
-
-            player.position.add(cursor);
+            Array<Entity> e = toSpawn.get((int)elapsedTime);
+            for(Entity en : e)
+            {
+                addEntity(en);
+            }
+            toSpawn.removeKey((int)elapsedTime);
         }
-        ///////////////////////////////////////////////////////////
-
 
 
         Vector3 target = new Vector3(player.position);
@@ -186,7 +192,7 @@ public class WorldModel
 
         g.update(delta);
 
-        if (player.position.x < -WORLD_WIDTH)
+        if (player.position.x < -WORLD_WIDTH / 2f)
         {
             target.x = -WORLD_WIDTH / 2f;
         }
@@ -227,8 +233,10 @@ public class WorldModel
     {
         if(!entities.contains(e, true))
         {
-            entities.add(e);
+          entities.add(e);
         }
+
+        if(e instanceof Player) player = (Player)e;
     }
 
     private float abs(float a)
@@ -236,19 +244,6 @@ public class WorldModel
         return a > 0 ? a : -a;
     }
 
-    public void addEntity(Player p)
-    {
-        for(Entity e : entities)
-        {
-            if(e instanceof Player)
-            {
-                Gdx.app.log("ERROR", "ADDED MULTIPLE PLAYERS");
-            }
-        }
-        player = p;
-        entities.add(p);
-    }
-    
     /*/////////////////////////////////////////////////////////////////////////
         maybe change?
         currently null checking as this is how we use grid, but 

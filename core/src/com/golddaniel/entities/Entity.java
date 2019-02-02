@@ -13,7 +13,7 @@ import com.golddaniel.main.WorldModel;
 public abstract class Entity 
 {
     public Vector3 position;
-    
+
     protected boolean isAlive;
    
     public abstract void update(WorldModel world, float delta);
@@ -35,4 +35,5 @@ public abstract class Entity
     {
         isAlive = false;
     }
+
 }

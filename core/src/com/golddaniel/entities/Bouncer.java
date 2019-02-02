@@ -112,28 +112,28 @@ public class Bouncer extends Entity
         }
         
         
-        if(position.x <= -model.WORLD_WIDTH / 2f)
+        if(position.x < -model.WORLD_WIDTH / 2f)
         {
-            position.x = -model.WORLD_WIDTH / 2f + 1;
+            position.x = -model.WORLD_WIDTH / 2f;
             dir.x = -dir.x;
         }
-        else if(position.x >= model.WORLD_WIDTH / 2f - width)
+        else if(position.x > model.WORLD_WIDTH / 2f)
         {
-            position.x = model.WORLD_WIDTH / 2f - width - 1;
+            position.x = model.WORLD_WIDTH / 2f;
             dir.x = -dir.x;
         }
-        if(position.y <= -model.WORLD_HEIGHT / 2f)
+        if(position.y < -model.WORLD_HEIGHT / 2f)
         {
-            position.y = -model.WORLD_HEIGHT / 2f + 1;
+            position.y = -model.WORLD_HEIGHT / 2f;
             dir.y = -dir.y;
         }
-        else if(position.y >= model.WORLD_HEIGHT /2f - height)
+        else if(position.y > model.WORLD_HEIGHT / 2f)
         {
-            position.y = model.WORLD_HEIGHT - height -1;
+            position.y = model.WORLD_HEIGHT / 2f;
             dir.y  = -dir.y;
         }
 
-        model.applyRadialForce(position, 150*delta, width);
+        model.applyRadialForce(position, 50*delta, width);
     }
 
     @Override
@@ -148,8 +148,6 @@ public class Bouncer extends Entity
             color.a = 0.45f;
         }
         s.setColor(color);
-
-
 
         s.draw(tex,
                     position.x - width / 2f, position.y - height / 2f,
@@ -196,7 +194,7 @@ public class Bouncer extends Entity
 
                     angle += MathUtils.random(-2.5f, 2.5f);
 
-                    Vector3 dim = new Vector3(0.1f, 0.1f, 0.1f);
+                    Vector3 dim = new Vector3(0.5f, 0.1f, 0.1f);
 
                     model.createParticle(
                             position.cpy(),
@@ -219,6 +217,8 @@ public class Bouncer extends Entity
 
 
                 isAlive = false;
+
+                model.applyRadialForce(position, 15f, width * 2);
             }
         }
     }

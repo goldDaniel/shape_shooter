@@ -86,7 +86,7 @@ public class BlackHole extends Entity
         {
             health += 6*delta;
         }
-        radius = MAX_RADIUS/8f + MAX_RADIUS*7f/8f * health/(float)MAX_HEALTH;
+        radius = MAX_RADIUS / 8f + MAX_RADIUS* 7f / 8f * health / (float)MAX_HEALTH;
         
         float force = 10f * delta * (1f + MathUtils.sinDeg(hue));
 

@@ -32,12 +32,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
+import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Obstacle;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.Turret;
 import com.golddaniel.main.*;
@@ -61,10 +65,10 @@ public class GameScreen extends VScreen
 
     TextureRegion tex;
 
-    float gridSpacing = 0.2f;
+    float gridSpacing = 0.25f;
     Label gridLabel;
     Label timeLabel;
-    SelectBox<String> entityList;
+    Label elapsed;
 
     PhysicsGrid g;
 
@@ -77,8 +81,31 @@ public class GameScreen extends VScreen
         super(sm, assets);
 
         tex = new TextureRegion(new Texture("texture.png"));
-        
-        model = new WorldModel(32,8);
+
+        ArrayMap<Integer, Array<Entity>> toSpawn = new ArrayMap<Integer, Array<Entity>>();
+
+        float worldWidth  = 26;
+        float worldHeight = 20;
+
+        int waves = 128;
+        for(int i = 0; i < waves; i++)
+        {
+            Array<Entity> toAdd = new Array<Entity>();
+
+
+            float angle = (float)i/(float)waves*360f;
+
+            toAdd.add(new Bouncer(
+                            new Vector3(),
+                            new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0)));
+
+            toSpawn.put((i+1), toAdd);
+        }
+
+
+
+        model = new WorldModel(worldWidth,worldHeight, toSpawn);
+
 
         model.addEntity(new Player());
 
@@ -87,15 +114,7 @@ public class GameScreen extends VScreen
                                         model.WORLD_HEIGHT),
                                         gridSpacing);
 
-    for(int i = 0; i < 20; i++)
-        {
-            model.addEntity(new Boid(new Vector3(-model.WORLD_WIDTH/2f,
-                                                 -model.WORLD_HEIGHT/2f + i * model.WORLD_HEIGHT,
-                                                 0)));
-            model.addEntity(new Boid(new Vector3(model.WORLD_WIDTH/2f,
-                                                 -model.WORLD_HEIGHT/2f + i * model.WORLD_HEIGHT,
-                                                 0)));
-        }
+
 
         model.setGrid(g);
 
@@ -144,39 +163,23 @@ public class GameScreen extends VScreen
         table.align(Align.topLeft);
 
         Label modeLabel = new Label("EDIT MODE", skin);
-        Label entityLabel = new Label("ENTITY TYPE   ", skin);
-        Label actionLabel = new Label("ACTION TYPE", skin);
-
-        entityLabel.setColor(Color.WHITE);
-        actionLabel.setColor(Color.WHITE);
+        elapsed = new Label("ELAPSED TIME: " + model.getElapsedTime(), skin);
 
         table.row();
         table.add(modeLabel).align(Align.center).padBottom(5f);
-
-
+        table.add(elapsed).align(Align.center).padBottom(5f);
         table.row();
-        table.add(entityLabel);
-        table.add(actionLabel);
 
-        SelectBox<String> actionList = new SelectBox<String>(skin);
-        actionList.setItems("SPAWN", "SELECT");
-
-        entityList = new SelectBox<String>(skin);
-        entityList.setItems("Boid", "Bouncer", "Cuber", "BlackHole", "Turret");
-
-        table.row();
-        table.add(entityList);
-        table.add(actionList);
-
-        table.row();
 
         gridLabel = new Label("SPACING: " + gridSpacing, skin);
 
         final Slider gridSlider = new Slider(0.05f, 1f, 0.05f, false, skin);
         gridSlider.setAnimateDuration(0.1f);
         gridSlider.setValue(gridSpacing);
-        gridSlider.addListener(new ChangeListener() {
-            public void changed (ChangeEvent event, Actor actor) {
+        gridSlider.addListener(new ChangeListener()
+        {
+            public void changed (ChangeEvent event, Actor actor)
+            {
                 float spacing = gridSlider.getValue();
 
                 gridSpacing = MathUtils.round(spacing * 100f) / 100f;
@@ -193,15 +196,12 @@ public class GameScreen extends VScreen
 
         table.row();
 
-
         timeLabel = new Label("TIMESCALE: " + Globals.TIMESCALE, skin);
         final Slider timeSlider = new Slider(0.1f, 1.5f, 0.1f, false, skin);
         timeSlider.setAnimateDuration(0.1f);
         timeSlider.setValue(1);
-        timeSlider.addListener(new ChangeListener()
-        {
-            public void changed (ChangeEvent event, Actor actor)
-            {
+        timeSlider.addListener(new ChangeListener() {
+            public void changed (ChangeEvent event, Actor actor) {
                     Globals.TIMESCALE = MathUtils.round(timeSlider.getValue() * 10f) / 10f;
                     timeLabel.setText("TIMESCALE: " + Globals.TIMESCALE);
             }
@@ -218,7 +218,7 @@ public class GameScreen extends VScreen
             {
                 runSim = !runSim;
                 saveBtn.setText(runSim + "");
-            };
+        };
         });
 
 
@@ -237,8 +237,6 @@ public class GameScreen extends VScreen
             runSim = false;
         }
 
-
-        //NOTE
         if(model.editMode)
         {
             Gdx.input.setInputProcessor(new InputMultiplexer(uiStage, camController));
@@ -250,6 +248,8 @@ public class GameScreen extends VScreen
                 model.update(delta);
                 CollisionSystem.update(model);
             }
+            elapsed.setText("ELAPSED TIME: " + model.getElapsedTime());
+
             s.setProjectionMatrix(uiCam.combined);
             uiStage.getViewport().getCamera().position.set(uiViewport.getWorldWidth()  / 2f,
                                                            uiViewport.getWorldHeight() / 2f,
