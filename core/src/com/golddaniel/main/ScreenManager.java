@@ -13,7 +13,6 @@ public class ScreenManager
     public enum STATE
     {
         PLAY,
-        LOADING,
         MAIN_MENU,
     }
     

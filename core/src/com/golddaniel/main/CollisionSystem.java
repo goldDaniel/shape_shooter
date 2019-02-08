@@ -15,11 +15,15 @@
  */
 package com.golddaniel.main;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
+import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Cuber;
@@ -70,10 +74,6 @@ public class CollisionSystem
         }
         for(Boid boid : boids)
         {
-            if(!boid.isActive())
-            {
-                continue;
-            }
             Rectangle bouncerRect = boid.getBoundingBox();
             
             for(Bullet bullet : bullets)
@@ -149,6 +149,44 @@ public class CollisionSystem
                     {
                         b.kill(model);
                         bullet.kill(model);
+                    }
+                }
+            }
+        }
+        for(Multiplier m : model.getEntityType(Multiplier.class))
+        {
+            if(model.getPlayer() != null)
+            {
+                if (m.getBoundingBox().overlaps(model.getPlayer().getBoundingBox()))
+                {
+                    m.kill(model);
+                    model.incrementMultiplier();
+
+                    int particles = 16;
+                    for (int i = 0; i < particles; i++)
+                    {
+                        float angle = (float) i / (float) particles * 360f;
+                        Vector3 dim = new Vector3(0.025f, 0.025f, 0.025f);
+
+                        float speed = MathUtils.random(8f, 14f);
+
+                        model.createParticle(
+                                m.position.cpy(),
+                                new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                                dim,
+                                MathUtils.random(0.05f, 0.15f),
+                                Color.LIME,
+                                Color.WHITE);
+
+                        speed = MathUtils.random(4f, 6f);
+
+                        model.createParticle(
+                                m.position.cpy(),
+                                new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                                dim,
+                                MathUtils.random(0.05f, 0.15f),
+                                Color.LIME,
+                                Color.CORAL);
                     }
                 }
             }

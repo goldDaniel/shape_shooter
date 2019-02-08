@@ -15,6 +15,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -24,7 +25,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -34,7 +34,7 @@ import com.golddaniel.main.WorldModel;
 public class Bouncer extends Entity
 {
 
-    static TextureRegion tex = new TextureRegion(new Texture("geometric/player.png"));
+    static TextureRegion tex;
     
     Color color;
     
@@ -51,25 +51,29 @@ public class Bouncer extends Entity
     boolean active;
    
     Timer activeTimer;
-    
-    public Bouncer(Vector3 pos, Vector3 dir)
+
+    public Bouncer(Vector3 pos, Vector3 dir, AssetManager assets)
     {
-        width = 1.5f;
-        height = 0.75f;
+        super(assets);
+        if(tex == null)
+        {
+            tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
+        }
+
+        width = 1f;
+        height = 0.5f;
         this.position = pos;
         position.x += width/2;
         position.y += height/2;
         //normalize just in case a normal vector was not passed
         this.dir = dir.nor();
-        speed = 4f;
+        speed = 2.5f;
         
         color = Color.YELLOW.cpy();
         
         active = false;
         
-        isAlive = true;
-        
-        health = 20;
+        health = 10;
         prevHealth = health;
         
         activeTimer = new Timer();
@@ -187,7 +191,7 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
-                int particles = 512;
+                int particles = 64;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
@@ -218,6 +222,8 @@ public class Bouncer extends Entity
 
                 isAlive = false;
 
+                model.addScore(2);
+                model.createMultipliers(position, 10);
                 model.applyRadialForce(position, 15f, width * 2);
             }
         }

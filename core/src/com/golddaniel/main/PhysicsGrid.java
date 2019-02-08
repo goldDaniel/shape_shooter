@@ -138,12 +138,15 @@ public class PhysicsGrid
         Vector3 acceleration;
         
         float inverseMass;
+
+        Color color;
         
-        public Point(Vector3 position, float inverseMass)
+        public Point(Vector3 position, float inverseMass, Color color)
         {
             this.desiredPosition = position.cpy();
             this.position = position.cpy();
             this.inverseMass = inverseMass;
+            this.color = color;
             velocity = new Vector3();
             acceleration = new Vector3();
         }
@@ -250,9 +253,6 @@ public class PhysicsGrid
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
 
-
-
-
         sh = new ImmediateModeRenderer20(2500000, true, true, 0);
         shader = new ShaderProgram(createVertexShader(), createFragmentShader());
 
@@ -280,11 +280,20 @@ public class PhysicsGrid
                     invMass = 0;
                 }
 
+                float colorSpectrum = 360f;
+                float saturation = 0.8f;
+                float alpha = 1f;
+                Color c = Color.MAGENTA.cpy().fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
+                                (float)j / (float)(points[i].length - 1) * colorSpectrum,
+                        saturation, 1f);
+                c.a = alpha;
+
                 points[i][j] = new Point(
                         new Vector3(i * gridDimensions.x / rows - gridDimensions.x / 2f,
                                 j * gridDimensions.y / cols - gridDimensions.y / 2f,
                                 0),
-                        invMass);
+                        invMass,
+                        c);
             }
         }
         
@@ -301,7 +310,7 @@ public class PhysicsGrid
         }
 
         runnables = new Array<PointRunnable>();
-        buildThreads(runnables, 16);
+        buildThreads(runnables, 4);
 
         immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
     }
@@ -414,107 +423,73 @@ public class PhysicsGrid
         {
             for (int j = 0; j < cols; j++)
             {
-                Color enabled = color.cpy();
-
-                float colorSpectrum = 720f;
-
-                float saturation = 0.65f;
-                float alpha = 0.5f;
-
                 {
                     Vector3 normal;
                     float dist;
                     Color lerp;
 
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
-                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
+
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i][j].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(1, 0, 0);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i][j].position.x,
                             points[i][j].position.y,
                             points[i][j].position.z);
 
-
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
-                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i + 1][j].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(0, 1, 0);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i + 1][j].position.x,
                             points[i + 1][j].position.y,
                             points[i + 1][j].position.z);
 
-
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i][j + 1].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(0, 0, 1);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i][j + 1].position.x,
                             points[i][j + 1].position.y,
                             points[i][j + 1].position.z);
 
-
-                    enabled.fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i][j + 1].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(0, 0, 1);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i][j + 1].position.x,
                             points[i][j + 1].position.y,
                             points[i][j + 1].position.z);
 
-
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
-                                    (float)j / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
                     normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i + 1][j].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(0, 1, 0);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i + 1][j].position.x,
                             points[i + 1][j].position.y,
                             points[i + 1][j].position.z);
 
-                    enabled.fromHsv((float)(i + 1) / (float)(points.length - 1) * colorSpectrum +
-                                    (float)(j + 1) / (float)(points[i].length - 1) * colorSpectrum,
-                            saturation, 1f);
-                    enabled.a = alpha;
                     normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(enabled, dist);
+                    lerp = disabled.cpy().lerp(points[i + 1][j + 1].color, dist);
 
-                    sh.normal(normal.x, normal.y, normal.z);
-                    sh.color(lerp.r, lerp.g, lerp.b, lerp.a);
+                    sh.normal(1, 0, 0);
+                    sh.color(lerp);
                     sh.vertex(
                             points[i + 1][j + 1].position.x,
                             points[i + 1][j + 1].position.y,
@@ -554,5 +529,6 @@ public class PhysicsGrid
     public void dispose()
     {
         sh.dispose();
+        es.shutdown();
     }
 }

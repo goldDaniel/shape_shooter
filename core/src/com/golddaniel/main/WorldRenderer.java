@@ -16,6 +16,7 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -60,20 +61,23 @@ public class WorldRenderer
     Model skyboxModel;
     ModelInstance skybox;
 
+    AssetManager assets;
 
-    public WorldRenderer(WorldModel model)
+    public WorldRenderer(WorldModel model, AssetManager assets)
     {
         s = new SpriteBatch();
         m = new ModelBatch();
 
 
         this.viewport = model.viewport;
+        this.assets = assets;
+
 
         bloom = new Bloom(model.viewport, 2f);
         bloom.setBloomIntesity(1f);
         bloom.setTreshold(0.95f);
 
-        Texture tex = new Texture(Gdx.files.internal("skybox.jpg"));
+        Texture tex = assets.get("skybox.jpg", Texture.class);
 
         ModelBuilder modelBuilder = new ModelBuilder();
         skyboxModel = modelBuilder.createSphere(
@@ -96,7 +100,6 @@ public class WorldRenderer
     {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
 
         m.begin(model.getCamera());
         m.render(skybox);

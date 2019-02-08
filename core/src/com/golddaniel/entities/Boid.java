@@ -16,6 +16,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -34,11 +35,11 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 4.25f;
+    static float SPEED_MAX = 1.25f;
    
     static Array<Boid> boids = new Array<Boid>();
     
-    static TextureRegion tex = new TextureRegion(new Texture("geometric/player.png"));
+    static TextureRegion tex;
     
     Vector3 velocity;
     Vector3 acceleration;
@@ -51,13 +52,18 @@ public class Boid extends Entity
     float height;
     
     int health = 5;
+
     
-    boolean active;
-    
-    public Boid(Vector3 position)
-    {        
+    public Boid(Vector3 position, AssetManager assets)
+    {
+        super(assets);
+        if(tex == null)
+        {
+            tex = new TextureRegion(assets.get(("geometric/player.png"), Texture.class));
+        }
+
         this.position = new Vector3(position);
-        
+
         float angle = MathUtils.random(MathUtils.PI*2);
         acceleration = new Vector3();
         velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
@@ -66,10 +72,6 @@ public class Boid extends Entity
         
         width = 0.25f;
         height = 0.25f;
-        
-        active = true;
-        isAlive = true;
-        
         color = Color.CORAL.cpy();
      
         
@@ -102,7 +104,6 @@ public class Boid extends Entity
                 count++;
             }
         }
-        
         if(count > 0)
         {
             sum.scl(1f/(float)count);
@@ -253,54 +254,52 @@ public class Boid extends Entity
     @Override
     public void update(WorldModel model, float delta)
     {
-        
-        if(active)
-        {
-            float[] hsv = new float[3];
-            color.toHsv(hsv);
-            hsv[0] += 60f*delta;
-            color.fromHsv(hsv);
-            
-            borderCheck(model);
-            
-            Vector3 separation = separation();
-            Vector3 allignment = allignment();
-            Vector3 cohesion   = cohesion();
-            Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
-            Vector3 seek = new Vector3();
-            
-            float range = 6f;
-            if(model.getEntityType(Player.class).size > 0)
-            {
-                
-                Vector3 target = model.getEntityType(Player.class).first().position;
-                float dist = target.dst(position);
-                
-                if(dist < range)
-                {
-                    seek.set(seek(target));
-                }
-            }
-            
-            acceleration.add(separation);
-            acceleration.add(allignment);
-            acceleration.add(cohesion);
-            acceleration.add(boundary);
-            acceleration.add(seek);
-            
-            acceleration.limit(SPEED_MAX/32f*delta);
-            
-            velocity.add(acceleration);
-            velocity.limit(SPEED_MAX*delta);
-            
-            position.add(velocity);
-            
-            acceleration.set(0, 0,0);
 
-            Vector3 pos = position.cpy();
-            pos.z = -0.1f;
-            model.applyRadialForce(position, 150f * delta, width * 2);
+        float[] hsv = new float[3];
+        color.toHsv(hsv);
+        hsv[0] += 60f*delta;
+        color.fromHsv(hsv);
+
+        borderCheck(model);
+
+        Vector3 separation = separation();
+        Vector3 allignment = allignment();
+        Vector3 cohesion   = cohesion();
+        Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+        Vector3 seek = new Vector3();
+
+        float range = 6f;
+        if(model.getEntityType(Player.class).size > 0)
+        {
+
+            Vector3 target = model.getEntityType(Player.class).first().position;
+            float dist = target.dst(position);
+
+            if(dist < range)
+            {
+                seek.set(seek(target));
+            }
         }
+
+        acceleration.add(separation);
+        acceleration.add(allignment);
+        acceleration.add(cohesion);
+        acceleration.add(boundary);
+        acceleration.add(seek);
+
+        acceleration.limit(SPEED_MAX/32f*delta);
+
+        velocity.add(acceleration);
+        velocity.limit(SPEED_MAX*delta);
+
+        position.add(velocity);
+
+        acceleration.set(0, 0,0);
+
+        Vector3 pos = position.cpy();
+        pos.z = -0.1f;
+        model.applyRadialForce(position, 150f * delta, width * 2);
+
     }
 
     private void borderCheck(WorldModel model)
@@ -327,14 +326,6 @@ public class Boid extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-        if(active)
-        { 
-            color.a = 1f;
-        }
-        else
-        {
-            color.a = 0.55f;
-        }
         s.setColor(color);
 
         Vector2 dir = new Vector2(velocity.x, velocity.y);
@@ -352,52 +343,50 @@ public class Boid extends Entity
     @Override
     public void kill(WorldModel model)
     {
-        //immune until active
-        if(active)
+        health--;
+        if(health <= 0)
         {
-            health--;
-            if(health <= 0)
+            int particles = 64;
+            for (int i = 0; i < particles; i++)
             {
-                int particles = 128;
-                for (int i = 0; i < particles; i++)
-                {
-                    float angle = (float)i/(float)particles*360f;
+                float angle = (float)i/(float)particles*360f;
 
-                    angle += MathUtils.random(-1.5f, 1.5f);
+                angle += MathUtils.random(-1.5f, 1.5f);
 
-                    Vector3 dim = new Vector3(0.55f, 0.05f, 0.15f);
+                Vector3 dim = new Vector3(0.5f, 0.01f, 0.01f);
 
-                    float speed = MathUtils.random(7f, 10f);
+                float speed = MathUtils.random(7f, 10f);
 
-                    model.createParticle(
+                model.createParticle(
+                    position.cpy(),
+                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    dim,
+                    MathUtils.random(0.1f, 0.5f),
+                    Color.WHITE,
+                    Color.CYAN);
+
+                speed = MathUtils.random(2f, 3f);
+
+                model.createParticle(
                         position.cpy(),
                         new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                         dim,
                         MathUtils.random(0.1f, 0.5f),
-                        Color.WHITE,
-                        Color.CYAN);
-
-                    speed = MathUtils.random(2f, 3f);
-
-                    model.createParticle(
-                            position.cpy(),
-                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
-                            dim,
-                            MathUtils.random(0.1f, 0.5f),
-                            Color.MAGENTA,
-                            Color.WHITE);
-                }
-
-                Vector3 pos = position.cpy();
-                pos.z = -0.01f;
-                model.applyRadialForce(
-                              pos,
-                        25,
-                        (width + height) * 2f);
-
-                active = false;
-                isAlive = false;
+                        Color.MAGENTA,
+                        Color.WHITE);
             }
+
+            Vector3 pos = position.cpy();
+            pos.z = -0.01f;
+
+            model.createMultipliers(position, 5);
+            model.addScore(1);
+            model.applyRadialForce(
+                          pos,
+                    25,
+                    (width + height) * 2f);
+
+            isAlive = false;
         }
     }
 
@@ -413,12 +402,5 @@ public class Boid extends Entity
     public void dispose()
     {
         boids.removeValue(this, true);
-    }
-
-
-
-    public boolean isActive()
-    {
-        return active;
     }
 }

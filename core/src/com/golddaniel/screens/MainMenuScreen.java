@@ -5,8 +5,7 @@
  */
 package com.golddaniel.screens;
 
-import bloom.Bloom;
-
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -14,22 +13,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.golddaniel.main.Assets;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.PhysicsGrid;
 
 /**
@@ -50,7 +40,7 @@ public class MainMenuScreen extends VScreen
     Skin uiSkin;
     Stage uiStage;
 
-    public MainMenuScreen(final ScreenManager sm, Assets assets)
+    public MainMenuScreen(final ScreenManager sm, AssetManager assets)
     {
         super(sm, assets);
                 
@@ -60,13 +50,10 @@ public class MainMenuScreen extends VScreen
         s = new SpriteBatch();
         s.enableBlending();        
 
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
-        FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-        parameter.size = 140;
-        font = generator.generateFont(parameter); // font size 12 pixels
-        generator.dispose();
 
-        uiSkin = new Skin(Gdx.files.internal("ui/neon/skin/neon-ui.json"));
+        font = assets.get("Square.ttf", BitmapFont.class);
+        uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
+
         uiStage = new Stage(viewport);
 
         int spacing = 8;
@@ -115,11 +102,6 @@ public class MainMenuScreen extends VScreen
         table.add(optionsBtn);
         table.row();
         table.add(quitBtn);
-    }
-
-    private float abs(float a)
-    {
-        return a > 0 ? a : -a;
     }
     
     @Override

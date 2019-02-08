@@ -30,6 +30,7 @@ import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 
@@ -48,15 +49,18 @@ public class WorldModel
     Array<Entity> entities;
 
     ArrayMap<Integer, Array<Entity>> toSpawn;
+
     Array<Entity> toRemove;
-    
+    Array<Entity> toAdd;
+
+
     //we create lots of particles, so lets create a pool
     Array<Particle> particles;
     Pool<Particle> particlePool;
     
     //we create lots of bullets, so lets create a pool
     Pool<Bullet> bulletPool;
-    
+
     Player player;
     
     PhysicsGrid g;
@@ -66,34 +70,30 @@ public class WorldModel
     ExtendViewport viewport;
     PerspectiveCamera cam;
 
+    float remainingTime;
     float elapsedTime = 0;
-    float sleepTimer = 0;
 
     public boolean editMode = false;
+
+    public float TIMESCALE = 1f;
+
+    int scoreMultiplier = 1;
+    int score = 0;
 
     public Camera getCamera()
     {
         return cam;
     }
 
-    public WorldModel(float width, float height, ArrayMap<Integer, Array<Entity>> toSpawn)
+    public WorldModel(float width, float height, ArrayMap<Integer, Array<Entity>> toSpawn, float levelTime)
     {
         this.toSpawn = toSpawn;
-        float vWidth;
-        float vHeight;
-        if(SharedLibraryLoader.isAndroid)
-        {
-            vWidth = 1080;
-            vHeight = 1920;
-        }
-        else
-        {
-            vWidth = 1920;
-            vHeight = 1080;
-        }
+        this.remainingTime = levelTime;
+        float vWidth  = 1920;
+        float vHeight = 1080;
+
         cam = new PerspectiveCamera(67, vWidth, vHeight);
         viewport = new ExtendViewport(vWidth, vHeight, cam);
-
         viewport.apply();
 
         cam.position.x = 0;
@@ -110,9 +110,12 @@ public class WorldModel
         
         entities = new Array<Entity>();
         toRemove = new Array<Entity>();
-        
+        toAdd = new Array<Entity>();
+
+
         particles = new Array<Particle>();
-        
+
+        //arbitrary large number
         particlePool = new Pool<Particle>(8192) {
             protected Particle newObject()
             {
@@ -126,28 +129,39 @@ public class WorldModel
         bulletPool = new Pool<Bullet>(512) {
             protected Bullet newObject()
             {
-                return new Bullet(Vector3.Zero, 0, 0, null);
+                return new Bullet(Vector3.Zero, 0, 0, null, null);
             }
         };
 
     }
 
-    public int getElapsedTime()
+    public float getElapsedTime()
     {
-        return (int)elapsedTime;
+        return elapsedTime;
+    }
+    public float getRemainingTime() { return remainingTime; }
+
+    public int getScore() { return score; };
+
+    public int getScoreMultiplier() { return scoreMultiplier; }
+
+    public void incrementMultiplier()
+    {
+        scoreMultiplier++;
     }
 
     public void update(float delta)
     {
-        sleepTimer -= delta;
-        if(sleepTimer <= 0) sleepTimer = 0;
-        else                return;
 
+        delta *= TIMESCALE;
         isUpdating = true;
 
 
         elapsedTime += delta;
+        remainingTime -= delta;
 
+        entities.addAll(toAdd);
+        toAdd.clear();
         if(toSpawn.containsKey((int)elapsedTime))
         {
             Array<Entity> e = toSpawn.get((int)elapsedTime);
@@ -158,15 +172,13 @@ public class WorldModel
             toSpawn.removeKey((int)elapsedTime);
         }
 
-
-        Vector3 target = new Vector3(player.position);
-
         for(Entity e : entities)
         {
             if(!e.isAlive())
             {
                 e.dispose();
                 toRemove.add(e);
+                if(e instanceof  Bullet) bulletPool.free((Bullet)e);
             }
             else
             {
@@ -181,8 +193,8 @@ public class WorldModel
         {
             if(!e.isAlive())
             {
-                e.dispose();
                 particles.removeValue(e, true);
+                particlePool.free(e);
             }
             else
             {
@@ -192,24 +204,29 @@ public class WorldModel
 
         g.update(delta);
 
-        if (player.position.x < -WORLD_WIDTH / 2f)
+        Vector3 target = new Vector3();
+        if(player != null)
         {
-            target.x = -WORLD_WIDTH / 2f;
-        }
-        if (player.position.x > WORLD_WIDTH / 2f)
-        {
-            target.x = WORLD_WIDTH / 2f;
-        }
+            target.set(player.position);
 
-        if (player.position.y < -WORLD_HEIGHT / 2f)
-        {
-            target.y = -WORLD_HEIGHT / 2f;
-        }
-        if (player.position.y > WORLD_HEIGHT / 2f)
-        {
-            target.y = WORLD_HEIGHT / 2f;
-        }
+            if (player.position.x < -WORLD_WIDTH / 2f)
+            {
+                target.x = -WORLD_WIDTH / 2f;
+            }
+            if (player.position.x > WORLD_WIDTH / 2f)
+            {
+                target.x = WORLD_WIDTH / 2f;
+            }
 
+            if (player.position.y < -WORLD_HEIGHT / 2f)
+            {
+                target.y = -WORLD_HEIGHT / 2f;
+            }
+            if (player.position.y > WORLD_HEIGHT / 2f)
+            {
+                target.y = WORLD_HEIGHT / 2f;
+            }
+        }
         if(!editMode)
         {
             //maintain our rotation around Z axis before lookAt
@@ -219,7 +236,7 @@ public class WorldModel
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
             cam.position.z = MathUtils.lerp(
                                 cam.position.z,
-                        (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 4f,
+                        (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 5f,
                        0.05f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
@@ -229,13 +246,24 @@ public class WorldModel
         isUpdating = false;
     }
 
+    public void addScore(int score)
+    {
+        this.score += score*scoreMultiplier;
+    }
+
     public void addEntity(Entity e)
     {
         if(!entities.contains(e, true))
         {
-          entities.add(e);
+            if(isUpdating)
+            {
+                toAdd.add(e);
+            }
+            else
+            {
+                entities.add(e);
+            }
         }
-
         if(e instanceof Player) player = (Player)e;
     }
 
@@ -269,6 +297,23 @@ public class WorldModel
         p.init(pos.cpy(), vel.cpy(), dim.cpy(), lifespan, startColor, endColor);
         particles.add(p);
     }
+
+    public void createMultipliers(Vector3 pos, int count)
+    {
+        for(int i = 0; i < count; i++)
+        {
+            float angle = ((float)(i)/(float)count) * 360f;
+
+            Vector3 vel = new Vector3();
+
+            float speed = MathUtils.random(0.5f, 1.5f);
+
+            vel.x = MathUtils.cos(angle) * speed;
+            vel.y = MathUtils.sin(angle) * speed;
+
+            addEntity(new Multiplier(pos.cpy(), vel, null));
+        }
+    }
     
     public void killAllEntities()
     {
@@ -276,6 +321,7 @@ public class WorldModel
         {
             e.kill();
         }
+        player = null;
     }
     
     public Array<Entity> getAllEntities()
@@ -309,11 +355,6 @@ public class WorldModel
         {
             e.dispose();
         }
-    }
-
-    public void sleep(float seconds)
-    {
-        sleepTimer += seconds;
     }
     
     public Player getPlayer()

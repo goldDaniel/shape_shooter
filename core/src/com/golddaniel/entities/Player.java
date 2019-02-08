@@ -17,6 +17,7 @@ package com.golddaniel.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.ControllerListener;
 import com.badlogic.gdx.controllers.Controllers;
@@ -120,9 +121,6 @@ public class Player extends Entity implements ControllerListener
     @Override
     public boolean axisMoved(Controller controller, int axisCode, float value)
     {
-
-
-
         final float DEADZONE = 0.2f;
 
 
@@ -212,11 +210,10 @@ public class Player extends Entity implements ControllerListener
 
     private WEAPON_TYPE weaponType;
 
-    public Player()
+    public Player(AssetManager assets)
     {
-        tex = new TextureRegion(new Texture("geometric/player.png"));
-
-
+        super(assets);
+        tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
 
         width = 0.5f;
         height = 0.5f;
@@ -239,6 +236,17 @@ public class Player extends Entity implements ControllerListener
         return a > 0 ? a : -a;
     }
 
+    public void setMoveDir(float x, float y)
+    {
+        moveDir.x = x;
+        moveDir.y = y;
+    }
+
+    public void setShootDir(float x, float y)
+    {
+        shootDir.x = x;
+        shootDir.y = y;
+    }
 
     public void update(WorldModel model, float delta)
     {
@@ -255,8 +263,6 @@ public class Player extends Entity implements ControllerListener
 
         if(SharedLibraryLoader.isWindows || SharedLibraryLoader.isLinux)
         {
-            float MAX_SPEED = 5.5f;
-
             moveDir.setZero();
             if(Gdx.input.isKeyPressed(Input.Keys.D))
             {
@@ -275,10 +281,6 @@ public class Player extends Entity implements ControllerListener
                 moveDir.y -= 1;
             }
 
-            velocity.add(moveDir.cpy().scl(MAX_SPEED));
-            velocity.limit(MAX_SPEED);
-
-
             shootDir.setZero();
             if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
             {
@@ -290,43 +292,42 @@ public class Player extends Entity implements ControllerListener
             }
             if(Gdx.input.isKeyPressed(Input.Keys.UP))
             {
-                shootDir.y += 1;
+            shootDir.y += 1;
             }
             if(Gdx.input.isKeyPressed(Input.Keys.DOWN))
             {
                 shootDir.y -= 1;
             }
-
-            if(shootDir.len2() > 0)
-            {
-                fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
-            }
         }
-        else if(SharedLibraryLoader.isAndroid)
+
+        float MAX_SPEED = 3.5f;
+
+        Vector3 acceleration = moveDir.cpy().scl(60f*delta);
+
+        if(moveDir.isZero())
         {
-            //should move input into another module////////////////////
-            if(SharedLibraryLoader.isAndroid)
-            {
-                float sensitivity = model.WORLD_HEIGHT / Gdx.graphics.getHeight();
+            velocity = velocity.lerp(Vector3.Zero, 5f*delta);
+        }
+        else
+        {
+            velocity.add(acceleration);
+        }
+        velocity.limit(MAX_SPEED);
 
-                Vector3 cursor = new Vector3(Gdx.input.getDeltaX(), -Gdx.input.getDeltaY(), 0);
 
-                //sensitivity
-                cursor.scl(sensitivity);
 
-                position.add(cursor);
-            }
-            ///////////////////////////////////////////////////////////
+        position.x += velocity.x * delta;
+        position.y += velocity.y * delta;
+        position.z = 0.00f;
+
+        if(shootDir.len2() > 0)
+        {
+            fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
         }
 
         angle += delta;
 
-        position.x += velocity.x * delta;
-        position.y += velocity.y * delta;
 
-        position.z = 0.00f;
-
-        velocity.scl(5 * delta);
        
         //bound inside world rect
         if(position.x < -model.WORLD_WIDTH/2f)
@@ -367,7 +368,7 @@ public class Player extends Entity implements ControllerListener
         {
             Vector3 pos = new Vector3(position);
 
-            Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+            Vector2 dir = new Vector2(velocity.x, velocity.y);
 
             pos.x -= MathUtils.cos(dir.angleRad()) * width / 2f;
             pos.y -= MathUtils.sin(dir.angleRad()) * height / 2f;
@@ -430,7 +431,7 @@ public class Player extends Entity implements ControllerListener
                             dir.angle() - dif*(i+1),
                             Bullet.TYPE.LASER_1);
                 }
-                cooldown = 0.08f;
+                cooldown = 0.1f;
             }
             else if(weaponType == WEAPON_TYPE.TWIN)
             {
@@ -456,7 +457,7 @@ public class Player extends Entity implements ControllerListener
 
     public void draw(SpriteBatch s)
     {
-        Vector2 dir = new Vector2(moveDir.x, moveDir.y);
+        Vector2 dir = new Vector2(velocity.x, velocity.y);
 
         s.setColor(Color.WHITE);
         s.draw(tex,
@@ -479,40 +480,35 @@ public class Player extends Entity implements ControllerListener
 
     public void kill(WorldModel model)
     {
-        if(model != null) return;
         isAlive = false;
-        int particles = 2048*4;
+        int particles = 512;
         for (int i = 0; i < particles; i++)
         {
             //particle angle
             float pAngle = (float)i/(float)particles*360f;
 
-            Vector3 dim = new Vector3(0.01f, 0.01f, 0.01f);
-//
-//            model.createParticle(
-//                    new Vector3(
-//                            position.x + width/2,
-//                            position.y + height/2,
-//                            0),
-//                    dim,
-//                    pAngle,
-//                    MathUtils.random(0.2f, 0.5f),
-//                    MathUtils.random(0.6f, 0.8f) * 2,
-//                    new Color(MathUtils.random(),
-//                        MathUtils.random(),
-//                        MathUtils.random(),
-//                        1f),
-//                    new Color(MathUtils.random(),
-//                        MathUtils.random(),
-//                        MathUtils.random(),
-//                        1f)
-//            );
+            Vector3 dim = new Vector3(0.5f, 0.01f, 0.01f);
+
+            float speed = MathUtils.random(12f, 15f);
+
+            model.createParticle(
+                    position.cpy(),
+                    new Vector3(MathUtils.cos(pAngle) * speed, MathUtils.sin(pAngle) * speed, 0),
+                    dim,
+                    MathUtils.random(0.4f, 2f),
+                    Color.MAGENTA,
+                    Color.WHITE);
+
+            speed = MathUtils.random(6f, 9f);
+
+            model.createParticle(
+                    position.cpy(),
+                    new Vector3(MathUtils.cos(pAngle) * speed, MathUtils.sin(pAngle) * speed, 0),
+                    dim,
+                    MathUtils.random(0.4f, 2f),
+                    Color.CYAN,
+                    Color.WHITE);
         }
         model.killAllEntities();
-    }
-
-    public void setWeaponType(WEAPON_TYPE type)
-    {
-        this.weaponType = type;
     }
 }

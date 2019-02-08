@@ -15,6 +15,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -25,7 +26,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -37,7 +37,7 @@ public class BlackHole extends Entity
     boolean isActive;
     float activeTimer;
  
-    private static TextureRegion edge = new TextureRegion(new Texture("geometric/dashedCircle.png"));
+    private static TextureRegion edge;
     
     private static ShapeRenderer sh = new ShapeRenderer();
     
@@ -53,8 +53,12 @@ public class BlackHole extends Entity
  
     float hue = -90f;
     
-    public BlackHole(Vector3 pos)
+    public BlackHole(Vector3 pos, AssetManager assets)
     {
+        super(assets);
+
+        edge = new TextureRegion(assets.get("geometric/dashedCircle.png", Texture.class));
+
         isActive = false;
         this.position = pos;
         isAlive = true;

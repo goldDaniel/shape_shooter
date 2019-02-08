@@ -15,6 +15,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -22,7 +23,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -34,7 +34,7 @@ public class Cuber extends Entity
     int health;
     
     
-    static Texture tex = new Texture("geometric/dashedSquare.png");
+    static Texture tex;
     
     Timer dirTimer;
     
@@ -45,8 +45,15 @@ public class Cuber extends Entity
     
     boolean active;
     
-    public Cuber(Vector3 pos)
+    public Cuber(Vector3 pos, AssetManager assets)
     {
+        super(assets);
+
+        if(tex == null)
+        {
+            tex = assets.get("geometric/dashedSquare.png", Texture.class);
+        }
+
         active = false;
         health = 9;
         isAlive = true;

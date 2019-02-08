@@ -5,7 +5,7 @@
  */
 package com.golddaniel.screens;
 
-import com.golddaniel.main.Assets;
+import com.badlogic.gdx.assets.AssetManager;
 import com.golddaniel.main.ScreenManager;
 import com.badlogic.gdx.Screen;
 
@@ -15,7 +15,7 @@ import com.badlogic.gdx.Screen;
  */
 public abstract class VScreen implements Screen
 {
-    final Assets assets;
+    final AssetManager assets;
     final ScreenManager sm;
     boolean inTransition;
     
@@ -23,7 +23,7 @@ public abstract class VScreen implements Screen
      *
      * @param sm
      */
-    public VScreen(ScreenManager sm, Assets assets)
+    public VScreen(ScreenManager sm, AssetManager assets)
     {
         this.sm = sm;
         this.assets = assets;

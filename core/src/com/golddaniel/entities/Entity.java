@@ -1,6 +1,7 @@
 
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -15,7 +16,12 @@ public abstract class Entity
     public Vector3 position;
 
     protected boolean isAlive;
-   
+
+    public Entity(AssetManager assets)
+    {
+        isAlive = true;
+    }
+
     public abstract void update(WorldModel world, float delta);
     public abstract void draw(SpriteBatch s);
     

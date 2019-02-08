@@ -4,46 +4,32 @@ package com.golddaniel.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.SelectBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
-import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
+import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
-import com.golddaniel.entities.Obstacle;
+import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Player;
-import com.golddaniel.entities.Turret;
 import com.golddaniel.main.*;
 
 /**
@@ -51,107 +37,165 @@ import com.golddaniel.main.*;
  */
 public class GameScreen extends VScreen
 {
-    WorldModel model;
-    WorldRenderer renderer;
-    
-    BitmapFont font;
-    SpriteBatch s;
+    private WorldModel model;
+    private WorldRenderer renderer;
 
-    Skin uiSkin;
-    Stage uiStage;
+    private Stage uiDebugStage;
+    private ExtendViewport uiDebugViewport;
 
-    OrthographicCamera uiCam;
-    ExtendViewport uiViewport;
+    private Stage uiStage;
 
-    TextureRegion tex;
+    private float gridSpacing = 0.3f;
+    private Label gridLabel;
+    private Label timeLabel;
+    private Label elapsed;
 
-    float gridSpacing = 0.25f;
-    Label gridLabel;
-    Label timeLabel;
-    Label elapsed;
+    private Label timerLabel;
+    private Label scoreLabel;
+    private Label multiplierLabel;
 
-    PhysicsGrid g;
+    private PhysicsGrid g;
 
-    boolean runSim;
+    private boolean runSim;
 
-    CameraInputController camController;
+    private CameraInputController camController;
 
-    public GameScreen(ScreenManager sm, Assets assets)
+    public GameScreen(ScreenManager sm, AssetManager assets)
     {
         super(sm, assets);
 
-        tex = new TextureRegion(new Texture("texture.png"));
+        Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
+
 
         ArrayMap<Integer, Array<Entity>> toSpawn = new ArrayMap<Integer, Array<Entity>>();
 
-        float worldWidth  = 26;
-        float worldHeight = 20;
+        float worldWidth  = 15;
+        float worldHeight = 10;
 
-        int waves = 128;
-        for(int i = 0; i < waves; i++)
+        float levelTime = 120f;
+
+        model = new WorldModel(worldWidth,worldHeight, toSpawn, levelTime);
+
+
+        for(int i = 0; i < 120; i += 4)
         {
             Array<Entity> toAdd = new Array<Entity>();
 
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
 
-            float angle = (float)i/(float)waves*360f;
-
-            toAdd.add(new Bouncer(
-                            new Vector3(),
-                            new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0)));
-
-            toSpawn.put((i+1), toAdd);
+            toSpawn.put(i, toAdd);
         }
 
+        for(int i = 0; i < 120; i += 12)
+        {
+            Array<Entity> toAdd = new Array<Entity>();
 
+            toAdd.add(new Bouncer(
+                            new Vector3(-worldWidth / 2f, worldHeight / 2f, 0),
+                            new Vector3(1, -1, 0),
+                            assets));
 
-        model = new WorldModel(worldWidth,worldHeight, toSpawn);
+            toAdd.add(new Bouncer(
+                            new Vector3(worldWidth / 2f, worldHeight / 2f, 0),
+                            new Vector3(-1, -1, 0),
+                            assets));
 
+            toAdd.add(new Bouncer(
+                            new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0),
+                            new Vector3(1, 1, 0),
+                            assets));
 
-        model.addEntity(new Player());
+            toAdd.add(new Bouncer(
+                            new Vector3(worldWidth / 2f, -worldHeight / 2f, 0),
+                            new Vector3(-1, 1, 0),
+                            assets));
+
+            toSpawn.put(i, toAdd);
+        }
+
+        model.addEntity(new Player(assets));
 
         g = new PhysicsGrid(
                             new Vector2(model.WORLD_WIDTH,
                                         model.WORLD_HEIGHT),
-                                        gridSpacing);
-
-
+                            gridSpacing);
 
         model.setGrid(g);
 
         camController = new CameraInputController(model.getCamera());
-        renderer = new WorldRenderer(model);
+        renderer = new WorldRenderer(model, assets);
 
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Square.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 64;
-        font = generator.generateFont(parameter); 
-        generator.dispose(); 
-        
-        
-        s = new SpriteBatch();
+        Bullet.loadTextures(assets);
+        Multiplier.loadTextures(assets);
 
-        float vWidth;
-        float vHeight;
-        if(SharedLibraryLoader.isAndroid)
+        uiDebugViewport = new ExtendViewport(800, 600);
+        uiDebugViewport.apply();
+
+        uiDebugStage = new Stage(uiDebugViewport);
+
+        buildEditorUI(uiDebugStage, uiSkin);
+
+        uiStage = new Stage(uiDebugViewport);
+        Touchpad leftPad = new Touchpad(0.1f, uiSkin);
+        Touchpad rightPad = new Touchpad(0.1f, uiSkin);
+
+        float size = 256;
+        leftPad.setSize(size, size);
+        rightPad.setSize(size, size);
+
+        leftPad.addListener(new ChangeListener()
         {
-            vWidth = 600;
-            vHeight = 800;
-        }
-        else
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                if(model.getPlayer() != null)
+                {
+                    // This is run when anything is changed on this actor.
+                    float deltaX = ((Touchpad) actor).getKnobPercentX();
+                    float deltaY = ((Touchpad) actor).getKnobPercentY();
+                    model.getPlayer().setMoveDir(deltaX, deltaY);
+                }
+            }
+        });
+        rightPad.addListener(new ChangeListener()
         {
-            vWidth = 800;
-            vHeight = 600;
-        }
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                if(model.getPlayer() != null)
+                {
+                    // This is run when anything is changed on this actor.
+                    float deltaX = ((Touchpad) actor).getKnobPercentX();
+                    float deltaY = ((Touchpad) actor).getKnobPercentY();
+                    model.getPlayer().setShootDir(deltaX, deltaY);
+                }
+            }
+        });
 
-        uiCam = new OrthographicCamera(vWidth, vHeight);
-        uiViewport = new ExtendViewport(vWidth, vHeight, uiCam);
-        uiCam.position.x = 0f;
-        uiCam.position.y = 0f;
-        uiViewport.apply();
+        leftPad.setPosition(64,64);
+        rightPad.setPosition(uiStage.getWidth() - size - 64, 64);
 
-        uiStage = new Stage(uiViewport);
-        uiSkin = new Skin(Gdx.files.internal("ui/neon/skin/neon-ui.json"));
-        buildEditorUI(uiStage, uiSkin);
+        uiStage.addActor(leftPad);
+        uiStage.addActor(rightPad);
+
+        timerLabel = new Label("", uiSkin);
+        timerLabel.setPosition(0, 600 - 32);
+        timerLabel.setFontScale(2);
+
+        scoreLabel = new Label("", uiSkin);
+        scoreLabel.setPosition(0, 600 - 32 - 32);
+        scoreLabel.setFontScale(2);
+
+        multiplierLabel = new Label("", uiSkin);
+        multiplierLabel.setPosition(0, 600 - 32 - 32 - 32);
+        multiplierLabel.setFontScale(2);
+
+        uiStage.addActor(timerLabel);
+        uiStage.addActor(scoreLabel);
+        uiStage.addActor(multiplierLabel);
     }
 
     private void buildEditorUI(Stage stage, Skin skin)
@@ -196,14 +240,14 @@ public class GameScreen extends VScreen
 
         table.row();
 
-        timeLabel = new Label("TIMESCALE: " + Globals.TIMESCALE, skin);
+        timeLabel = new Label("TIMESCALE: " + model.TIMESCALE, skin);
         final Slider timeSlider = new Slider(0.1f, 1.5f, 0.1f, false, skin);
         timeSlider.setAnimateDuration(0.1f);
         timeSlider.setValue(1);
         timeSlider.addListener(new ChangeListener() {
             public void changed (ChangeEvent event, Actor actor) {
-                    Globals.TIMESCALE = MathUtils.round(timeSlider.getValue() * 10f) / 10f;
-                    timeLabel.setText("TIMESCALE: " + Globals.TIMESCALE);
+                    model.TIMESCALE = MathUtils.round(timeSlider.getValue() * 10f) / 10f;
+                    timeLabel.setText("TIMESCALE: " + model.TIMESCALE);
             }
         });
 
@@ -218,7 +262,7 @@ public class GameScreen extends VScreen
             {
                 runSim = !runSim;
                 saveBtn.setText(runSim + "");
-        };
+            }
         });
 
 
@@ -239,33 +283,50 @@ public class GameScreen extends VScreen
 
         if(model.editMode)
         {
-            Gdx.input.setInputProcessor(new InputMultiplexer(uiStage, camController));
+            Gdx.input.setInputProcessor(new InputMultiplexer(uiDebugStage, camController));
 
-            uiStage.act();
+            uiDebugStage.act();
 
             if(runSim)
             {
                 model.update(delta);
                 CollisionSystem.update(model);
             }
-            elapsed.setText("ELAPSED TIME: " + model.getElapsedTime());
-
-            s.setProjectionMatrix(uiCam.combined);
-            uiStage.getViewport().getCamera().position.set(uiViewport.getWorldWidth()  / 2f,
-                                                           uiViewport.getWorldHeight() / 2f,
+            uiDebugStage.getViewport().getCamera().position.set(
+                                                           uiDebugViewport.getWorldWidth()  / 2f,
+                                                           uiDebugViewport.getWorldHeight() / 2f,
                                                            1);
-
             renderer.draw(model);
-            uiStage.draw();
+            uiDebugStage.draw();
         }
         else
         {
-            Gdx.input.setInputProcessor(null);
+            if(model.getRemainingTime() > 0)
+            {
+                Gdx.input.setInputProcessor(uiStage);
 
-            model.update(delta);
-            CollisionSystem.update(model);
+                uiStage.act();
+                model.update(delta);
+                CollisionSystem.update(model);
+
+
+                if (model.getPlayer() == null)
+                {
+                    model.addEntity(new Player(assets));
+                }
+            }
             renderer.draw(model);
+            uiStage.getViewport().getCamera().position.set(
+                    uiDebugViewport.getWorldWidth()  / 2f,
+                    uiDebugViewport.getWorldHeight() / 2f,
+                    1);
+            uiStage.draw();
         }
+
+        elapsed.setText("ELAPSED TIME: " + (int)model.getElapsedTime());
+        timerLabel.setText("REMAINING TIME: " + (int)model.getRemainingTime());
+        scoreLabel.setText("SCORE: " + model.getScore());
+        multiplierLabel.setText("MULTIPLIER: x" + model.getScoreMultiplier());
 
     }
 
@@ -282,7 +343,7 @@ public class GameScreen extends VScreen
     @Override
     public void resize(int width, int height)
     {
-        uiViewport.update(width, height);
+        uiDebugViewport.update(width, height);
         renderer.resize(width, height);
     }
 

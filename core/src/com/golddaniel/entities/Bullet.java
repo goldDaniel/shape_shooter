@@ -15,13 +15,14 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.golddaniel.main.Globals;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -42,26 +43,43 @@ public class Bullet extends Entity
         LASER_4,
     }
     
-    private final static TextureRegion LASER_1 = 
-            new TextureRegion(new Texture("lasers/laserBlue01.png"));
+    private static TextureRegion LASER_1;
     
-    private final static TextureRegion LASER_2 = 
-            new TextureRegion(new Texture("lasers/laserBlue02.png"));
+    private static TextureRegion LASER_2;
     
-    private final static TextureRegion LASER_3 = 
-            new TextureRegion(new Texture("lasers/laserBlue03.png"));
+    private static TextureRegion LASER_3;
     
-    private final static TextureRegion LASER_4 = 
-            new TextureRegion(new Texture("lasers/laserBlue04.png"));
+    private static TextureRegion LASER_4;
     
     float dir;
     
     TextureRegion tex;
     
     float speed;
-    
-    public Bullet(Vector3 position, float speed, float dir, TYPE type)
+
+    public static void loadTextures(AssetManager assets)
     {
+        if(LASER_1 == null)
+        {
+            LASER_1 = new TextureRegion(assets.get("lasers/laserBlue01.png", Texture.class));
+        }
+        if(LASER_2 == null)
+        {
+            LASER_2 = new TextureRegion(assets.get("lasers/laserBlue02.png", Texture.class));
+        }
+        if(LASER_3 == null)
+        {
+            LASER_3 = new TextureRegion(assets.get("lasers/laserBlue03.png", Texture.class));
+        }
+        if(LASER_4 == null)
+        {
+            LASER_4 = new TextureRegion(assets.get("lasers/laserBlue04.png", Texture.class));
+        }
+    }
+
+    public Bullet(Vector3 position, float speed, float dir, TYPE type, AssetManager assets)
+    {
+        super(assets);
         init(position, speed, dir, type);
     }
     
@@ -128,6 +146,7 @@ public class Bullet extends Entity
     {
         if(isAlive)
         {
+            s.setColor(Color.CYAN);
             s.draw(tex,
                     position.x - width / 2f, position.y - height / 2f,
                     width / 2f, height / 2f,

@@ -1,5 +1,177 @@
 package com.golddaniel.entities;
 
-public class Multiplier
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
+import com.golddaniel.main.WorldModel;
+public class Multiplier extends Entity
 {
+
+    Vector3 velocity;
+
+    static TextureRegion tex;
+
+    float width;
+    float height;
+    float angle = 0;
+
+    float lifespan = 5f;
+
+    boolean inRangeOfPlayer = false;
+
+    public Multiplier(Vector3 pos, Vector3 vel, AssetManager assets)
+    {
+        super(assets);
+        this.position = pos;
+        this.velocity = vel;
+
+        width = 0.25f;
+        height = 0.125f;
+    }
+
+    public static void loadTextures(AssetManager assets)
+    {
+        if(tex == null)
+            tex = new TextureRegion(assets.get("texture.png", Texture.class));
+    }
+
+    @Override
+    public void update(WorldModel model, float delta)
+    {
+        lifespan -= delta;
+        angle += velocity.len()*360f*delta;
+
+        Player p  = model.getPlayer();
+
+        //this block is here, because once we are in range, the
+        //multiplier will always move towards player, even once
+        //they have left range
+        if(lifespan < 4f)
+        {
+            if (p.position.dst(position) < 3f) inRangeOfPlayer = true;
+        }
+        if(inRangeOfPlayer)
+        {
+            Vector3 dir = p.position.cpy().sub(position);
+            dir.nor().scl(velocity.len());
+            velocity.set(dir);
+
+            //increase acceleration the closer we are to the player
+            Vector3 toAdd = velocity.cpy().nor();
+            toAdd.scl(25f * delta * 1f / p.position.dst(position));
+            velocity.add(toAdd);
+
+
+            Vector3 dim = new Vector3(0.025f, 0.025f, 0.025f);
+            Vector3 pos = position.cpy();
+            pos.sub(-width/2f, -height/2f, 0);
+
+            model.createParticle(
+                    pos,
+                    velocity.cpy().scl(-1),
+                    dim,
+                    MathUtils.random(0.1f, 0.5f),
+                    Color.LIME,
+                    Color.WHITE);
+
+            pos = position.cpy();
+            pos.sub(-width/2f, height/2f, 0);
+
+            model.createParticle(
+                    pos,
+                    velocity.cpy().scl(-1),
+                    dim,
+                    MathUtils.random(0.1f, 0.5f),
+                    Color.LIME,
+                    Color.WHITE);
+
+            pos = position.cpy();
+            pos.sub(width/2f, -height/2f, 0);
+
+            model.createParticle(
+                    pos,
+                    velocity.cpy().scl(-1),
+                    dim,
+                    MathUtils.random(0.1f, 0.5f),
+                    Color.LIME,
+                    Color.WHITE);
+
+            pos = position.cpy();
+            pos.sub(width/2f, height/2f, 0);
+
+            model.createParticle(
+                    pos,
+                    velocity.cpy().scl(-1),
+                    dim,
+                    MathUtils.random(0.1f, 0.5f),
+                    Color.LIME,
+                    Color.WHITE);
+        }
+
+        position.x += velocity.x * delta;
+        position.y += velocity.y * delta;
+
+        if(position.x < -model.WORLD_WIDTH / 2f)
+        {
+            position.x = -model.WORLD_WIDTH /2f;
+            velocity.x = -velocity.x;
+        }
+        else if(position.x > model.WORLD_WIDTH / 2f)
+        {
+            position.x = model.WORLD_WIDTH /2f;
+            velocity.x = -velocity.x;
+        }
+        if(position.y < -model.WORLD_HEIGHT / 2f)
+        {
+            position.y = -model.WORLD_HEIGHT /2f;
+            velocity.y = -velocity.y;
+        }
+        else if(position.y > model.WORLD_HEIGHT / 2f)
+        {
+            position.y = model.WORLD_HEIGHT / 2f;
+            velocity.y = -velocity.y;
+        }
+
+        if(lifespan <= 0) isAlive = false;
+    }
+
+    @Override
+    public void draw(SpriteBatch s)
+    {
+        Color c = Color.LIME.cpy();
+        c.a = 0.8f * lifespan / 5f + 0.2f;
+        s.setColor(c);
+        s.draw(tex,
+                position.x - width / 2f, position.y - height / 2f,
+                width / 2, height / 2,
+                width, height,
+                1f, 1f,
+                angle);
+    }
+
+    @Override
+    public void kill(WorldModel model)
+    {
+        isAlive = false;
+    }
+
+    @Override
+    public Rectangle getBoundingBox()
+    {
+        return new Rectangle(position.x - width / 2f,
+                             position.y - height / 2f,
+                                width, height);
+    }
+
+    @Override
+    public void dispose()
+    {
+
+    }
 }
