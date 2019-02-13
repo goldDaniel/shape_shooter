@@ -20,11 +20,13 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
+import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -33,7 +35,6 @@ import com.golddaniel.main.WorldModel;
  */
 public class Bouncer extends Entity
 {
-
     static TextureRegion tex;
     
     Color color;
@@ -137,7 +138,7 @@ public class Bouncer extends Entity
             dir.y  = -dir.y;
         }
 
-        model.applyRadialForce(position, 50*delta, width);
+        model.applyRadialForce(position, 150*delta, width);
     }
 
     @Override
@@ -191,22 +192,26 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
-                int particles = 64;
+                int particles = 16;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
 
                     angle += MathUtils.random(-2.5f, 2.5f);
 
-                    Vector3 dim = new Vector3(0.5f, 0.1f, 0.1f);
+                    Vector3 dim = new Vector3(0.5f, 0.05f, 0.05f);
+
+                    //reuse speed variable when we kill
+                    //totally was on purpose and not accidental
+                    speed = MathUtils.random(5f, 7f);
 
                     model.createParticle(
                             position.cpy(),
                             new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
-                            Color.YELLOW,
-                            Color.CYAN);
+                            Color.RED,
+                            Color.WHITE);
 
                     speed = MathUtils.random(5f, 7f);
 
@@ -215,16 +220,19 @@ public class Bouncer extends Entity
                             new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
-                            Color.YELLOW,
-                            Color.WHITE);
+                            Color.WHITE,
+                            Color.ORANGE);
                 }
-
 
                 isAlive = false;
 
                 model.addScore(2);
-                model.createMultipliers(position, 10);
-                model.applyRadialForce(position, 15f, width * 2);
+                model.createMultipliers(position, 6);
+                model.applyRadialForce(position, 20f,
+                                 width * 1.5f,
+                                        Color.YELLOW.cpy());
+
+                AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             }
         }
     }

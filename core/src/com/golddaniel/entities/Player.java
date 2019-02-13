@@ -26,12 +26,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -40,9 +42,19 @@ import com.golddaniel.main.WorldModel;
  */
 public class Player extends Entity implements ControllerListener
 {
+    public enum WEAPON_TYPE
+    {
+        RAPID,
+        SPREAD,
+        TWIN,
+    }
+
+    private WEAPON_TYPE weaponType;
+
+
     float hue;
 
-    TextureRegion tex;
+    static TextureRegion tex;
     Vector3 velocity;
     Vector3 moveDir;
     Vector3 shootDir;
@@ -52,8 +64,21 @@ public class Player extends Entity implements ControllerListener
 
     float angle;
 
+
+
+    final float COOLDOWN_DEFAULT = 0.125f;
+    final float COOLDOWN_POWERUP = 0.02f;
+
+    final int EXTRA_STREAMS_DEFAULT = 2;
+    final int EXTRA_STREAMS_POWERUP = 5;
+
+
+    float powerupTimer = 0;
+    int extraStreams = EXTRA_STREAMS_DEFAULT;
+
     //weapon cooldown, should probably move into its own module
     float cooldown = 0;
+    float currentWeaponCooldown = COOLDOWN_DEFAULT;
 
     public static class PS4
     {
@@ -197,23 +222,16 @@ public class Player extends Entity implements ControllerListener
         return false;
     }
 
-
-
-
-
-    public enum WEAPON_TYPE
+    public static void loadTextures(AssetManager assets)
     {
-        RAPID,
-        SPREAD,
-        TWIN,
+        if(tex == null)
+            tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
     }
-
-    private WEAPON_TYPE weaponType;
 
     public Player(AssetManager assets)
     {
         super(assets);
-        tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
+
 
         width = 0.5f;
         height = 0.5f;
@@ -327,6 +345,14 @@ public class Player extends Entity implements ControllerListener
 
         angle += delta;
 
+        powerupTimer -= delta;
+        if(powerupTimer <= 0)
+        {
+            powerupTimer = 0;
+            currentWeaponCooldown = COOLDOWN_DEFAULT;
+            extraStreams = EXTRA_STREAMS_DEFAULT;
+            powerupTimer = 0;
+        }
 
        
         //bound inside world rect
@@ -363,7 +389,7 @@ public class Player extends Entity implements ControllerListener
     private void createParticleTrail(WorldModel model)
     {
         Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
-        Color end = Color.RED.cpy().fromHsv(hue + 180f, 1f, 1f);
+        Color end = Color.BLACK.cpy();
         for (int i = 0; i < 10; i++)
         {
             Vector3 pos = new Vector3(position);
@@ -390,68 +416,35 @@ public class Player extends Entity implements ControllerListener
     {
         if(cooldown <= 0)
         {
+            AudioSystem.playSound(AudioSystem.SoundEffect.LASER);
+
             Vector2 dir = new Vector2(direction.x, direction.y);
 
             Vector3 bulletPos = new Vector3();
             bulletPos.x = position.x + 0.005f;
             bulletPos.y = position.y + height /2f;
 
-            if(weaponType == WEAPON_TYPE.RAPID)
+            float speed = 17f;
+            model.createBullet(bulletPos,
+                    speed,
+                    dir.angle(),
+                    Bullet.TYPE.LASER_1);
+
+            float dif = 1.5f;
+            //adds this amount of bullets to each side
+            //i.e. extrabullets*2 gets added
+            for (int i = 0; i < extraStreams; i++)
             {
-                float speed = 19f;
-                dir.x += MathUtils.random(-0.25f, 0.25f);
-                dir.nor();
-
                 model.createBullet(bulletPos,
                         speed,
-                        dir.angle(),
+                        dir.angle() + dif*(i+1),
                         Bullet.TYPE.LASER_1);
-
-                cooldown = 0.045f;
+                model.createBullet(bulletPos,
+                        speed,
+                        dir.angle() - dif*(i+1),
+                        Bullet.TYPE.LASER_1);
             }
-            else if(weaponType == WEAPON_TYPE.SPREAD)
-            {
-                float speed = 17f;
-                model.createBullet(bulletPos,
-                        speed,
-                        dir.angle(),
-                        Bullet.TYPE.LASER_1);
-
-                float dif = 1.5f;
-                //adds this amount of bullets to each side
-                //i.e. extrabullets*2 gets added
-                for (int i = 0; i < 2; i++)
-                {
-                    model.createBullet(bulletPos,
-                            speed,
-                            dir.angle() + dif*(i+1),
-                            Bullet.TYPE.LASER_1);
-                    model.createBullet(bulletPos,
-                            speed,
-                            dir.angle() - dif*(i+1),
-                            Bullet.TYPE.LASER_1);
-                }
-                cooldown = 0.1f;
-            }
-            else if(weaponType == WEAPON_TYPE.TWIN)
-            {
-                float speed = 20f;
-                bulletPos.x += width / 2f;
-
-                model.createBullet(bulletPos,
-                        speed,
-                        dir.angle(),
-                        Bullet.TYPE.LASER_1);
-
-                bulletPos.x -= width;
-
-                model.createBullet(bulletPos,
-                        speed,
-                        dir.angle(),
-                        Bullet.TYPE.LASER_1);
-
-                cooldown = 0.15f;
-            }
+            cooldown = currentWeaponCooldown;
         }       
     }
 
@@ -470,16 +463,18 @@ public class Player extends Entity implements ControllerListener
 
     public void dispose()
     {
+        Controllers.removeListener(this);
     }
 
     public Rectangle getBoundingBox()
     {
         return new Rectangle(position.x - width /2f, position.y - height /2f,
-                             width, height);
+                             width / 2f, height);
     }
 
     public void kill(WorldModel model)
     {
+        AudioSystem.playSound(AudioSystem.SoundEffect.PLAYER_DEATH);
         isAlive = false;
         int particles = 512;
         for (int i = 0; i < particles; i++)
@@ -489,26 +484,40 @@ public class Player extends Entity implements ControllerListener
 
             Vector3 dim = new Vector3(0.5f, 0.01f, 0.01f);
 
-            float speed = MathUtils.random(12f, 15f);
+            float speed = MathUtils.random(15f, 22f);
 
             model.createParticle(
                     position.cpy(),
-                    new Vector3(MathUtils.cos(pAngle) * speed, MathUtils.sin(pAngle) * speed, 0),
+                    new Vector3(
+                        MathUtils.cosDeg(pAngle) * speed,
+                        MathUtils.sinDeg(pAngle) * speed,
+                        0),
                     dim,
                     MathUtils.random(0.4f, 2f),
                     Color.MAGENTA,
                     Color.WHITE);
 
-            speed = MathUtils.random(6f, 9f);
+            speed = MathUtils.random(10f, 14f);
 
             model.createParticle(
                     position.cpy(),
-                    new Vector3(MathUtils.cos(pAngle) * speed, MathUtils.sin(pAngle) * speed, 0),
+                    new Vector3(
+                            MathUtils.cosDeg(pAngle) * speed,
+                            MathUtils.sinDeg(pAngle) * speed,
+                            0),
                     dim,
                     MathUtils.random(0.4f, 2f),
                     Color.CYAN,
                     Color.WHITE);
         }
         model.killAllEntities();
+    }
+
+    public void applyPowerup()
+    {
+        extraStreams = EXTRA_STREAMS_POWERUP;
+        currentWeaponCooldown = COOLDOWN_POWERUP;
+
+        powerupTimer = 8f;
     }
 }

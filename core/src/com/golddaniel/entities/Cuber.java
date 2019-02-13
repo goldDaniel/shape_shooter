@@ -21,8 +21,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Timer;
+import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -40,8 +42,8 @@ public class Cuber extends Entity
     
     Vector3 dir;
     
-    int width;
-    int height;
+    float width;
+    float height;
     
     boolean active;
     
@@ -63,7 +65,7 @@ public class Cuber extends Entity
         
         dir = new Vector3();
         
-        width = height = 64;
+        width = height = 0.4f;
         
         boolean axis = MathUtils.randomBoolean();
         
@@ -155,31 +157,31 @@ public class Cuber extends Entity
                 }, 0.75f);
             }
             
-            position.add(dir.cpy().scl(400f*delta));
+            position.add(dir.cpy().scl(2f*delta));
             
-            if(position.x < 0)
+            if(position.x < -world.WORLD_WIDTH/2f)
             {
-                position.x = 0;
+                position.x = -world.WORLD_WIDTH /2f;
                 dir.x = -dir.x;
             }
-            else if(position.x > world.WORLD_WIDTH - width)
+            else if(position.x > world.WORLD_WIDTH / 2f)
             {
-                position.x = world.WORLD_WIDTH - width;
+                position.x = world.WORLD_WIDTH / 2f;
                 dir.x = -dir.x;
             }
             
-            if(position.y < 0)
+            if(position.y < -world.WORLD_HEIGHT /2f)
             {
-                position.y = 0;
+                position.y = -world.WORLD_HEIGHT / 2f;
                 dir.y = -dir.y;
             }
-            else if(position.y > world.WORLD_HEIGHT - height)
+            else if(position.y > world.WORLD_HEIGHT /2f)
             {
-                position.y = world.WORLD_HEIGHT - height;
+                position.y = world.WORLD_HEIGHT / 2f;
                 dir.y = -dir.y;
             }
 
-            world.applyRadialForce(getMid(), 1000f, 192);
+            world.applyRadialForce(getMid(), 200f*delta, width*1.5f);
         }
         else
         {
@@ -200,14 +202,14 @@ public class Cuber extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-        Color c = Color.LIME.cpy();
+        Color c = Color.RED.cpy();
         if(!active)
         {
             c.a = 0.4f;
         }
         s.setColor(c);
         
-        s.draw(tex, position.x, position.y, width, height);
+        s.draw(tex, position.x - width / 2f, position.y - height / 2f, width, height);
         
         s.setColor(Color.WHITE);
     }
@@ -219,35 +221,36 @@ public class Cuber extends Entity
         health--;
         if(health <= 0)
         {
+            AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             isAlive = false;
-            model.applyRadialForce(getMid(), 10000f, 256);
-            
-            int particles = 32;
+            model.applyRadialForce(getMid(), 40f, width *3, Color.RED);
+
+            model.createMultipliers(position, 5);
+
+            int particles = 16;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
-
                 angle += MathUtils.random(-2.5f, 2.5f);
 
-                Vector3 dim = new Vector3(0.01f, 0.01f, 0.01f);
 
-//                model.createParticle(
-//                        getMid(),
-//                        dim,
-//                        angle,
-//                        MathUtils.random(0.5f, 0.65f),
-//                        1,
-//                        Color.LIME,
-//                        Color.WHITE);
-//
-//                model.createParticle(
-//                        getMid(),
-//                        dim,
-//                        angle,
-//                        MathUtils.random(0.55f, 0.75f),
-//                        1f/2f,
-//                        Color.RED,
-//                        Color.PINK);
+                float speed = 5f + MathUtils.random(-2f, 2f);
+
+                Vector3 dim = new Vector3(0.25f, 0.08f, 0.08f);
+
+
+                Vector3 vel = new Vector3(
+                                MathUtils.cosDeg(angle)*speed,
+                                MathUtils.sinDeg(angle)*speed,
+                                0);
+
+                model.createParticle(
+                        position,
+                        vel,
+                        dim,
+                        MathUtils.random(0.5f, 0.65f),
+                        Color.LIME,
+                        Color.RED);
             } 
         } 
     }

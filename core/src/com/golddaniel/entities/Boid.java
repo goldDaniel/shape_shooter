@@ -27,6 +27,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
+import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -35,23 +36,23 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    static float SPEED_MAX = 1.25f;
-   
-    static Array<Boid> boids = new Array<Boid>();
-    
-    static TextureRegion tex;
-    
-    Vector3 velocity;
-    Vector3 acceleration;
-    
-    Timer activeTimer;
-    
-    Color color;
-    
-    float width;
-    float height;
-    
-    int health = 5;
+    private static float SPEED_MAX = 1.25f;
+
+    private static Array<Boid> boids = new Array<Boid>();
+
+    private static TextureRegion tex;
+
+    private Vector3 velocity;
+    private Vector3 acceleration;
+
+    private Timer activeTimer;
+
+    private Color color;
+
+    private float width;
+    private float height;
+
+    private int health = 5;
 
     
     public Boid(Vector3 position, AssetManager assets)
@@ -72,9 +73,8 @@ public class Boid extends Entity
         
         width = 0.25f;
         height = 0.25f;
-        color = Color.CORAL.cpy();
-     
-        
+        color = Color.CYAN.cpy();
+
         boids.add(this);
     }
     
@@ -87,7 +87,7 @@ public class Boid extends Entity
     {
         Vector3 result = new Vector3();
         int count = 0;
-        float range = 2f;
+        float range = 5f;
         
         Vector3 sum = new Vector3();
         for(Boid b : boids)
@@ -120,7 +120,7 @@ public class Boid extends Entity
     private Vector3 allignment()
     {
         Vector3 result = new Vector3();
-        float range = 2.5f;
+        float range = 3.5f;
         int count = 0;
         
         Vector3 sum = new Vector3();
@@ -160,7 +160,7 @@ public class Boid extends Entity
     
         int count = 0;
         
-        float range = 1.15f;
+        float range = 0.75f;
         
         Vector3 sum = new Vector3();
         for(Boid b : boids)
@@ -254,12 +254,6 @@ public class Boid extends Entity
     @Override
     public void update(WorldModel model, float delta)
     {
-
-        float[] hsv = new float[3];
-        color.toHsv(hsv);
-        hsv[0] += 60f*delta;
-        color.fromHsv(hsv);
-
         borderCheck(model);
 
         Vector3 separation = separation();
@@ -268,13 +262,12 @@ public class Boid extends Entity
         Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
         Vector3 seek = new Vector3();
 
-        float range = 6f;
+        float range = 7f;
         if(model.getEntityType(Player.class).size > 0)
         {
 
             Vector3 target = model.getEntityType(Player.class).first().position;
             float dist = target.dst(position);
-
             if(dist < range)
             {
                 seek.set(seek(target));
@@ -298,7 +291,7 @@ public class Boid extends Entity
 
         Vector3 pos = position.cpy();
         pos.z = -0.1f;
-        model.applyRadialForce(position, 150f * delta, width * 2);
+        model.applyRadialForce(position, 150f * delta, width);
 
     }
 
@@ -346,14 +339,14 @@ public class Boid extends Entity
         health--;
         if(health <= 0)
         {
-            int particles = 64;
+            int particles = 16;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
 
                 angle += MathUtils.random(-1.5f, 1.5f);
 
-                Vector3 dim = new Vector3(0.5f, 0.01f, 0.01f);
+                Vector3 dim = new Vector3(0.25f, 0.05f, 0.05f);
 
                 float speed = MathUtils.random(7f, 10f);
 
@@ -379,12 +372,16 @@ public class Boid extends Entity
             Vector3 pos = position.cpy();
             pos.z = -0.01f;
 
-            model.createMultipliers(position, 5);
+            model.createMultipliers(position, 3);
             model.addScore(1);
             model.applyRadialForce(
                           pos,
-                    25,
-                    (width + height) * 2f);
+                    20,
+                    (width) * 4f, Color.CYAN.cpy());
+
+            boids.removeValue(this, true);
+
+            AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
 
             isAlive = false;
         }

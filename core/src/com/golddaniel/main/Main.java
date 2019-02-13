@@ -6,6 +6,8 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.SkinLoader;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -36,6 +38,7 @@ public class Main extends ApplicationAdapter {
         assets = new AssetManager();
 
         assets.load("texture.png", Texture.class);
+        assets.load("circle.png", Texture.class);
 
         {
             FileHandleResolver resolver = new InternalFileHandleResolver();
@@ -43,8 +46,8 @@ public class Main extends ApplicationAdapter {
             assets.setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(resolver));
 
             FreetypeFontLoader.FreeTypeFontLoaderParameter parms = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
-            parms.fontFileName = "fonts/Square.ttf";  // path of .ttf file where that exist
-            parms.fontParameters.size = 64;
+            parms.fontFileName = "fonts/Square.ttf";  // path of .ttf file
+            parms.fontParameters.size = 72;
             assets.load("Square.ttf", BitmapFont.class, parms);   // fileName with extension, sameName will use to get from manager
         }
 
@@ -57,12 +60,22 @@ public class Main extends ApplicationAdapter {
 
         assets.load("skybox.jpg", Texture.class);
         assets.load("geometric/dashedCircle.png", Texture.class);
+        assets.load("geometric/dashedSquare.png", Texture.class);
         assets.load("geometric/player.png", Texture.class);
 
-        assets.load("lasers/laserBlue01.png", Texture.class);
+        assets.load("lasers/laserRed14.png", Texture.class);
         assets.load("lasers/laserBlue02.png", Texture.class);
         assets.load("lasers/laserBlue03.png", Texture.class);
         assets.load("lasers/laserBlue04.png", Texture.class);
+
+
+        assets.load("sounds/bouncer_death.mp3", Sound.class);
+        assets.load("sounds/player_death.wav", Sound.class);
+        assets.load("sounds/pickup.wav", Sound.class);
+        assets.load("sounds/laser.wav", Sound.class);
+        assets.load("sounds/respawn.wav", Sound.class);
+
+        assets.load("sounds/background.mp3", Music.class);
 
         while(assets.update())
         {
@@ -96,7 +109,7 @@ public class Main extends ApplicationAdapter {
         //fixed issue on linux where you could not move mouse after
         //closing the window
         
-
+        AudioSystem.dispose();
         sm.dispose();
     }
     

@@ -54,18 +54,6 @@ public class ScreenManager
         return result;
     }
     
-    public boolean disposeScreen(STATE state)
-    {
-        boolean result = false;
-        
-        if(screenMap.containsKey(state))
-        {
-            screenMap.removeKey(state).dispose();
-            result = true;
-        }
-        return result;
-    }
-    
     /**
      * Call at program end
      */

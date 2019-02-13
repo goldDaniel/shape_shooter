@@ -17,25 +17,16 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.Queue;
 
-import java.awt.MediaTracker;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +39,7 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 8f;
+    final float STIFFNESS = 5f;
     final float DAMPING = 3.5f;
     final float INVERSE_MASS = 1f/0.0125f;
 
@@ -132,21 +123,23 @@ public class PhysicsGrid
     {
         //position point is created at and have to spring back to
         Vector3 desiredPosition;
-        
         Vector3 position;
+
         Vector3 velocity;
         Vector3 acceleration;
         
         float inverseMass;
 
+        Color desiredColor;
         Color color;
-        
-        public Point(Vector3 position, float inverseMass, Color color)
+
+        private Point(Vector3 position, float inverseMass, Color color)
         {
             this.desiredPosition = position.cpy();
             this.position = position.cpy();
             this.inverseMass = inverseMass;
-            this.color = color;
+            this.desiredColor = color;
+            this.color = desiredColor.cpy();
             velocity = new Vector3();
             acceleration = new Vector3();
         }
@@ -190,9 +183,11 @@ public class PhysicsGrid
             {
                 velocity.x = velocity.y = velocity.z = 0;
             }
+
+            color.lerp(desiredColor, delta * 0.5f);
         }
 
-        public void applyForce(Vector3 force)
+        private void applyForce(Vector3 force)
         {
             acceleration.x += force.x*inverseMass;
             acceleration.y += force.y*inverseMass;
@@ -213,16 +208,11 @@ public class PhysicsGrid
     private int rows;
     private int cols;
 
-    ShaderProgram shader;
-    ImmediateModeRenderer20 immediateRenderer;
+    private Array<PointRunnable> runnables;
 
-    boolean fill = false;
+    private ExecutorService es;
 
-    Array<PointRunnable> runnables;
-
-    ExecutorService es;
-
-    class PointRunnable implements Runnable
+    private class PointRunnable implements Runnable
     {
         Array<Point> points;
         float dt;
@@ -232,10 +222,7 @@ public class PhysicsGrid
             this.points = points;
         }
 
-        public void setDelta(float dt)
-        {
-            this.dt = dt;
-        }
+        public void setDelta(float dt) { this.dt = dt; }
 
         @Override
         public void run()
@@ -253,17 +240,17 @@ public class PhysicsGrid
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
 
-        sh = new ImmediateModeRenderer20(2500000, true, true, 0);
-        shader = new ShaderProgram(createVertexShader(), createFragmentShader());
+        sh = new ImmediateModeRenderer20(10000, true, true, 0);
+        ShaderProgram shader = new ShaderProgram(createVertexShader(), createFragmentShader());
 
         if(!shader.isCompiled())
         {
             Gdx.app.log("SHADER", shader.getLog());
         }
 
-        sh.setShader(shader);
+        color = Color.BLUE.cpy();
 
-        color = Color.MAGENTA.cpy();
+        sh.setShader(shader);
 
         points = new Point[rows + 1][cols + 1];
         
@@ -280,12 +267,10 @@ public class PhysicsGrid
                     invMass = 0;
                 }
 
-                float colorSpectrum = 360f;
+                float colorSpectrum = 30f;
                 float saturation = 0.8f;
                 float alpha = 1f;
-                Color c = Color.MAGENTA.cpy().fromHsv((float)i / (float)(points.length - 1) * colorSpectrum +
-                                (float)j / (float)(points[i].length - 1) * colorSpectrum,
-                        saturation, 1f);
+                Color c = Color.WHITE.cpy().fromHsv(0f, 0f, 0.45f);
                 c.a = alpha;
 
                 points[i][j] = new Point(
@@ -310,9 +295,7 @@ public class PhysicsGrid
         }
 
         runnables = new Array<PointRunnable>();
-        buildThreads(runnables, 4);
-
-        immediateRenderer = new ImmediateModeRenderer20(false, true, 0);
+        buildThreads(runnables, 8);
     }
 
     private void buildThreads(Array<PointRunnable> runnables, int threadCount)
@@ -367,7 +350,7 @@ public class PhysicsGrid
         }
     }
 
-    public void applyRadialForce(Vector3 pos, float force, float radius)
+    protected void applyRadialForce(Vector3 pos, float force, float radius)
     {
         for (Point[] pointArr : points)
         {
@@ -385,6 +368,25 @@ public class PhysicsGrid
         }
     }
 
+    protected void applyRadialForce(Vector3 pos, float force, float radius, Color c)
+    {
+        for (Point[] pointArr : points)
+        {
+            for (Point point : pointArr)
+            {
+                float dist = Vector3.dst(pos.x, pos.y, pos.z,
+                        point.position.x, point.position.y, point.position.z);
+                if (dist < radius)
+                {
+                    Vector3 dir = point.position.cpy().sub(pos);
+                    dir.nor().scl(force * (1f - (dist/radius)));
+                    point.applyForce(dir);
+                    point.color = c.cpy();
+                }
+            }
+        }
+    }
+
     private float abs(float a)
     {
         return a < 0 ? -a : a;
@@ -393,31 +395,19 @@ public class PhysicsGrid
     public void draw(SpriteBatch s)
     {
         s.end();
-        Gdx.gl.glLineWidth(4f);
+        Gdx.gl.glLineWidth(8f);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 
         Color disabled = color.cpy();
-
         disabled.r /= 8f;
         disabled.g /= 8f;
         disabled.b /= 8f;
-        disabled.a = 0.05f;
+        disabled.a = 0.35f;
 
-        if(Gdx.input.isKeyJustPressed(Keys.P))
-        {
-            fill = !fill;
-        }
+        sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
 
-        if(!fill)
-        {
-            sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
-        }
-        else
-        {
-            sh.begin(s.getProjectionMatrix(), GL20.GL_TRIANGLES);
-        }
 
         for(int i = 0; i < rows; i++)
         {
@@ -427,7 +417,6 @@ public class PhysicsGrid
                     Vector3 normal;
                     float dist;
                     Color lerp;
-
 
                     normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
                     dist = normal.len()*2f;

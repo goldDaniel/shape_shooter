@@ -16,25 +16,20 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
-
-import java.awt.*;
 
 /**
  *
@@ -80,6 +75,8 @@ public class WorldModel
     int scoreMultiplier = 1;
     int score = 0;
 
+    float respawnTimer = 0f;
+
     public Camera getCamera()
     {
         return cam;
@@ -107,16 +104,15 @@ public class WorldModel
 
         WORLD_WIDTH = width;
         WORLD_HEIGHT = height;
-        
+
         entities = new Array<Entity>();
         toRemove = new Array<Entity>();
         toAdd = new Array<Entity>();
 
-
         particles = new Array<Particle>();
 
         //arbitrary large number
-        particlePool = new Pool<Particle>(8192) {
+        particlePool = new Pool<Particle>(8192*2) {
             protected Particle newObject()
             {
                 return new Particle(new Vector3(-1000,-1000,-1000),
@@ -125,14 +121,14 @@ public class WorldModel
                             0, null, null);
             }
         };
-        
-        bulletPool = new Pool<Bullet>(512) {
+
+        bulletPool = new Pool<Bullet>(1024)
+        {
             protected Bullet newObject()
             {
                 return new Bullet(Vector3.Zero, 0, 0, null, null);
             }
         };
-
     }
 
     public float getElapsedTime()
@@ -140,11 +136,8 @@ public class WorldModel
         return elapsedTime;
     }
     public float getRemainingTime() { return remainingTime; }
-
     public int getScore() { return score; };
-
     public int getScoreMultiplier() { return scoreMultiplier; }
-
     public void incrementMultiplier()
     {
         scoreMultiplier++;
@@ -152,10 +145,8 @@ public class WorldModel
 
     public void update(float delta)
     {
-
         delta *= TIMESCALE;
         isUpdating = true;
-
 
         elapsedTime += delta;
         remainingTime -= delta;
@@ -178,7 +169,7 @@ public class WorldModel
             {
                 e.dispose();
                 toRemove.add(e);
-                if(e instanceof  Bullet) bulletPool.free((Bullet)e);
+                if(e instanceof  Bullet)     bulletPool.free((Bullet)e);
             }
             else
             {
@@ -236,12 +227,94 @@ public class WorldModel
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
             cam.position.z = MathUtils.lerp(
                                 cam.position.z,
-                        (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 5f,
-                       0.05f);
+                        (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 3.5f,
+                       delta*2f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
         }
         cam.update();
+
+
+        float respawnTime = 1.5f;
+        if(player == null)
+        {
+            respawnTimer += delta;
+
+            int particles = 8;
+            for(int i = 0; i < particles; i++)
+            {
+                float angle = (float)i/(float)particles * 360f;
+
+                angle += MathUtils.random(-30f, 30f);
+
+                Vector3 velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+                velocity.scl(MathUtils.random(2f, 4f));
+
+                createParticle(
+                        Vector3.Zero,
+                        velocity,
+                        new Vector3(0.5f, 0.01f, 0.01f),
+                        MathUtils.random(0.25f, 0.4f),
+                        Color.MAGENTA,
+                        Color.CYAN);
+
+                velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+                velocity.scl(MathUtils.random(3f, 5f));
+
+                createParticle(
+                        Vector3.Zero,
+                        velocity,
+                        new Vector3(0.5f, 0.01f, 0.01f),
+                        MathUtils.random(0.25f, 0.4f),
+                        Color.CYAN,
+                        Color.YELLOW);
+            }
+            if(respawnTimer >= respawnTime)
+            {
+                AudioSystem.playSound(AudioSystem.SoundEffect.RESPAWN);
+                //WE RESPAWN THE PLAYER IN HERE
+                ///////////////////////////////////////////////////////////////////////
+                addEntity(new Player(null));
+                applyRadialForce(new Vector3(), 2000f*delta, 2.25f);
+
+                particles = 256;
+                for(int i = 0; i < particles; i++)
+                {
+                    float angle = (float)i/(float)particles * 360f;
+
+                    angle += MathUtils.random(-10f, 10f);
+
+                    Vector3 velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+
+                    velocity.scl(MathUtils.random(10f, 14f));
+                    createParticle(
+                            Vector3.Zero,
+                            velocity,
+                            new Vector3(0.75f, 0.02f, 0.02f),
+                            MathUtils.random(0.7f, 0.9f),
+                            Color.MAGENTA,
+                            Color.CYAN);
+
+                    velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+
+                    velocity.scl(MathUtils.random(8f, 14f));
+                    createParticle(
+                            Vector3.Zero,
+                            velocity,
+                            new Vector3(0.75f, 0.02f, 0.02f),
+                            MathUtils.random(0.7f, 0.9f),
+                            Color.CYAN,
+                            Color.WHITE);
+                }
+                //////////////////////////////////////////////////////////////////////////////////
+            }
+        }
+        else
+        {
+            respawnTimer = 0;
+        }
+        float audioLerp = (1f - respawnTimer/respawnTime);
+        AudioSystem.setMusicVolume(0.1f +  0.9f * (float)Math.pow(audioLerp, 4f));
 
         isUpdating = false;
     }
@@ -274,23 +347,33 @@ public class WorldModel
 
     /*/////////////////////////////////////////////////////////////////////////
         maybe change?
-        currently null checking as this is how we use grid, but 
+        currently null checking as this is how we use grid, but
         sometimes we dont have a grid, when we are testing
-    */    
+    */
     public void applyRadialForce(Vector3 pos, float force, float radius)
-    {   
+    {
         if(g != null)
             g.applyRadialForce(pos, force, radius);
+        else
+            Gdx.app.log("WORLD-MODEL", "NO GRID TO APPLY FORCE TO");
+    }
+
+    public void applyRadialForce(Vector3 pos, float force, float radius, Color c)
+    {
+        if(g != null)
+            g.applyRadialForce(pos, force, radius, c);
+        else
+            Gdx.app.log("WORLD-MODEL", "NO GRID TO APPLY FORCE TO");
     }
     //////////////////////////////////////////////////////////////////////////////
-    
+
     public void createBullet(Vector3 pos, float speed, float dir, Bullet.TYPE type)
     {
         Bullet b = bulletPool.obtain();
         b.init(pos, speed, dir, type);
         addEntity(b);
     }
-    
+
     public void createParticle(Vector3 pos, Vector3 vel, Vector3 dim, float lifespan, Color startColor, Color endColor)
     {
         Particle p = particlePool.obtain();
@@ -302,19 +385,19 @@ public class WorldModel
     {
         for(int i = 0; i < count; i++)
         {
+
             float angle = ((float)(i)/(float)count) * 360f;
-
-            Vector3 vel = new Vector3();
-
             float speed = MathUtils.random(0.5f, 1.5f);
 
+            Vector3 vel = new Vector3();
             vel.x = MathUtils.cos(angle) * speed;
             vel.y = MathUtils.sin(angle) * speed;
 
-            addEntity(new Multiplier(pos.cpy(), vel, null));
+            Multiplier m = new Multiplier(pos.cpy(), vel, null);
+            addEntity(m);
         }
     }
-    
+
     public void killAllEntities()
     {
         for(Entity e : entities)
@@ -323,21 +406,21 @@ public class WorldModel
         }
         player = null;
     }
-    
+
     public Array<Entity> getAllEntities()
     {
         return entities;
     }
-    
+
     public Array<Particle> getAllParticles()
     {
         return particles;
     }
-    
+
     public <T> Array<T> getEntityType(Class<T> type)
     {
         Array<T> result = new Array<T>();
-        
+
         for(int i = 0; i < entities.size; i++)
         {
             T obj = (T)entities.get(i);
@@ -348,7 +431,7 @@ public class WorldModel
         }
         return result;
     }
-    
+
     public void dispose()
     {
         for(Entity e : entities)
@@ -356,7 +439,7 @@ public class WorldModel
             e.dispose();
         }
     }
-    
+
     public Player getPlayer()
     {
         return player;

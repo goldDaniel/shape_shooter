@@ -6,6 +6,15 @@
 package com.golddaniel.screens;
 
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -34,8 +43,6 @@ public class MainMenuScreen extends VScreen
     SpriteBatch s;
 
     BitmapFont font;
-    
-    PhysicsGrid g;
 
     Skin uiSkin;
     Stage uiStage;
@@ -55,9 +62,6 @@ public class MainMenuScreen extends VScreen
         uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
 
         uiStage = new Stage(viewport);
-
-        int spacing = 8;
-        g = new PhysicsGrid(new Vector2(72f*2, 128f*2), spacing);
 
         Table table = new Table();
         table.setFillParent(true);
@@ -112,20 +116,12 @@ public class MainMenuScreen extends VScreen
 
         Gdx.input.setInputProcessor(uiStage);
 
-        g.update(delta);
-
-
-        camera.position.x = camera.position.y = 0;
+        camera.position.x = 0f;
+        camera.position.y = 0f;
         camera.update();
 
-        s.setProjectionMatrix(camera.combined);
-        s.begin();
-        g.draw(s);
-        s.end();
-
-
-        camera.position.x = viewport.getWorldWidth() /2f;
-        camera.position.y = viewport.getWorldHeight() /2f;
+        camera.position.x = viewport.getWorldWidth()  / 2f;
+        camera.position.y = viewport.getWorldHeight() / 2f;
         camera.update();
 
         uiStage.act();

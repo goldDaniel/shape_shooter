@@ -15,6 +15,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -56,11 +57,15 @@ public class Particle implements Pool.Poolable
     Color endColor;
     Color color;
 
-    //private static TextureRegion rectTex = new TextureRegion(new Texture("texture.png"));
-    private static TextureRegion circleTex = new TextureRegion(new Texture("circle.png"));
+    private static TextureRegion circleTex;
 
     boolean isAlive;
 
+    public static void loadTextures(AssetManager assets)
+    {
+        if(circleTex == null)
+            circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
+    }
 
     public Particle(
             Vector3 pos, Vector3 velocity, Vector3 dim,

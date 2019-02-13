@@ -27,8 +27,10 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
+import com.golddaniel.entities.Cuber;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
+import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 import com.golddaniel.main.*;
 
@@ -45,7 +47,7 @@ public class GameScreen extends VScreen
 
     private Stage uiStage;
 
-    private float gridSpacing = 0.3f;
+    private float gridSpacing = 0.35f;
     private Label gridLabel;
     private Label timeLabel;
     private Label elapsed;
@@ -54,11 +56,15 @@ public class GameScreen extends VScreen
     private Label scoreLabel;
     private Label multiplierLabel;
 
+    private Label endLabel;
+
     private PhysicsGrid g;
 
     private boolean runSim;
 
     private CameraInputController camController;
+
+    private float gameRestart = 2f;
 
     public GameScreen(ScreenManager sm, AssetManager assets)
     {
@@ -66,20 +72,33 @@ public class GameScreen extends VScreen
 
         Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
 
-
         ArrayMap<Integer, Array<Entity>> toSpawn = new ArrayMap<Integer, Array<Entity>>();
 
-        float worldWidth  = 15;
-        float worldHeight = 10;
+        float worldWidth  = 12;
+        float worldHeight = 8;
 
-        float levelTime = 120f;
+        float levelTime = 90f;
 
         model = new WorldModel(worldWidth,worldHeight, toSpawn, levelTime);
 
-
-        for(int i = 0; i < 120; i += 4)
+        for(int i = 0; i < levelTime/3; i += 4)
         {
             Array<Entity> toAdd = new Array<Entity>();
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
 
             toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
             toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
@@ -89,47 +108,59 @@ public class GameScreen extends VScreen
             toSpawn.put(i, toAdd);
         }
 
-        for(int i = 0; i < 120; i += 12)
+        for(int i = (int)levelTime/3; i < levelTime*2/3; i += 4)
         {
             Array<Entity> toAdd = new Array<Entity>();
 
-            toAdd.add(new Bouncer(
-                            new Vector3(-worldWidth / 2f, worldHeight / 2f, 0),
-                            new Vector3(1, -1, 0),
-                            assets));
-
-            toAdd.add(new Bouncer(
-                            new Vector3(worldWidth / 2f, worldHeight / 2f, 0),
-                            new Vector3(-1, -1, 0),
-                            assets));
-
-            toAdd.add(new Bouncer(
-                            new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0),
-                            new Vector3(1, 1, 0),
-                            assets));
-
-            toAdd.add(new Bouncer(
-                            new Vector3(worldWidth / 2f, -worldHeight / 2f, 0),
-                            new Vector3(-1, 1, 0),
-                            assets));
+            toAdd.add(new Cuber(new Vector3(-worldWidth /2f, -worldHeight /2f, 0), assets));
+            toAdd.add(new Cuber(new Vector3(worldWidth /2f, -worldHeight /2f, 0), assets));
+            toAdd.add(new Cuber(new Vector3(worldWidth /2f, worldHeight /2f, 0), assets));
+            toAdd.add(new Cuber(new Vector3(-worldWidth /2f, worldHeight /2f, 0), assets));
 
             toSpawn.put(i, toAdd);
         }
 
-        model.addEntity(new Player(assets));
+        for(int i = 0; i < levelTime; i += 16)
+        {
+            Array<Entity> toAdd = new Array<Entity>();
+
+            toAdd.add(new Bouncer(
+                    new Vector3(-worldWidth / 2f, worldHeight / 2f, 0),
+                    new Vector3(1, -1, 0),
+                    assets));
+
+            toAdd.add(new Bouncer(
+                    new Vector3(worldWidth / 2f, worldHeight / 2f, 0),
+                    new Vector3(-1, -1, 0),
+                    assets));
+
+            toAdd.add(new Bouncer(
+                    new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0),
+                    new Vector3(1, 1, 0),
+                    assets));
+
+            toAdd.add(new Bouncer(
+                    new Vector3(worldWidth / 2f, -worldHeight / 2f, 0),
+                    new Vector3(-1, 1, 0),
+                    assets));
+
+            toSpawn.put(i, toAdd);
+        }
 
         g = new PhysicsGrid(
-                            new Vector2(model.WORLD_WIDTH,
-                                        model.WORLD_HEIGHT),
-                            gridSpacing);
+                new Vector2(model.WORLD_WIDTH,
+                        model.WORLD_HEIGHT),
+                gridSpacing);
 
         model.setGrid(g);
 
         camController = new CameraInputController(model.getCamera());
-        renderer = new WorldRenderer(model, assets);
 
         Bullet.loadTextures(assets);
         Multiplier.loadTextures(assets);
+        Player.loadTextures(assets);
+        Particle.loadTextures(assets);
+        AudioSystem.loadSounds(assets);
 
         uiDebugViewport = new ExtendViewport(800, 600);
         uiDebugViewport.apply();
@@ -142,7 +173,7 @@ public class GameScreen extends VScreen
         Touchpad leftPad = new Touchpad(0.1f, uiSkin);
         Touchpad rightPad = new Touchpad(0.1f, uiSkin);
 
-        float size = 256;
+        float size = 192;
         leftPad.setSize(size, size);
         rightPad.setSize(size, size);
 
@@ -175,8 +206,8 @@ public class GameScreen extends VScreen
             }
         });
 
-        leftPad.setPosition(64,64);
-        rightPad.setPosition(uiStage.getWidth() - size - 64, 64);
+        leftPad.setPosition(96,96);
+        rightPad.setPosition(uiStage.getWidth() - size - 96, 96);
 
         uiStage.addActor(leftPad);
         uiStage.addActor(rightPad);
@@ -193,9 +224,30 @@ public class GameScreen extends VScreen
         multiplierLabel.setPosition(0, 600 - 32 - 32 - 32);
         multiplierLabel.setFontScale(2);
 
+        endLabel = new Label("LEVEL COMPLETE", uiSkin);
+        endLabel.setPosition(800/2f, 600/2f);
+        endLabel.setFontScale(2);
+
         uiStage.addActor(timerLabel);
         uiStage.addActor(scoreLabel);
         uiStage.addActor(multiplierLabel);
+
+        TextButton powerUp = new TextButton("POWERUP", uiSkin);
+        powerUp.addListener(new ClickListener()
+        {
+            @Override
+            public void clicked(InputEvent event, float x, float y)
+            {
+                if(model.getPlayer() != null)
+                    model.getPlayer().applyPowerup();
+            }
+        });
+        powerUp.setSize(120, 80);
+
+        powerUp.setPosition(800-140, 600 - 100);
+        uiStage.addActor(powerUp);
+
+        renderer = new WorldRenderer(model, assets);
     }
 
     private void buildEditorUI(Stage stage, Skin skin)
@@ -283,6 +335,8 @@ public class GameScreen extends VScreen
 
         if(model.editMode)
         {
+            AudioSystem.pauseMusic();
+
             Gdx.input.setInputProcessor(new InputMultiplexer(uiDebugStage, camController));
 
             uiDebugStage.act();
@@ -301,23 +355,32 @@ public class GameScreen extends VScreen
         }
         else
         {
-            if(model.getRemainingTime() > 0)
+            if (model.getRemainingTime() > 0)
             {
+                AudioSystem.startMusic();
                 Gdx.input.setInputProcessor(uiStage);
 
                 uiStage.act();
                 model.update(delta);
                 CollisionSystem.update(model);
+            }
+            else
+            {
+                uiStage.addActor(endLabel);
 
-
-                if (model.getPlayer() == null)
+                if(gameRestart <= 0)
                 {
-                    model.addEntity(new Player(assets));
+                    AudioSystem.stopMusic();
+                    sm.setScreen(ScreenManager.STATE.MAIN_MENU);
+                }
+                else
+                {
+                    gameRestart -= delta;
                 }
             }
             renderer.draw(model);
             uiStage.getViewport().getCamera().position.set(
-                    uiDebugViewport.getWorldWidth()  / 2f,
+                    uiDebugViewport.getWorldWidth() / 2f,
                     uiDebugViewport.getWorldHeight() / 2f,
                     1);
             uiStage.draw();
@@ -338,6 +401,13 @@ public class GameScreen extends VScreen
     @Override
     public void hide()
     {
+    }
+
+    @Override
+    public void dispose()
+    {
+        model.dispose();
+        renderer.dispose();
     }
     
     @Override

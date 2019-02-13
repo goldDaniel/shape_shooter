@@ -15,6 +15,7 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -41,10 +42,10 @@ public class BlackHole extends Entity
     
     private static ShapeRenderer sh = new ShapeRenderer();
     
-    final int MAX_HEALTH = 10;
+    final int MAX_HEALTH = 50;
     float health;
     
-    float MAX_RADIUS = 5f;
+    float MAX_RADIUS = 1f;
     float radius;
     
     Color color;
@@ -99,7 +100,7 @@ public class BlackHole extends Entity
                 force,
                 radius);
         
-        float range = radius * 2 * (1f + MathUtils.sinDeg(hue));
+        float range = radius * 4 * (1f + MathUtils.sinDeg(hue));
         Array<Bullet> bullets = world.getEntityType(Bullet.class);
         for(Bullet b : bullets)
         {
@@ -113,7 +114,7 @@ public class BlackHole extends Entity
                 b.dir = MathUtils.lerpAngleDeg(
                                         b.dir, 
                                         dir.angle(),
-                                        -2.5f*delta*(1f - dist/range));
+                                        -4.5f*delta*(1f - dist/range));
             }
         }
     }
@@ -129,26 +130,30 @@ public class BlackHole extends Entity
         s.setColor(Color.WHITE.cpy().fromHsv(hue, 1f, 1f));
         s.draw(
                 edge, 
-                position.x - radius / 2f,
-                position.y - radius / 2f,
-                radius / 2f, radius / 2f,
+                position.x - radius,
+                position.y - radius,
                 radius, radius,
-                0.5f + MathUtils.sinDeg(hue),
-                0.5f + MathUtils.sinDeg(hue),
+                radius*2f, radius*2f,
+                1.5f + 1.25f*MathUtils.sinDeg(hue),
+                1.5f + 1.25f*MathUtils.sinDeg(hue),
                 hue);
+        s.end();
 
-        s.setColor(Color.CYAN);
-        s.draw(
-                edge,
-                position.x - radius / 2f,
-                position.y - radius / 2f,
-                radius / 2f, radius / 2f,
-                radius, radius,
-                1f,
-                1f,
-                hue);
+        int segments = 64;
+        sh.setProjectionMatrix(s.getProjectionMatrix());
+        sh.setColor(Color.BLACK);
+        sh.begin(ShapeRenderer.ShapeType.Filled);
+        sh.circle(position.x, position.y, radius, segments);
+        sh.end();
+
+        Gdx.gl.glLineWidth(2f);
+        sh.setColor(Color.CYAN);
+        sh.begin(ShapeRenderer.ShapeType.Line);
+        sh.circle(position.x, position.y, radius, segments);
+        sh.end();
 
         s.setColor(Color.WHITE);
+        s.begin();
     }
 
     @Override
@@ -162,28 +167,66 @@ public class BlackHole extends Entity
         {
             model.applyRadialForce(position, 20, 0.05f);
             isAlive = false;
+
+            float numP = 128;
+            for (int i = 0; i < numP; i++)
+            {
+                float pAngle = (float)i/numP*360f;
+
+                pAngle += MathUtils.random(-5f, 5f);
+
+                Vector3 pos = position.cpy();
+                pos.x += MathUtils.cosDeg(pAngle)*radius;
+                pos.y += MathUtils.sinDeg(pAngle)*radius;
+
+                Vector3 dim = new Vector3(0.45f, 0.05f, 0.05f);
+
+                float speed = MathUtils.random(4f, 7f);
+
+                Vector3 velocity = new Vector3(
+                        MathUtils.cosDeg(pAngle) * speed,
+                        MathUtils.sinDeg(pAngle) * speed,
+                        0);
+
+                model.createParticle(
+                        pos,
+                        velocity,
+                        dim,
+                        MathUtils.random(0.2f, 0.6f),
+                        Color.MAGENTA,
+                        Color.WHITE);
+            }
+
+            model.applyRadialForce(position, 100f, MAX_RADIUS*2f, Color.MAGENTA);
         }
         
-        float numP = 64;
+        float numP = 32;
         for (int i = 0; i < numP; i++)
         {
-            float pAngle = (float)i/(float)numP*360f;
-            
+            float pAngle = (float)i/numP*360f;
+
+            pAngle += MathUtils.random(-5f, 5f);
+
             Vector3 pos = position.cpy();
-            pos.x += MathUtils.cosDeg(pAngle)*radius - radius/2f;
+            pos.x += MathUtils.cosDeg(pAngle)*radius;
             pos.y += MathUtils.sinDeg(pAngle)*radius;
 
-            Vector3 dim = new Vector3(0.01f, 0.1f, 0.01f);
+            Vector3 dim = new Vector3(0.45f, 0.05f, 0.05f);
 
-            Vector3 velocity = new Vector3(MathUtils.cosDeg(pAngle), MathUtils.sinDeg(pAngle), 0);
+            float speed = MathUtils.random(4f, 7f);
+
+            Vector3 velocity = new Vector3(
+                            MathUtils.cosDeg(pAngle) * speed,
+                            MathUtils.sinDeg(pAngle) * speed,
+                            0);
 
             model.createParticle(
                 pos,
                 velocity,
                 dim,
                 MathUtils.random(0.2f, 0.6f),
-                Color.MAGENTA,
-                Color.CYAN);
+                Color.MAGENTA.cpy().fromHsv(210, MathUtils.random(0.5f, 1f), MathUtils.random(0.5f, 1f)),
+                Color.WHITE);
         }
     }
 

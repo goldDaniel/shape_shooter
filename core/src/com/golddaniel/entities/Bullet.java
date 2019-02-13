@@ -61,7 +61,7 @@ public class Bullet extends Entity
     {
         if(LASER_1 == null)
         {
-            LASER_1 = new TextureRegion(assets.get("lasers/laserBlue01.png", Texture.class));
+            LASER_1 = new TextureRegion(assets.get("lasers/laserRed14.png", Texture.class));
         }
         if(LASER_2 == null)
         {
@@ -112,8 +112,8 @@ public class Bullet extends Entity
            tex = new TextureRegion();
         }
 
-        width = 0.15f;
-        height = 0.15f;
+        width = 0.05f;
+        height = 0.65f;
 
         this.position.x -= width / 2f;
         this.position.y -= height / 2f;
@@ -137,7 +137,7 @@ public class Bullet extends Entity
         }
 
         Vector3 pos = position.cpy();
-        model.applyRadialForce(pos, 50 * delta, width * 4.5f);
+        model.applyRadialForce(pos, 35 * delta, height);
     }
 
     
@@ -146,13 +146,13 @@ public class Bullet extends Entity
     {
         if(isAlive)
         {
-            s.setColor(Color.CYAN);
+            s.setColor(Color.PINK);
             s.draw(tex,
                     position.x - width / 2f, position.y - height / 2f,
                     width / 2f, height / 2f,
                     width, height,
                     1f, 1f,
-                    dir);
+                    dir + 90f);
         }
     }
     

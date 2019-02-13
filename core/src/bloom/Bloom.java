@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.golddaniel.main.WorldModel;
 
 
 public class Bloom {
@@ -103,7 +104,7 @@ public class Bloom {
             
 		initialize((int)(Gdx.graphics.getWidth() * scale), 
                            (int)(Gdx.graphics.getHeight() * scale),
-				null, true, false, true);
+				null, true, true, true);
 	}
 
 	/**
@@ -148,9 +149,10 @@ public class Bloom {
 	 *            and only do blooming on certain objects param use32bitFBO does
 	 *            fbo use higher precision than 16bits.
 	 */
-	public Bloom(int FBO_W, int FBO_H, FrameBuffer sceneIsCapturedHere,
+	public Bloom(ExtendViewport viewport, int FBO_W, int FBO_H, FrameBuffer sceneIsCapturedHere,
 			boolean useBlending, boolean use32bitFBO) {
 
+	    this.viewport = viewport;
 		initialize(FBO_W, FBO_H, sceneIsCapturedHere, false, useBlending,
 				use32bitFBO);
 		disposeFBO = false;
@@ -244,8 +246,12 @@ public class Bloom {
 			frameBuffer.begin();
 			Gdx.gl.glClearColor(r, g, b, a);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
 		}
+	}
+
+	public void setViewport(ExtendViewport model)
+	{
+		this.viewport = model;
 	}
 
 	/**

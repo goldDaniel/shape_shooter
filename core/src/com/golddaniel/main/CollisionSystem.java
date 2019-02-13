@@ -161,33 +161,7 @@ public class CollisionSystem
                 {
                     m.kill(model);
                     model.incrementMultiplier();
-
-                    int particles = 16;
-                    for (int i = 0; i < particles; i++)
-                    {
-                        float angle = (float) i / (float) particles * 360f;
-                        Vector3 dim = new Vector3(0.025f, 0.025f, 0.025f);
-
-                        float speed = MathUtils.random(8f, 14f);
-
-                        model.createParticle(
-                                m.position.cpy(),
-                                new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
-                                dim,
-                                MathUtils.random(0.05f, 0.15f),
-                                Color.LIME,
-                                Color.WHITE);
-
-                        speed = MathUtils.random(4f, 6f);
-
-                        model.createParticle(
-                                m.position.cpy(),
-                                new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
-                                dim,
-                                MathUtils.random(0.05f, 0.15f),
-                                Color.LIME,
-                                Color.CORAL);
-                    }
+                    AudioSystem.playSound(AudioSystem.SoundEffect.PICKUP);
                 }
             }
         }

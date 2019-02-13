@@ -8,11 +8,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 import com.golddaniel.main.WorldModel;
+
 public class Multiplier extends Entity
 {
-
     Vector3 velocity;
 
     static TextureRegion tex;
@@ -28,11 +27,16 @@ public class Multiplier extends Entity
     public Multiplier(Vector3 pos, Vector3 vel, AssetManager assets)
     {
         super(assets);
+        init(pos, vel);
+        width = 0.125f;
+        height = width / 2f;
+    }
+
+    public void init(Vector3 pos, Vector3 vel)
+    {
         this.position = pos;
         this.velocity = vel;
-
-        width = 0.25f;
-        height = 0.125f;
+        isAlive = true;
     }
 
     public static void loadTextures(AssetManager assets)
@@ -54,7 +58,7 @@ public class Multiplier extends Entity
         //they have left range
         if(lifespan < 4f)
         {
-            if (p.position.dst(position) < 3f) inRangeOfPlayer = true;
+            if (p.position.dst(position) < 2f) inRangeOfPlayer = true;
         }
         if(inRangeOfPlayer)
         {
@@ -74,7 +78,7 @@ public class Multiplier extends Entity
 
             model.createParticle(
                     pos,
-                    velocity.cpy().scl(-1),
+                    Vector3.Zero.cpy(),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -85,7 +89,7 @@ public class Multiplier extends Entity
 
             model.createParticle(
                     pos,
-                    velocity.cpy().scl(-1),
+                    Vector3.Zero.cpy(),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -96,7 +100,7 @@ public class Multiplier extends Entity
 
             model.createParticle(
                     pos,
-                    velocity.cpy().scl(-1),
+                    Vector3.Zero.cpy(),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -107,7 +111,7 @@ public class Multiplier extends Entity
 
             model.createParticle(
                     pos,
-                    velocity.cpy().scl(-1),
+                    Vector3.Zero.cpy(),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -159,6 +163,32 @@ public class Multiplier extends Entity
     public void kill(WorldModel model)
     {
         isAlive = false;
+        int particles = 8;
+        for (int i = 0; i < particles; i++)
+        {
+            float angle = (float) i / (float) particles * 360f;
+            Vector3 dim = new Vector3(0.25f, 0.025f, 0.025f);
+
+            float speed = MathUtils.random(8f, 14f);
+
+            model.createParticle(
+                    position.cpy(),
+                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    dim,
+                    MathUtils.random(0.05f, 0.15f),
+                    Color.LIME,
+                    Color.WHITE);
+
+            speed = MathUtils.random(4f, 6f);
+
+            model.createParticle(
+                    position.cpy(),
+                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    dim,
+                    MathUtils.random(0.05f, 0.15f),
+                    Color.LIME,
+                    Color.CORAL);
+        }
     }
 
     @Override
