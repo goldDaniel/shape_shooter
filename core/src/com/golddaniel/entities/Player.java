@@ -26,14 +26,13 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.golddaniel.main.AudioSystem;
+import com.golddaniel.main.PS4Map;
 import com.golddaniel.main.WorldModel;
 
 /**
@@ -51,7 +50,6 @@ public class Player extends Entity implements ControllerListener
 
     private WEAPON_TYPE weaponType;
 
-
     float hue;
 
     static TextureRegion tex;
@@ -61,9 +59,6 @@ public class Player extends Entity implements ControllerListener
 
     public float width;
     public float height;
-
-    float angle;
-
 
 
     final float COOLDOWN_DEFAULT = 0.125f;
@@ -80,43 +75,7 @@ public class Player extends Entity implements ControllerListener
     float cooldown = 0;
     float currentWeaponCooldown = COOLDOWN_DEFAULT;
 
-    public static class PS4
-    {
 
-
-        public static final int AXIS_LEFT_HORIZONTAL;
-        public static final int AXIS_LEFT_VERTICAL;
-        public static final int AXIS_RIGHT_HORIZONTAL;
-        public static final int AXIS_RIGHT_VERTICAL;
-
-        static
-        {
-            if (SharedLibraryLoader.isWindows)
-            {
-                AXIS_LEFT_HORIZONTAL = 3;
-                AXIS_LEFT_VERTICAL = 2;
-
-                AXIS_RIGHT_HORIZONTAL = 1;
-                AXIS_RIGHT_VERTICAL = 0;
-            }
-            else if(SharedLibraryLoader.isLinux)
-            {
-                AXIS_LEFT_HORIZONTAL = 0;
-                AXIS_LEFT_VERTICAL = 1;
-
-                AXIS_RIGHT_HORIZONTAL = 3;
-                AXIS_RIGHT_VERTICAL = 4;
-            }
-            else
-            {
-                AXIS_LEFT_VERTICAL = -1;
-                AXIS_LEFT_HORIZONTAL = -1;
-                AXIS_RIGHT_HORIZONTAL = -1;
-                AXIS_RIGHT_VERTICAL = -1;
-            }
-        }
-
-    }
 
     @Override
     public void connected(Controller controller)
@@ -154,7 +113,7 @@ public class Player extends Entity implements ControllerListener
             System.out.println(axisCode + " :  " + value);
         }
 
-        if (axisCode == PS4.AXIS_LEFT_HORIZONTAL)
+        if (axisCode == PS4Map.AXIS_LEFT_HORIZONTAL)
         {
             if (value * value > DEADZONE * DEADZONE)
             {
@@ -164,7 +123,7 @@ public class Player extends Entity implements ControllerListener
                 moveDir.x = 0;
             }
         }
-        if (axisCode == PS4.AXIS_LEFT_VERTICAL)
+        if (axisCode == PS4Map.AXIS_LEFT_VERTICAL)
         {
             if (value * value > DEADZONE * DEADZONE)
             {
@@ -175,7 +134,7 @@ public class Player extends Entity implements ControllerListener
             }
         }
 
-        if (axisCode == PS4.AXIS_RIGHT_HORIZONTAL)
+        if (axisCode == PS4Map.AXIS_RIGHT_HORIZONTAL)
         {
             if (value * value > DEADZONE * DEADZONE)
             {
@@ -185,7 +144,7 @@ public class Player extends Entity implements ControllerListener
                 shootDir.x = 0;
             }
         }
-        if (axisCode == PS4.AXIS_RIGHT_VERTICAL)
+        if (axisCode == PS4Map.AXIS_RIGHT_VERTICAL)
         {
             if (value * value > DEADZONE * DEADZONE)
             {
@@ -318,7 +277,7 @@ public class Player extends Entity implements ControllerListener
             }
         }
 
-        float MAX_SPEED = 3.5f;
+        float MAX_SPEED = 2.5f;
 
         Vector3 acceleration = moveDir.cpy().scl(60f*delta);
 
@@ -342,8 +301,6 @@ public class Player extends Entity implements ControllerListener
         {
             fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
         }
-
-        angle += delta;
 
         powerupTimer -= delta;
         if(powerupTimer <= 0)
@@ -389,7 +346,7 @@ public class Player extends Entity implements ControllerListener
     private void createParticleTrail(WorldModel model)
     {
         Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
-        Color end = Color.BLACK.cpy();
+        Color end = Color.WHITE.cpy();
         for (int i = 0; i < 10; i++)
         {
             Vector3 pos = new Vector3(position);
@@ -424,7 +381,7 @@ public class Player extends Entity implements ControllerListener
             bulletPos.x = position.x + 0.005f;
             bulletPos.y = position.y + height /2f;
 
-            float speed = 17f;
+            float speed = 25f;
             model.createBullet(bulletPos,
                     speed,
                     dir.angle(),

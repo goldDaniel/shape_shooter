@@ -31,6 +31,7 @@ public class ScreenManager
         if(screenMap.containsKey(state))
         {
             currentState = state;
+            screenMap.get(currentState).show();
             result = true;
         }
         return result;

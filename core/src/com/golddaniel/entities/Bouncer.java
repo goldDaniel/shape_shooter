@@ -48,10 +48,8 @@ public class Bouncer extends Entity
     
     float width;
     float height;
-    
-    boolean active;
-   
-    Timer activeTimer;
+
+    float activeTimer = 2f;
 
     public Bouncer(Vector3 pos, Vector3 dir, AssetManager assets)
     {
@@ -71,32 +69,33 @@ public class Bouncer extends Entity
         speed = 2.5f;
         
         color = Color.YELLOW.cpy();
-        
-        active = false;
-        
+
         health = 10;
         prevHealth = health;
-        
-        activeTimer = new Timer();
     }
 
     @Override
     public void update(WorldModel model, float delta)
     {
-        
-        //start acting afer 5s
-        if(!active)
+        if(activeTimer > 0)
         {
-            if(activeTimer.isEmpty())
+            activeTimer -= delta;
+            for(int i = 0; i < 6; i++)
             {
-                activeTimer.scheduleTask(new Timer.Task()
-                {
-                    @Override
-                    public void run()
-                    {
-                        active = true;
-                    }
-                }, 2);
+                float angle = MathUtils.PI * activeTimer * (i + 1);
+                float speed = MathUtils.random(12f, 14f);
+                speed *= 0.5f*activeTimer;
+                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+
+                model.createParticle(
+                        position,
+                        new Vector3(MathUtils.cos(angle) * speed,
+                                MathUtils.sin(angle) * speed,
+                                0),
+                        dim,
+                        MathUtils.random(0.1f, 0.25f),
+                        Color.YELLOW,
+                        color);
             }
         }
         else
@@ -144,7 +143,7 @@ public class Bouncer extends Entity
     @Override
     public void draw(SpriteBatch s)
     {   
-        if(active)
+        if(activeTimer <= 0)
         { 
             color.a = 1f;
         }
@@ -172,11 +171,7 @@ public class Bouncer extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        float radius = width > height ? width : height;
-        
-        radius /= 2f;
-        
-        return new Rectangle(position.x, position.y, radius, radius);
+        return new Rectangle(position.x - width / 2f, position.y - height /2f, height, height);
     }
     
     public void kill()
@@ -187,12 +182,12 @@ public class Bouncer extends Entity
     @Override
     public void kill(WorldModel model)
     {
-        if(active)
+        if(activeTimer <= 0)
         {
             health--;
             if(health <= 0)
             {
-                int particles = 16;
+                int particles = 32;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
@@ -210,7 +205,7 @@ public class Bouncer extends Entity
                             new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
-                            Color.RED,
+                            Color.YELLOW,
                             Color.WHITE);
 
                     speed = MathUtils.random(5f, 7f);
@@ -230,7 +225,7 @@ public class Bouncer extends Entity
                 model.createMultipliers(position, 6);
                 model.applyRadialForce(position, 20f,
                                  width * 1.5f,
-                                        Color.YELLOW.cpy());
+                                        Color.YELLOW.cpy().fromHsv(55, 0.55f, 0.75f));
 
                 AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             }
@@ -239,6 +234,6 @@ public class Bouncer extends Entity
     
     public boolean isActive()
     {
-        return active;
+        return activeTimer <= 0;
     }
 }

@@ -68,7 +68,7 @@ public class CollisionSystem
                 Rectangle playerRect = model.getPlayer().getBoundingBox();
                 if(playerRect.overlaps(bouncerRect) || bouncerRect.overlaps(playerRect))
                 {
-                    model.player.kill(model);
+                    model.getPlayer().kill(model);
                 }
             }
         }
@@ -90,12 +90,12 @@ public class CollisionSystem
                 }
             }
            
-            if(boid.isAlive() && model.getEntityType(Player.class).size > 0)
+            if(boid.isActive() && boid.isAlive() && model.getEntityType(Player.class).size > 0)
             {
-                Rectangle playerRect = model.player.getBoundingBox();
+                Rectangle playerRect = model.getPlayer().getBoundingBox();
                 if(playerRect.overlaps(bouncerRect) || bouncerRect.overlaps(playerRect))
                 {
-                    model.player.kill(model);
+                    model.getPlayer().kill(model);
                 }
             }
         }

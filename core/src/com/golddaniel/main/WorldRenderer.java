@@ -63,28 +63,26 @@ public class WorldRenderer
 
     boolean doBloom = true;
 
-    public WorldRenderer(WorldModel model, AssetManager assets)
+    public WorldRenderer(ExtendViewport e, AssetManager assets)
     {
         s = new SpriteBatch();
         m = new ModelBatch();
 
-
-        this.viewport = model.viewport;
         this.assets = assets;
 
         float scale;
         if(SharedLibraryLoader.isAndroid)
         {
-            scale = 1f/12f;
+            scale = 1f/8f;
         }
         else
         {
-            scale = 2f;
+            scale = 1/4f;
 
         }
-
-        bloom = new Bloom(model.viewport, scale);
-        bloom.setTreshold(0f);
+        this.viewport = e;
+        bloom = new Bloom(e, scale);
+        bloom.setTreshold(0.2f);
         bloom.setBloomIntesity(1.25f);
 
         Texture tex = assets.get("skybox.jpg", Texture.class);
@@ -92,7 +90,7 @@ public class WorldRenderer
         ModelBuilder modelBuilder = new ModelBuilder();
         skyboxModel = modelBuilder.createSphere(
                                      -256f, -256f, -256f,
-                                            128, 128,
+                                            64, 64,
                                             new Material(TextureAttribute.createDiffuse(tex)),
                                     VertexAttributes.Usage.Position |
                                              VertexAttributes.Usage.Normal |
@@ -103,12 +101,19 @@ public class WorldRenderer
         fbo = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), false);
     }
 
+    public void setViewport(ExtendViewport v)
+    {
+        this.viewport = v;
+    }
+
     public void draw(WorldModel model)
     {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) doBloom = !doBloom;
+        bloom.setViewport(model.getViewport());
+        this.viewport = model.getViewport();
 
         if(rebuildFramebuffer)
         {
@@ -127,7 +132,7 @@ public class WorldRenderer
         m.end();
 
         s.enableBlending();
-        s.setProjectionMatrix(model.cam.combined);
+        s.setProjectionMatrix(model.getCamera().combined);
 
         s.begin();
         {
@@ -146,12 +151,12 @@ public class WorldRenderer
                 model.getAllParticles().get(i).draw(s);
             }
             //draw player on top
-            if (model.player != null)
+            if (model.getPlayer() != null)
             {
-                model.player.draw(s);
+                model.getPlayer().draw(s);
             }
-            s.end();
         }
+        s.end();
         fbo.end();
 
         //need to flip that y axis
@@ -165,15 +170,19 @@ public class WorldRenderer
         if(doBloom) bloom.capture();
         s.begin();
         s.draw(fbo.getColorBufferTexture(),
-                0, 0);
+                0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         s.end();
         if(doBloom) bloom.render();
     }
     
     public void resize(int width, int height)
     {
-        viewport.update(width, height);
-        viewport.apply();
+        //this is here because we do not pass the viewport in the constructor
+        if(viewport != null)
+        {
+            viewport.update(width, height);
+            viewport.apply();
+        }
 
         rebuildFramebuffer = true;
     }

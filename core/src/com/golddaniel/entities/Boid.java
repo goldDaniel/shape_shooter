@@ -36,16 +36,15 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    private static float SPEED_MAX = 1.25f;
+    private static float SPEED_MAX = 0.85f;
 
     private static Array<Boid> boids = new Array<Boid>();
 
+    private static TextureRegion circleTex;
     private static TextureRegion tex;
 
     private Vector3 velocity;
     private Vector3 acceleration;
-
-    private Timer activeTimer;
 
     private Color color;
 
@@ -54,6 +53,7 @@ public class Boid extends Entity
 
     private int health = 5;
 
+    private float activeTimer = 2f;
     
     public Boid(Vector3 position, AssetManager assets)
     {
@@ -62,15 +62,17 @@ public class Boid extends Entity
         {
             tex = new TextureRegion(assets.get(("geometric/player.png"), Texture.class));
         }
+        if(circleTex == null)
+        {
+            circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
+        }
 
         this.position = new Vector3(position);
 
         float angle = MathUtils.random(MathUtils.PI*2);
         acceleration = new Vector3();
         velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
-        
-        activeTimer = new Timer();
-        
+
         width = 0.25f;
         height = 0.25f;
         color = Color.CYAN.cpy();
@@ -251,48 +253,95 @@ public class Boid extends Entity
         return result;
     }
 
-    @Override
-    public void update(WorldModel model, float delta)
-    {
-        borderCheck(model);
 
+    public void update(float delta)
+    {
         Vector3 separation = separation();
         Vector3 allignment = allignment();
-        Vector3 cohesion   = cohesion();
-        Vector3 boundary   = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
-        Vector3 seek = new Vector3();
-
-        float range = 7f;
-        if(model.getEntityType(Player.class).size > 0)
-        {
-
-            Vector3 target = model.getEntityType(Player.class).first().position;
-            float dist = target.dst(position);
-            if(dist < range)
-            {
-                seek.set(seek(target));
-            }
-        }
+        Vector3 cohesion = cohesion();
 
         acceleration.add(separation);
         acceleration.add(allignment);
         acceleration.add(cohesion);
-        acceleration.add(boundary);
-        acceleration.add(seek);
 
-        acceleration.limit(SPEED_MAX/32f*delta);
+        acceleration.limit(SPEED_MAX / 32f * delta);
 
         velocity.add(acceleration);
-        velocity.limit(SPEED_MAX*delta);
+        velocity.limit(SPEED_MAX * delta);
 
         position.add(velocity);
 
-        acceleration.set(0, 0,0);
+        acceleration.set(0, 0, 0);
 
         Vector3 pos = position.cpy();
         pos.z = -0.1f;
-        model.applyRadialForce(position, 150f * delta, width);
+    }
 
+    @Override
+    public void update(WorldModel model, float delta)
+    {
+        if(activeTimer <= 0)
+        {
+            borderCheck(model);
+
+            Vector3 separation = separation();
+            Vector3 allignment = allignment();
+            Vector3 cohesion = cohesion();
+            Vector3 boundary = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+            Vector3 seek = new Vector3();
+
+            float range = 7f;
+            if (model.getEntityType(Player.class).size > 0)
+            {
+
+                Vector3 target = model.getEntityType(Player.class).first().position;
+                float dist = target.dst(position);
+                if (dist < range)
+                {
+                    seek.set(seek(target));
+                }
+            }
+
+            acceleration.add(separation);
+            acceleration.add(allignment);
+            acceleration.add(cohesion);
+            acceleration.add(boundary);
+            acceleration.add(seek);
+
+            acceleration.limit(SPEED_MAX / 32f * delta);
+
+            velocity.add(acceleration);
+            velocity.limit(SPEED_MAX * delta);
+
+            position.add(velocity);
+
+            acceleration.set(0, 0, 0);
+
+            Vector3 pos = position.cpy();
+            pos.z = -0.1f;
+            model.applyRadialForce(position, 150f * delta, width);
+        }
+        else
+        {
+            activeTimer -= delta;
+            for(int i = 0; i < 6; i++)
+            {
+                float angle = MathUtils.PI * activeTimer * (i + 1);
+                float speed = MathUtils.random(12f, 14f);
+                speed *= 0.5f*activeTimer;
+                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+
+                model.createParticle(
+                                position,
+                                new Vector3(MathUtils.cos(angle) * speed,
+                                            MathUtils.sin(angle) * speed,
+                                            0),
+                                dim,
+                                MathUtils.random(0.1f, 0.25f),
+                                Color.WHITE,
+                                color);
+            }
+        }
     }
 
     private void borderCheck(WorldModel model)
@@ -319,34 +368,39 @@ public class Boid extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-        s.setColor(color);
 
+        Color c = color.cpy();
+        if(activeTimer > 0)
+        {
+            c.a = 0.5f;
+        }
+        s.setColor(c);
         Vector2 dir = new Vector2(velocity.x, velocity.y);
 
         s.draw(tex,
-                    position.x - width / 2f, position.y - height /2f,
-                    width / 2, height / 2,
-                    width, height,
-                    1, 1,
-                    dir.angle());
-        
+                position.x - width / 2f, position.y - height / 2f,
+                width / 2, height / 2,
+                width, height,
+                1, 1,
+                dir.angle());
+
         s.setColor(Color.WHITE);
     }
 
     @Override
     public void kill(WorldModel model)
     {
-        health--;
+        if(activeTimer <= 0) health--;
         if(health <= 0)
         {
-            int particles = 16;
+            int particles = 32;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
 
                 angle += MathUtils.random(-1.5f, 1.5f);
 
-                Vector3 dim = new Vector3(0.25f, 0.05f, 0.05f);
+                Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
 
                 float speed = MathUtils.random(7f, 10f);
 
@@ -376,8 +430,8 @@ public class Boid extends Entity
             model.addScore(1);
             model.applyRadialForce(
                           pos,
-                    20,
-                    (width) * 4f, Color.CYAN.cpy());
+                    22,
+                    (width) * 4f, Color.CYAN.cpy().fromHsv(210f, 0.65f, 0.8f));
 
             boids.removeValue(this, true);
 
@@ -385,6 +439,11 @@ public class Boid extends Entity
 
             isAlive = false;
         }
+    }
+
+    public boolean isActive()
+    {
+        return activeTimer <= 0;
     }
 
     @Override

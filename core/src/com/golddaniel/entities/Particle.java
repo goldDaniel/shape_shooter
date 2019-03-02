@@ -99,7 +99,6 @@ public class Particle implements Pool.Poolable
         color.g = MathUtils.lerp(endColor.g, startColor.g, lifespan / START_LIFESPAN);
         color.b = MathUtils.lerp(endColor.b, startColor.b, lifespan / START_LIFESPAN);
         color.a = MathUtils.lerp(0.01f, 1f, lifespan / START_LIFESPAN);
-
     }
 
     public void update(WorldModel world, float delta)
@@ -143,9 +142,9 @@ public class Particle implements Pool.Poolable
         pos.set(-1000, -1000, -1000);
         velocity.set(0, 0, 0);
         dim.set(0, 0, 0);
+        isAlive = true;
 
 
-
-        startColor = endColor = color = null;
+        startColor = endColor = color = Color.WHITE.cpy();
     }
 }

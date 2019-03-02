@@ -41,42 +41,43 @@ public class WorldModel
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
 
-    Array<Entity> entities;
+    private Array<Entity> entities;
 
-    ArrayMap<Integer, Array<Entity>> toSpawn;
+    private ArrayMap<Integer, Array<Entity>> toSpawn;
 
-    Array<Entity> toRemove;
-    Array<Entity> toAdd;
+    private Array<Entity> toRemove;
+    private Array<Entity> toAdd;
 
 
     //we create lots of particles, so lets create a pool
-    Array<Particle> particles;
-    Pool<Particle> particlePool;
+    private Array<Particle> particles;
+    private Pool<Particle> particlePool;
     
     //we create lots of bullets, so lets create a pool
-    Pool<Bullet> bulletPool;
+    private Pool<Bullet> bulletPool;
 
-    Player player;
-    
-    PhysicsGrid g;
-    
-    boolean isUpdating;
+    private Player player;
 
-    ExtendViewport viewport;
-    PerspectiveCamera cam;
+    private PhysicsGrid g;
 
-    float remainingTime;
-    float elapsedTime = 0;
+    private boolean isUpdating;
+
+    private ExtendViewport viewport;
+    private PerspectiveCamera cam;
+
+    private float remainingTime;
+    private float elapsedTime = 0;
 
     public boolean editMode = false;
 
     public float TIMESCALE = 1f;
 
-    int scoreMultiplier = 1;
-    int score = 0;
+    private int scoreMultiplier = 1;
+    private int score = 0;
 
-    float respawnTimer = 0f;
+    private float respawnTimer = 0f;
 
+    public ExtendViewport getViewport() { return viewport; }
     public Camera getCamera()
     {
         return cam;
@@ -122,7 +123,7 @@ public class WorldModel
             }
         };
 
-        bulletPool = new Pool<Bullet>(1024)
+        bulletPool = new Pool<Bullet>(2048)
         {
             protected Bullet newObject()
             {
@@ -213,6 +214,7 @@ public class WorldModel
             {
                 target.y = -WORLD_HEIGHT / 2f;
             }
+
             if (player.position.y > WORLD_HEIGHT / 2f)
             {
                 target.y = WORLD_HEIGHT / 2f;
@@ -385,7 +387,6 @@ public class WorldModel
     {
         for(int i = 0; i < count; i++)
         {
-
             float angle = ((float)(i)/(float)count) * 360f;
             float speed = MathUtils.random(0.5f, 1.5f);
 
@@ -438,6 +439,7 @@ public class WorldModel
         {
             e.dispose();
         }
+        g.dispose();
     }
 
     public Player getPlayer()

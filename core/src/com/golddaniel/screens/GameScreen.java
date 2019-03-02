@@ -64,14 +64,10 @@ public class GameScreen extends VScreen
 
     private CameraInputController camController;
 
-    private float gameRestart = 2f;
+    private float gameRestart = 5f;
 
-    public GameScreen(ScreenManager sm, AssetManager assets)
+    private void buildTestWorld()
     {
-        super(sm, assets);
-
-        Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
-
         ArrayMap<Integer, Array<Entity>> toSpawn = new ArrayMap<Integer, Array<Entity>>();
 
         float worldWidth  = 12;
@@ -81,78 +77,115 @@ public class GameScreen extends VScreen
 
         model = new WorldModel(worldWidth,worldHeight, toSpawn, levelTime);
 
-        for(int i = 0; i < levelTime/3; i += 4)
+        for(int i = 0; i < 20; i += 4)
         {
             Array<Entity> toAdd = new Array<Entity>();
 
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3( worldWidth / 2f, 0, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, 0, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0) , assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0) , assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0) , assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0) , assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
 
             toSpawn.put(i, toAdd);
         }
 
-        for(int i = (int)levelTime/3; i < levelTime*2/3; i += 4)
+        Array<Entity> toAdd = new Array<Entity>();
+
+        for(int i= 0; i < 4; i++)
         {
-            Array<Entity> toAdd = new Array<Entity>();
-
-            toAdd.add(new Cuber(new Vector3(-worldWidth /2f, -worldHeight /2f, 0), assets));
-            toAdd.add(new Cuber(new Vector3(worldWidth /2f, -worldHeight /2f, 0), assets));
-            toAdd.add(new Cuber(new Vector3(worldWidth /2f, worldHeight /2f, 0), assets));
-            toAdd.add(new Cuber(new Vector3(-worldWidth /2f, worldHeight /2f, 0), assets));
-
-            toSpawn.put(i, toAdd);
+            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f, -worldHeight / 2f + 2*(i + 1), 0),
+                    new Vector3(1, 0, 0),
+                    assets));
         }
+        toSpawn.put(24, toAdd);
+        toAdd = new Array<Entity>();
 
-        for(int i = 0; i < levelTime; i += 16)
+        for(int i= 0; i < 4; i++)
         {
-            Array<Entity> toAdd = new Array<Entity>();
-
-            toAdd.add(new Bouncer(
-                    new Vector3(-worldWidth / 2f, worldHeight / 2f, 0),
-                    new Vector3(1, -1, 0),
+            toAdd.add(new Bouncer(new Vector3(worldWidth / 2f, -worldHeight / 2f + 2*(i), 0),
+                    new Vector3(-1, 0, 0),
                     assets));
+        }
+        toSpawn.put(32, toAdd);
 
-            toAdd.add(new Bouncer(
-                    new Vector3(worldWidth / 2f, worldHeight / 2f, 0),
-                    new Vector3(-1, -1, 0),
+        toAdd = new Array<Entity>();
+
+
+        for(int i= 0; i < 6; i++)
+        {
+            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f + 2*(i), -worldHeight / 2f, 0),
+                    new Vector3(0, 1, 0),
                     assets));
+        }
+        toSpawn.put(42, toAdd);
 
-            toAdd.add(new Bouncer(
-                    new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0),
-                    new Vector3(1, 1, 0),
+        for(int i= 0; i < 6; i++)
+        {
+            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f + 2*(i), worldHeight / 2f, 0),
+                    new Vector3(0, -1, 0),
                     assets));
+        }
+        toSpawn.put(46, toAdd);
 
-            toAdd.add(new Bouncer(
-                    new Vector3(worldWidth / 2f, -worldHeight / 2f, 0),
-                    new Vector3(-1, 1, 0),
-                    assets));
+        toAdd = new Array<Entity>();
+        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toSpawn.put(54, toAdd);
 
-            toSpawn.put(i, toAdd);
+        toAdd = new Array<Entity>();
+        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toSpawn.put(62, toAdd);
+
+        for(int i = 0; i < 30; i += 4)
+        {
+            toAdd = new Array<Entity>();
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3( worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+
+
+            toSpawn.put(68 + i, toAdd);
         }
 
         g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
-                        model.WORLD_HEIGHT),
+                            model.WORLD_HEIGHT),
                 gridSpacing);
 
         model.setGrid(g);
+    }
+
+    private void init()
+    {
+        Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
+
+        buildTestWorld();
 
         camController = new CameraInputController(model.getCamera());
 
@@ -170,8 +203,8 @@ public class GameScreen extends VScreen
         buildEditorUI(uiDebugStage, uiSkin);
 
         uiStage = new Stage(uiDebugViewport);
-        Touchpad leftPad = new Touchpad(0.1f, uiSkin);
-        Touchpad rightPad = new Touchpad(0.1f, uiSkin);
+        Touchpad leftPad = new Touchpad(0.25f, uiSkin);
+        Touchpad rightPad = new Touchpad(0.25f, uiSkin);
 
         float size = 192;
         leftPad.setSize(size, size);
@@ -227,6 +260,7 @@ public class GameScreen extends VScreen
         endLabel = new Label("LEVEL COMPLETE", uiSkin);
         endLabel.setPosition(800/2f, 600/2f);
         endLabel.setFontScale(2);
+        endLabel.scaleBy(4f);
 
         uiStage.addActor(timerLabel);
         uiStage.addActor(scoreLabel);
@@ -247,7 +281,13 @@ public class GameScreen extends VScreen
         powerUp.setPosition(800-140, 600 - 100);
         uiStage.addActor(powerUp);
 
-        renderer = new WorldRenderer(model, assets);
+        renderer = new WorldRenderer(model.getViewport(), assets);
+    }
+
+    public GameScreen(ScreenManager sm, AssetManager assets)
+    {
+        super(sm, assets);
+        init();
     }
 
     private void buildEditorUI(Stage stage, Skin skin)
@@ -370,7 +410,12 @@ public class GameScreen extends VScreen
 
                 if(gameRestart <= 0)
                 {
+                    gameRestart = 5f;
                     AudioSystem.stopMusic();
+
+                    init();
+                    resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
                     sm.setScreen(ScreenManager.STATE.MAIN_MENU);
                 }
                 else

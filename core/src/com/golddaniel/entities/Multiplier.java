@@ -72,10 +72,9 @@ public class Multiplier extends Entity
             velocity.add(toAdd);
 
 
-            Vector3 dim = new Vector3(0.025f, 0.025f, 0.025f);
+            Vector3 dim = new Vector3(0.015f, 0.015f, 0.015f);
             Vector3 pos = position.cpy();
             pos.sub(-width/2f, -height/2f, 0);
-
             model.createParticle(
                     pos,
                     Vector3.Zero.cpy(),
@@ -86,7 +85,6 @@ public class Multiplier extends Entity
 
             pos = position.cpy();
             pos.sub(-width/2f, height/2f, 0);
-
             model.createParticle(
                     pos,
                     Vector3.Zero.cpy(),
@@ -97,7 +95,6 @@ public class Multiplier extends Entity
 
             pos = position.cpy();
             pos.sub(width/2f, -height/2f, 0);
-
             model.createParticle(
                     pos,
                     Vector3.Zero.cpy(),
@@ -108,7 +105,6 @@ public class Multiplier extends Entity
 
             pos = position.cpy();
             pos.sub(width/2f, height/2f, 0);
-
             model.createParticle(
                     pos,
                     Vector3.Zero.cpy(),

@@ -39,7 +39,7 @@ public class PhysicsGrid
 {
 
 
-    final float STIFFNESS = 5f;
+    final float STIFFNESS = 3.5f;
     final float DAMPING = 3.5f;
     final float INVERSE_MASS = 1f/0.0125f;
 
@@ -143,7 +143,7 @@ public class PhysicsGrid
             velocity = new Vector3();
             acceleration = new Vector3();
         }
-        
+
         public void update(float delta)
         {
             //there is an invisible spring that connects the initial
@@ -151,13 +151,13 @@ public class PhysicsGrid
             //calculations for said spring. Otherwise the grid effect
             //doesn't come back fast enough, also maintains the general shape
             //of the grid
-            float stiffnessScale = 1f/16f;
-            
+            float stiffnessScale = 1f/32f;
+
             // FORCE CALCULATIONS
             float springForceX = -STIFFNESS*stiffnessScale*(position.x - desiredPosition.x);
             float dampingForceX = DAMPING * velocity.x;
             float forceX = springForceX - dampingForceX;
-            
+
             float springForceY = -STIFFNESS*stiffnessScale*(position.y - desiredPosition.y);
             float dampingForceY = DAMPING * velocity.y;
             float forceY = springForceY - dampingForceY;
@@ -240,7 +240,7 @@ public class PhysicsGrid
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
 
-        sh = new ImmediateModeRenderer20(10000, true, true, 0);
+        sh = new ImmediateModeRenderer20(rows*cols*6, true, true, 0);
         ShaderProgram shader = new ShaderProgram(createVertexShader(), createFragmentShader());
 
         if(!shader.isCompiled())
@@ -262,7 +262,7 @@ public class PhysicsGrid
             {
                 float invMass = INVERSE_MASS;
                 if (i == 0 || i == points.length - 1 ||
-                        j == 0 || j == points[i].length - 1)
+                    j == 0 || j == points[i].length - 1)
                 {
                     invMass = 0;
                 }
@@ -270,7 +270,7 @@ public class PhysicsGrid
                 float colorSpectrum = 30f;
                 float saturation = 0.8f;
                 float alpha = 1f;
-                Color c = Color.WHITE.cpy().fromHsv(0f, 0f, 0.45f);
+                Color c = Color.WHITE.cpy().fromHsv(0f, 0f, 0.55f);
                 c.a = alpha;
 
                 points[i][j] = new Point(
@@ -295,7 +295,7 @@ public class PhysicsGrid
         }
 
         runnables = new Array<PointRunnable>();
-        buildThreads(runnables, 8);
+        buildThreads(runnables, 4);
     }
 
     private void buildThreads(Array<PointRunnable> runnables, int threadCount)
@@ -395,7 +395,7 @@ public class PhysicsGrid
     public void draw(SpriteBatch s)
     {
         s.end();
-        Gdx.gl.glLineWidth(8f);
+        Gdx.gl.glLineWidth(4f);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -404,7 +404,7 @@ public class PhysicsGrid
         disabled.r /= 8f;
         disabled.g /= 8f;
         disabled.b /= 8f;
-        disabled.a = 0.35f;
+        disabled.a = 0.1f;
 
         sh.begin(s.getProjectionMatrix(), GL20.GL_LINES);
 

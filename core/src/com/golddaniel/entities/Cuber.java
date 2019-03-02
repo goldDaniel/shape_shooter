@@ -45,7 +45,7 @@ public class Cuber extends Entity
     float width;
     float height;
     
-    boolean active;
+    float activeTimer = 2f;
     
     public Cuber(Vector3 pos, AssetManager assets)
     {
@@ -56,7 +56,6 @@ public class Cuber extends Entity
             tex = assets.get("geometric/dashedSquare.png", Texture.class);
         }
 
-        active = false;
         health = 9;
         isAlive = true;
         position = new Vector3(pos);
@@ -96,9 +95,9 @@ public class Cuber extends Entity
     }
     
     @Override
-    public void update(final WorldModel world, float delta)
+    public void update(final WorldModel model, float delta)
     {
-        if(active)
+        if(activeTimer <= 0)
         {
             if(dirTimer.isEmpty())
             {
@@ -108,9 +107,9 @@ public class Cuber extends Entity
                     @Override
                     public void run()
                     {
-                        if(world.getPlayer() != null)
+                        if(model.getPlayer() != null)
                         {
-                            Vector3 pPos = world.getPlayer().position.cpy();
+                            Vector3 pPos = model.getPlayer().position.cpy();
 
                             float xDist = pPos.x - position.x;
                             float yDist = pPos.y - position.y;
@@ -159,42 +158,49 @@ public class Cuber extends Entity
             
             position.add(dir.cpy().scl(2f*delta));
             
-            if(position.x < -world.WORLD_WIDTH/2f)
+            if(position.x < -model.WORLD_WIDTH/2f)
             {
-                position.x = -world.WORLD_WIDTH /2f;
+                position.x = -model.WORLD_WIDTH /2f;
                 dir.x = -dir.x;
             }
-            else if(position.x > world.WORLD_WIDTH / 2f)
+            else if(position.x > model.WORLD_WIDTH / 2f)
             {
-                position.x = world.WORLD_WIDTH / 2f;
+                position.x = model.WORLD_WIDTH / 2f;
                 dir.x = -dir.x;
             }
             
-            if(position.y < -world.WORLD_HEIGHT /2f)
+            if(position.y < -model.WORLD_HEIGHT /2f)
             {
-                position.y = -world.WORLD_HEIGHT / 2f;
+                position.y = -model.WORLD_HEIGHT / 2f;
                 dir.y = -dir.y;
             }
-            else if(position.y > world.WORLD_HEIGHT /2f)
+            else if(position.y > model.WORLD_HEIGHT /2f)
             {
-                position.y = world.WORLD_HEIGHT / 2f;
+                position.y = model.WORLD_HEIGHT / 2f;
                 dir.y = -dir.y;
             }
 
-            world.applyRadialForce(getMid(), 200f*delta, width*1.5f);
+            model.applyRadialForce(getMid(), 200f*delta, width*1.5f);
         }
         else
         {
-            if(dirTimer.isEmpty())
+            activeTimer -= delta;
+            for(int i = 0; i < 6; i++)
             {
-                dirTimer.scheduleTask(new Timer.Task()
-                {
-                    @Override
-                    public void run()
-                    {
-                        active = true;
-                    }
-                }, 2f);
+                float angle = MathUtils.PI * activeTimer * (i + 1);
+                float speed = MathUtils.random(12f, 14f);
+                speed *= 0.5f*activeTimer;
+                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+
+                model.createParticle(
+                        position,
+                        new Vector3(MathUtils.cos(angle) * speed,
+                                MathUtils.sin(angle) * speed,
+                                0),
+                        dim,
+                        MathUtils.random(0.1f, 0.25f),
+                        Color.RED,
+                        Color.WHITE);
             }
         } 
     }
@@ -203,7 +209,7 @@ public class Cuber extends Entity
     public void draw(SpriteBatch s)
     {
         Color c = Color.RED.cpy();
-        if(!active)
+        if(activeTimer > 0)
         {
             c.a = 0.4f;
         }
@@ -217,7 +223,7 @@ public class Cuber extends Entity
     @Override
     public void kill(WorldModel model)
     {
-        if(!active) return;
+        if(activeTimer > 0) return;
         health--;
         if(health <= 0)
         {
@@ -227,7 +233,7 @@ public class Cuber extends Entity
 
             model.createMultipliers(position, 5);
 
-            int particles = 16;
+            int particles = 32;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -236,7 +242,7 @@ public class Cuber extends Entity
 
                 float speed = 5f + MathUtils.random(-2f, 2f);
 
-                Vector3 dim = new Vector3(0.25f, 0.08f, 0.08f);
+                Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
 
 
                 Vector3 vel = new Vector3(
@@ -249,8 +255,8 @@ public class Cuber extends Entity
                         vel,
                         dim,
                         MathUtils.random(0.5f, 0.65f),
-                        Color.LIME,
-                        Color.RED);
+                        Color.RED,
+                        Color.WHITE);
             } 
         } 
     }
@@ -258,7 +264,7 @@ public class Cuber extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x, position.y, width, height);
+    return new Rectangle(position.x - width / 2f, position.y - width / 2f, width, height);
     }
 
     @Override
@@ -268,7 +274,7 @@ public class Cuber extends Entity
 
     public boolean isActive()
     {
-        return active;
+        return activeTimer <= 0;
     }
     
 }

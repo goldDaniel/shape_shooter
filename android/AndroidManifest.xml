@@ -11,7 +11,7 @@
         android:theme="@style/GdxTheme" >
         <activity
             android:name="com.golddaniel.main.AndroidLauncher"
-            android:label="!!SHAPE SHOOTER!!"
+            android:label="Shape Shooter"
             android:screenOrientation="landscape"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout">
             <intent-filter>

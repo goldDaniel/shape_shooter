@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.golddaniel.screens.*;
 
@@ -30,10 +31,12 @@ public class Main extends ApplicationAdapter {
 
     boolean finishedLoading = false;
 
+    ShapeRenderer sh;
     @Override
     public void create () 
     {
-        sm = new ScreenManager();
+        sh = new ShapeRenderer();
+
 
         assets = new AssetManager();
 
@@ -45,10 +48,15 @@ public class Main extends ApplicationAdapter {
             assets.setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(resolver));
             assets.setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(resolver));
 
-            FreetypeFontLoader.FreeTypeFontLoaderParameter parms = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
-            parms.fontFileName = "fonts/Square.ttf";  // path of .ttf file
-            parms.fontParameters.size = 72;
-            assets.load("Square.ttf", BitmapFont.class, parms);   // fileName with extension, sameName will use to get from manager
+            FreetypeFontLoader.FreeTypeFontLoaderParameter parms72 = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
+            parms72.fontFileName = "fonts/Square.ttf";  // path of .ttf file
+            parms72.fontParameters.size = 48;
+            assets.load("Square72.ttf", BitmapFont.class, parms72);   // fileName with extension, sameName will use to get from manager
+
+            FreetypeFontLoader.FreeTypeFontLoaderParameter parms32 = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
+            parms32.fontFileName = "fonts/Square.ttf";  // path of .ttf file
+            parms32.fontParameters.size = 32;
+            assets.load("Square32.ttf", BitmapFont.class, parms32);
         }
 
         {
@@ -76,22 +84,6 @@ public class Main extends ApplicationAdapter {
         assets.load("sounds/respawn.wav", Sound.class);
 
         assets.load("sounds/background.mp3", Music.class);
-
-        while(assets.update())
-        {
-            Gdx.gl.glClearColor(0, 0, 0, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        }
-        assets.finishLoading();
-        Gdx.app.log("ENGINE", "FINISHED LOADING");
-
-        //initalize our screens with enums to access
-        sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm, assets));
-        sm.initalizeScreen(ScreenManager.STATE.PLAY, new GameScreen(sm, assets));
-        sm.setScreen(ScreenManager
-                .STATE.MAIN_MENU);
-
-        finishedLoading = true;
     }
 
     @Override
@@ -99,7 +91,43 @@ public class Main extends ApplicationAdapter {
     {
         if(finishedLoading)
         {
-            sm.render(Gdx.graphics.getDeltaTime());
+            if(sm != null) sm.render(Gdx.graphics.getDeltaTime());
+        }
+        else
+        {
+            Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+            //ghetto loading bar
+            sh.begin(ShapeRenderer.ShapeType.Filled);
+            sh.rect(
+                    0,
+                    Gdx.graphics.getHeight() / 2f,
+                assets.getProgress()*Gdx.graphics.getWidth(),
+                        Gdx.graphics.getHeight()/16f);
+            sh.end();
+
+
+            finishedLoading = assets.update();
+
+            if(finishedLoading)
+            {
+                Gdx.app.log("ENGINE", "FINISHED LOADING");
+                assets.finishLoading();
+
+                if(sm == null)
+                {
+                    sm = new ScreenManager();
+                    //initalize our screens with enums to access
+                    sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm, assets));
+                    sm.initalizeScreen(ScreenManager.STATE.PLAY, new GameScreen(sm, assets));
+                    sm.setScreen(ScreenManager
+                            .STATE.MAIN_MENU);
+
+                    sm.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                }
+
+            }
         }
     }
 
@@ -116,6 +144,6 @@ public class Main extends ApplicationAdapter {
     @Override
     public void resize(int width, int height)
     {
-        sm.resize(width, height);
+        if(sm != null) sm.resize(width, height);
     }
 }
