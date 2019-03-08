@@ -40,7 +40,7 @@ public class PhysicsGrid
 
 
     final float STIFFNESS = 3.5f;
-    final float DAMPING = 3.5f;
+    final float DAMPING = 2.25f;
     final float INVERSE_MASS = 1f/0.0125f;
 
     static private String createVertexShader()
@@ -151,7 +151,7 @@ public class PhysicsGrid
             //calculations for said spring. Otherwise the grid effect
             //doesn't come back fast enough, also maintains the general shape
             //of the grid
-            float stiffnessScale = 1f/32f;
+            float stiffnessScale = 1f/16f;
 
             // FORCE CALCULATIONS
             float springForceX = -STIFFNESS*stiffnessScale*(position.x - desiredPosition.x);
@@ -240,7 +240,7 @@ public class PhysicsGrid
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
 
-        sh = new ImmediateModeRenderer20(rows*cols*6, true, true, 0);
+        sh = new ImmediateModeRenderer20(rows*cols*8, true, true, 0);
         ShaderProgram shader = new ShaderProgram(createVertexShader(), createFragmentShader());
 
         if(!shader.isCompiled())
@@ -440,6 +440,17 @@ public class PhysicsGrid
                             points[i + 1][j].position.y,
                             points[i + 1][j].position.z);
 
+                    normal = points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                    dist = normal.len()*2f;
+                    lerp = disabled.cpy().lerp(points[i][j].color, dist);
+
+                    sh.normal(0, 0, 1);
+                    sh.color(lerp);
+                    sh.vertex(
+                            points[i][j].position.x,
+                            points[i][j].position.y,
+                            points[i][j].position.z);
+
                     normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
                     dist = normal.len()*2f;
                     lerp = disabled.cpy().lerp(points[i][j + 1].color, dist);
@@ -451,38 +462,58 @@ public class PhysicsGrid
                             points[i][j + 1].position.y,
                             points[i][j + 1].position.z);
 
-                    normal = points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                    //INTERPOLATED LINES============================================================
+                    normal =  points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                    normal.add(points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition));
+                    normal.scl(1f/2f);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(points[i][j + 1].color, dist);
+                    lerp = disabled.cpy().lerp(points[i][j].color.cpy().lerp(points[i + 1][j].color, 0.5f), dist);
 
-                    sh.normal(0, 0, 1);
                     sh.color(lerp);
                     sh.vertex(
-                            points[i][j + 1].position.x,
-                            points[i][j + 1].position.y,
-                            points[i][j + 1].position.z);
+                            (points[i][j].position.x + points[i + 1][j].position.x) / 2f,
+                            (points[i][j].position.y + points[i + 1][j].position.y) / 2f,
+                            (points[i][j].position.z + points[i + 1][j].position.z) / 2f);
 
-                    normal = points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                    normal =  points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition);
+                    normal.add(points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition));
+                    normal.scl(1f/2f);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(points[i + 1][j].color, dist);
+                    lerp = disabled.cpy().lerp(points[i][j + 1].color.cpy().lerp(points[i + 1][j + 1].color, 0.5f), dist);
 
-                    sh.normal(0, 1, 0);
                     sh.color(lerp);
                     sh.vertex(
-                            points[i + 1][j].position.x,
-                            points[i + 1][j].position.y,
-                            points[i + 1][j].position.z);
+                            (points[i][j + 1].position.x + points[i + 1][j + 1].position.x) / 2f,
+                            (points[i][j + 1].position.y + points[i + 1][j + 1].position.y) / 2f,
+                            (points[i][j + 1].position.z + points[i + 1][j + 1].position.z) / 2f);
 
-                    normal = points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition);
+
+                    normal =  points[i][j].position.cpy().sub(points[i][j].desiredPosition);
+                    normal.add(points[i][j + 1].position.cpy().sub(points[i][j + 1].desiredPosition));
+                    normal.scl(1f/2f);
                     dist = normal.len()*2f;
-                    lerp = disabled.cpy().lerp(points[i + 1][j + 1].color, dist);
+                    lerp = disabled.cpy().lerp(points[i][j].color.cpy().lerp(points[i][j + 1].color, 0.5f), dist);
 
-                    sh.normal(1, 0, 0);
                     sh.color(lerp);
                     sh.vertex(
-                            points[i + 1][j + 1].position.x,
-                            points[i + 1][j + 1].position.y,
-                            points[i + 1][j + 1].position.z);
+                            (points[i][j].position.x + points[i][j + 1].position.x) / 2f,
+                            (points[i][j].position.y + points[i][j + 1].position.y) / 2f,
+                            (points[i][j].position.z + points[i][j + 1].position.z) / 2f);
+
+
+                    normal =  points[i + 1][j].position.cpy().sub(points[i + 1][j].desiredPosition);
+                    normal.add(points[i + 1][j + 1].position.cpy().sub(points[i + 1][j + 1].desiredPosition));
+                    normal.scl(1f/2f);
+                    dist = normal.len()*2f;
+                    lerp = disabled.cpy().lerp(points[i + 1][j].color.cpy().lerp(points[i + 1][j + 1].color, 0.5f), dist);
+
+                    sh.color(lerp);
+                    sh.vertex(
+                            (points[i + 1][j].position.x + points[i + 1][j + 1].position.x) / 2f,
+                            (points[i + 1][j].position.y + points[i + 1][j + 1].position.y) / 2f,
+                            (points[i + 1][j].position.z + points[i + 1][j + 1].position.z) / 2f);
+
+                    //==============================================================================
                 }
             }
         }

@@ -19,6 +19,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
@@ -63,7 +64,7 @@ public class WorldRenderer
 
     boolean doBloom = true;
 
-    public WorldRenderer(ExtendViewport e, AssetManager assets)
+    public WorldRenderer(PerspectiveCamera cam, AssetManager assets)
     {
         s = new SpriteBatch();
         m = new ModelBatch();
@@ -77,11 +78,11 @@ public class WorldRenderer
         }
         else
         {
-            scale = 1/4f;
+            scale = 1;
 
         }
-        this.viewport = e;
-        bloom = new Bloom(e, scale);
+        this.viewport = new ExtendViewport(1920, 1080, cam);
+        bloom = new Bloom(viewport, scale);
         bloom.setTreshold(0.2f);
         bloom.setBloomIntesity(1.25f);
 
@@ -112,8 +113,6 @@ public class WorldRenderer
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) doBloom = !doBloom;
-        bloom.setViewport(model.getViewport());
-        this.viewport = model.getViewport();
 
         if(rebuildFramebuffer)
         {
@@ -134,6 +133,7 @@ public class WorldRenderer
         s.enableBlending();
         s.setProjectionMatrix(model.getCamera().combined);
 
+        s.totalRenderCalls = 0;
         s.begin();
         {
             model.getGrid().draw(s);
@@ -157,6 +157,7 @@ public class WorldRenderer
             }
         }
         s.end();
+        //Gdx.app.log("RENDER CALLS", s.totalRenderCalls + "");
         fbo.end();
 
         //need to flip that y axis
@@ -173,6 +174,7 @@ public class WorldRenderer
                 0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         s.end();
         if(doBloom) bloom.render();
+
     }
     
     public void resize(int width, int height)

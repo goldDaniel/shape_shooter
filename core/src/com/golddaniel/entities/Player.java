@@ -36,7 +36,6 @@ import com.golddaniel.main.PS4Map;
 import com.golddaniel.main.WorldModel;
 
 /**
- *
  * @author wrksttn
  */
 public class Player extends Entity implements ControllerListener
@@ -50,31 +49,30 @@ public class Player extends Entity implements ControllerListener
 
     private WEAPON_TYPE weaponType;
 
-    float hue;
+    private float hue;
 
-    static TextureRegion tex;
-    Vector3 velocity;
-    Vector3 moveDir;
-    Vector3 shootDir;
+    private static TextureRegion tex;
+    private Vector3 velocity;
+    private Vector3 moveDir;
+    private Vector3 shootDir;
 
-    public float width;
-    public float height;
-
-
-    final float COOLDOWN_DEFAULT = 0.125f;
-    final float COOLDOWN_POWERUP = 0.02f;
-
-    final int EXTRA_STREAMS_DEFAULT = 2;
-    final int EXTRA_STREAMS_POWERUP = 5;
+    private float width;
+    private float height;
 
 
-    float powerupTimer = 0;
-    int extraStreams = EXTRA_STREAMS_DEFAULT;
+    private final float COOLDOWN_DEFAULT = 0.125f;
+    private final float COOLDOWN_POWERUP = 0.02f;
+
+    private final int EXTRA_STREAMS_DEFAULT = 2;
+    private final int EXTRA_STREAMS_POWERUP = 5;
+
+
+    private float powerupTimer = 0;
+    private int extraStreams = EXTRA_STREAMS_DEFAULT;
 
     //weapon cooldown, should probably move into its own module
-    float cooldown = 0;
-    float currentWeaponCooldown = COOLDOWN_DEFAULT;
-
+    private float cooldown = 0;
+    private float currentWeaponCooldown = COOLDOWN_DEFAULT;
 
 
     @Override
@@ -118,7 +116,8 @@ public class Player extends Entity implements ControllerListener
             if (value * value > DEADZONE * DEADZONE)
             {
                 moveDir.x = value;
-            } else
+            }
+            else
             {
                 moveDir.x = 0;
             }
@@ -128,7 +127,8 @@ public class Player extends Entity implements ControllerListener
             if (value * value > DEADZONE * DEADZONE)
             {
                 moveDir.y = -value;
-            } else
+            }
+            else
             {
                 moveDir.y = 0;
             }
@@ -139,7 +139,8 @@ public class Player extends Entity implements ControllerListener
             if (value * value > DEADZONE * DEADZONE)
             {
                 shootDir.x = value;
-            } else
+            }
+            else
             {
                 shootDir.x = 0;
             }
@@ -149,7 +150,8 @@ public class Player extends Entity implements ControllerListener
             if (value * value > DEADZONE * DEADZONE)
             {
                 shootDir.y = -value;
-            } else
+            }
+            else
             {
                 shootDir.y = 0;
             }
@@ -183,7 +185,7 @@ public class Player extends Entity implements ControllerListener
 
     public static void loadTextures(AssetManager assets)
     {
-        if(tex == null)
+        if (tex == null)
             tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
     }
 
@@ -191,26 +193,19 @@ public class Player extends Entity implements ControllerListener
     {
         super(assets);
 
-
         width = 0.5f;
         height = 0.5f;
-        
+
         position = new Vector3(0, 0, 0);
         velocity = new Vector3();
         moveDir = new Vector3();
         shootDir = new Vector3();
-        
+
         isAlive = true;
 
         weaponType = WEAPON_TYPE.SPREAD;
 
         Controllers.addListener(this);
-    }
-
-
-    private float abs(float a)
-    {
-        return a > 0 ? a : -a;
     }
 
     public void setMoveDir(float x, float y)
@@ -228,62 +223,62 @@ public class Player extends Entity implements ControllerListener
     public void update(WorldModel model, float delta)
     {
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.U))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.U))
         {
             weaponType = WEAPON_TYPE.SPREAD;
         }
-        else if(Gdx.input.isKeyJustPressed(Input.Keys.Y))
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.Y))
         {
             weaponType = WEAPON_TYPE.RAPID;
         }
-        if(!isAlive) return;
+        if (!isAlive) return;
 
-        if(SharedLibraryLoader.isWindows || SharedLibraryLoader.isLinux)
+        if (SharedLibraryLoader.isWindows || SharedLibraryLoader.isLinux)
         {
             moveDir.setZero();
-            if(Gdx.input.isKeyPressed(Input.Keys.D))
+            if (Gdx.input.isKeyPressed(Input.Keys.D))
             {
                 moveDir.x += 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.A))
+            if (Gdx.input.isKeyPressed(Input.Keys.A))
             {
                 moveDir.x -= 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.W))
+            if (Gdx.input.isKeyPressed(Input.Keys.W))
             {
                 moveDir.y += 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.S))
+            if (Gdx.input.isKeyPressed(Input.Keys.S))
             {
                 moveDir.y -= 1;
             }
 
             shootDir.setZero();
-            if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
             {
                 shootDir.x += 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
+            if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
             {
                 shootDir.x -= 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.UP))
+            if (Gdx.input.isKeyPressed(Input.Keys.UP))
             {
-            shootDir.y += 1;
+                shootDir.y += 1;
             }
-            if(Gdx.input.isKeyPressed(Input.Keys.DOWN))
+            if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
             {
                 shootDir.y -= 1;
             }
         }
 
-        float MAX_SPEED = 2.5f;
+        float MAX_SPEED = 3.5f;
 
-        Vector3 acceleration = moveDir.cpy().scl(60f*delta);
+        Vector3 acceleration = moveDir.cpy().scl(60f * delta);
 
-        if(moveDir.isZero())
+        if (moveDir.isZero())
         {
-            velocity = velocity.lerp(Vector3.Zero, 5f*delta);
+            velocity = velocity.lerp(Vector3.Zero, 5f * delta);
         }
         else
         {
@@ -292,18 +287,17 @@ public class Player extends Entity implements ControllerListener
         velocity.limit(MAX_SPEED);
 
 
-
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
         position.z = 0.00f;
 
-        if(shootDir.len2() > 0)
+        if (shootDir.len2() > 0)
         {
             fireBullets(model, new Vector3(shootDir.x, shootDir.y, 0));
         }
 
         powerupTimer -= delta;
-        if(powerupTimer <= 0)
+        if (powerupTimer <= 0)
         {
             powerupTimer = 0;
             currentWeaponCooldown = COOLDOWN_DEFAULT;
@@ -311,34 +305,33 @@ public class Player extends Entity implements ControllerListener
             powerupTimer = 0;
         }
 
-       
         //bound inside world rect
-        if(position.x < -model.WORLD_WIDTH/2f)
+        if (position.x < -model.WORLD_WIDTH / 2f)
         {
-            position.x = -model.WORLD_WIDTH/2f;
+            position.x = -model.WORLD_WIDTH / 2f;
         }
-        else if(position.x > model.WORLD_WIDTH/2)
+        else if (position.x > model.WORLD_WIDTH / 2)
         {
-            position.x = model.WORLD_WIDTH/2f;
-        }
-        
-        if(position.y < -model.WORLD_HEIGHT/2f)
-        {
-            position.y = -model.WORLD_HEIGHT/2f;
-        }
-        else if(position.y > model.WORLD_HEIGHT/2f)
-        {
-            position.y = model.WORLD_HEIGHT/2f;
+            position.x = model.WORLD_WIDTH / 2f;
         }
 
-        hue += 90f*delta;
+        if (position.y < -model.WORLD_HEIGHT / 2f)
+        {
+            position.y = -model.WORLD_HEIGHT / 2f;
+        }
+        else if (position.y > model.WORLD_HEIGHT / 2f)
+        {
+            position.y = model.WORLD_HEIGHT / 2f;
+        }
+
+        hue += 90f * delta;
         hue %= 360f;
-        
+
         cooldown -= delta;
 
         Vector3 pos = position.cpy();
         pos.z = -0.01f;
-        model.applyRadialForce(pos, 250 * delta ,width * 1.5f);
+        model.applyRadialForce(pos, 250 * delta, width * 1.5f);
 
         createParticleTrail(model);
     }
@@ -368,10 +361,10 @@ public class Player extends Entity implements ControllerListener
             model.createParticle(pos, vel, dim, lifespan, start, end);
         }
     }
-    
+
     private void fireBullets(WorldModel model, Vector3 direction)
     {
-        if(cooldown <= 0)
+        if (cooldown <= 0)
         {
             AudioSystem.playSound(AudioSystem.SoundEffect.LASER);
 
@@ -379,7 +372,7 @@ public class Player extends Entity implements ControllerListener
 
             Vector3 bulletPos = new Vector3();
             bulletPos.x = position.x + 0.005f;
-            bulletPos.y = position.y + height /2f;
+            bulletPos.y = position.y + height / 2f;
 
             float speed = 25f;
             model.createBullet(bulletPos,
@@ -394,15 +387,15 @@ public class Player extends Entity implements ControllerListener
             {
                 model.createBullet(bulletPos,
                         speed,
-                        dir.angle() + dif*(i+1),
+                        dir.angle() + dif * (i + 1),
                         Bullet.TYPE.LASER_1);
                 model.createBullet(bulletPos,
                         speed,
-                        dir.angle() - dif*(i+1),
+                        dir.angle() - dif * (i + 1),
                         Bullet.TYPE.LASER_1);
             }
             cooldown = currentWeaponCooldown;
-        }       
+        }
     }
 
     public void draw(SpriteBatch s)
@@ -425,8 +418,8 @@ public class Player extends Entity implements ControllerListener
 
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x - width /2f, position.y - height /2f,
-                             width / 2f, height);
+        return new Rectangle(position.x - width / 2f, position.y - height / 2f,
+                width / 2f, height / 2f);
     }
 
     public void kill(WorldModel model)
@@ -437,7 +430,7 @@ public class Player extends Entity implements ControllerListener
         for (int i = 0; i < particles; i++)
         {
             //particle angle
-            float pAngle = (float)i/(float)particles*360f;
+            float pAngle = (float) i / (float) particles * 360f;
 
             Vector3 dim = new Vector3(0.5f, 0.01f, 0.01f);
 
@@ -446,9 +439,9 @@ public class Player extends Entity implements ControllerListener
             model.createParticle(
                     position.cpy(),
                     new Vector3(
-                        MathUtils.cosDeg(pAngle) * speed,
-                        MathUtils.sinDeg(pAngle) * speed,
-                        0),
+                            MathUtils.cosDeg(pAngle) * speed,
+                            MathUtils.sinDeg(pAngle) * speed,
+                            0),
                     dim,
                     MathUtils.random(0.4f, 2f),
                     Color.MAGENTA,
@@ -467,6 +460,7 @@ public class Player extends Entity implements ControllerListener
                     Color.CYAN,
                     Color.WHITE);
         }
+        model.applyRadialForce(position, 200, 3, Color.WHITE);
         model.killAllEntities();
     }
 
@@ -475,6 +469,6 @@ public class Player extends Entity implements ControllerListener
         extraStreams = EXTRA_STREAMS_POWERUP;
         currentWeaponCooldown = COOLDOWN_POWERUP;
 
-        powerupTimer = 8f;
+        powerupTimer = 5f;
     }
 }

@@ -53,7 +53,7 @@ public class Cuber extends Entity
 
         if(tex == null)
         {
-            tex = assets.get("geometric/dashedSquare.png", Texture.class);
+            tex = assets.get("texture.png", Texture.class);
         }
 
         health = 9;

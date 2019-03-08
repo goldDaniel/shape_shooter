@@ -118,14 +118,14 @@ public class CollisionSystem
                     }
                 }
             }
-                if(model.getPlayer() != null)
+            if(model.getPlayer() != null)
+            {
+                Rectangle p = model.getPlayer().getBoundingBox();
+                if(p.overlaps(cb.getBoundingBox()))
                 {
-                    Rectangle p = model.getPlayer().getBoundingBox();
-                    if(p.overlaps(cb.getBoundingBox()))
-                    {
-                        model.getPlayer().kill(model);
-                    }
+                    model.getPlayer().kill(model);
                 }
+            }
         }
         for(BlackHole b : model.getEntityType(BlackHole.class))
         {
