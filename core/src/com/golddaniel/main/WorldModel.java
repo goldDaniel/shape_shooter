@@ -16,7 +16,6 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
@@ -24,12 +23,14 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
+import com.golddaniel.entities.TextParticle;
+
+import javax.xml.soap.Text;
 
 /**
  * @author wrksttn
@@ -47,6 +48,8 @@ public class WorldModel
     private Array<Entity> toRemove;
     private Array<Entity> toAdd;
 
+
+    private Array<TextParticle> textParticles;
 
     //we create lots of particles, so lets create a pool
     private Array<Particle> particles;
@@ -104,6 +107,8 @@ public class WorldModel
         entities = new Array<Entity>();
         toRemove = new Array<Entity>();
         toAdd = new Array<Entity>();
+
+        textParticles = new Array<TextParticle>(128);
 
         particles = new Array<Particle>();
 
@@ -178,6 +183,13 @@ public class WorldModel
                 e.update(this, delta);
             }
         }
+        Array<TextParticle> toRemove = new Array<TextParticle>();
+        for(TextParticle p : textParticles)
+        {
+            p.update(this, delta);
+            if(!p.isAlive()) toRemove.add(p);
+        }
+        textParticles.removeAll(toRemove, true);
 
         g.update(delta);
 
@@ -391,6 +403,12 @@ public class WorldModel
         addEntity(b);
     }
 
+    public void createTextParticle(int num, Vector3 pos)
+    {
+        TextParticle p = new TextParticle(null, "x" + num, pos);
+        textParticles.add(p);
+    }
+
     public void createParticle(Vector3 pos, Vector3 vel, Vector3 dim, float lifespan, Color startColor, Color endColor)
     {
         Particle p = particlePool.obtain();
@@ -432,6 +450,8 @@ public class WorldModel
     {
         return particles;
     }
+
+    protected Array<TextParticle> getTextParticles() { return textParticles; }
 
     public <T> Array<T> getEntityType(Class<T> type)
     {

@@ -41,7 +41,7 @@ public class PhysicsGrid
 
     final float STIFFNESS = 3.5f;
     final float DAMPING = 2.25f;
-    final float INVERSE_MASS = 1f/0.0125f;
+    final float INVERSE_MASS = 1f/0.025f;
 
     static private String createVertexShader()
     {

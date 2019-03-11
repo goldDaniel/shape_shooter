@@ -84,7 +84,7 @@ public class WorldRenderer
         this.viewport = new ExtendViewport(1920, 1080, cam);
         bloom = new Bloom(viewport, scale);
         bloom.setTreshold(0.2f);
-        bloom.setBloomIntesity(1.25f);
+        bloom.setBloomIntesity(1f);
 
         Texture tex = assets.get("skybox.jpg", Texture.class);
 
@@ -150,6 +150,12 @@ public class WorldRenderer
             {
                 model.getAllParticles().get(i).draw(s);
             }
+
+            for (int i = 0; i < model.getTextParticles().size; i++)
+            {
+                model.getTextParticles().get(i).draw(s);
+            }
+
             //draw player on top
             if (model.getPlayer() != null)
             {

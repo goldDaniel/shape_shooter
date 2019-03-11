@@ -12,8 +12,13 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
+import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Cuber;
 import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Multiplier;
+import com.golddaniel.entities.Particle;
+import com.golddaniel.entities.Player;
+import com.golddaniel.entities.TextParticle;
 import com.golddaniel.main.*;
 
 /**
@@ -25,7 +30,7 @@ public class GameScreen extends VScreen
     private UIRenderer uiRenderer;
     private WorldRenderer worldRenderer;
 
-    private float gridSpacing = 0.4f;
+    private float gridSpacing = 0.35f;
     private boolean runSim;
     private float gameRestart = 5f;
 
@@ -147,22 +152,28 @@ public class GameScreen extends VScreen
         model.setGrid(g);
     }
 
-    private void init()
-    {
-
-        buildTestWorld();
-        uiRenderer = new UIRenderer(model, assets);
-        worldRenderer = new WorldRenderer(model.getCamera(), assets);
-    }
-
     public GameScreen(ScreenManager sm, AssetManager assets)
     {
         super(sm, assets);
         sh = new ShapeRenderer();
         init();
+        Bullet.loadTextures(assets);
+        Multiplier.loadTextures(assets);
+        Player.loadTextures(assets);
+        Particle.loadTextures(assets);
+        AudioSystem.loadSounds(assets);
+        Boid.loadTextures(assets);
+        TextParticle.loadTextures(assets);
     }
 
+    private void init()
+    {
+        //this creates worldModel, we need this to pass to the renderers
+        buildTestWorld();
 
+        uiRenderer = new UIRenderer(model, assets);
+        worldRenderer = new WorldRenderer(model.getCamera(), assets);
+    }
 
     @Override
     public void render(float delta)

@@ -161,6 +161,10 @@ public class CollisionSystem
                 {
                     m.kill(model);
                     model.incrementMultiplier();
+                    if(model.getScoreMultiplier() % 5 == 0)
+                    {
+                        model.createTextParticle(model.getScoreMultiplier(), model.getPlayer().position);
+                    }
                     AudioSystem.playSound(AudioSystem.SoundEffect.PICKUP);
                 }
             }

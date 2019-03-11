@@ -1,6 +1,5 @@
 package com.golddaniel.main;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -9,10 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.golddaniel.entities.Bullet;
-import com.golddaniel.entities.Multiplier;
-import com.golddaniel.entities.Particle;
-import com.golddaniel.entities.Player;
 
 public class UIRenderer
 {
@@ -29,18 +24,11 @@ public class UIRenderer
     {
         Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
 
-        Bullet.loadTextures(assets);
-        Multiplier.loadTextures(assets);
-        Player.loadTextures(assets);
-        Particle.loadTextures(assets);
-        AudioSystem.loadSounds(assets);
-
-
         uiStage = new Stage(new ExtendViewport(800, 600));
         Touchpad leftPad = new Touchpad(0.25f, uiSkin);
         Touchpad rightPad = new Touchpad(0.25f, uiSkin);
 
-        float size = 192;
+        float size = 216;
         leftPad.setSize(size, size);
         rightPad.setSize(size, size);
 

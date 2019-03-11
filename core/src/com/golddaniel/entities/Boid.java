@@ -54,18 +54,18 @@ public class Boid extends Entity
     private int health = 5;
 
     private float activeTimer = 2f;
-    
+
+    public static void loadTextures(AssetManager assets)
+    {
+        if(circleTex == null)
+            circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
+        if(tex == null)
+            tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
+    }
+
     public Boid(Vector3 position, AssetManager assets)
     {
         super(assets);
-        if(tex == null)
-        {
-            tex = new TextureRegion(assets.get(("geometric/player.png"), Texture.class));
-        }
-        if(circleTex == null)
-        {
-            circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
-        }
 
         this.position = new Vector3(position);
 
