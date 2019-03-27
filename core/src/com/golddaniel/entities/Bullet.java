@@ -23,17 +23,24 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Pool;
 import com.golddaniel.main.WorldModel;
 
 /**
  *
  * @author wrksttn
  */
-public class Bullet extends Entity
+public class Bullet extends Entity implements Pool.Poolable
 {
 
     float width;
     float height;
+
+    @Override
+    public void reset()
+    {
+
+    }
 
     public enum TYPE
     {

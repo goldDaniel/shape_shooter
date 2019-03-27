@@ -24,12 +24,16 @@ public class Multiplier extends Entity
 
     boolean inRangeOfPlayer = false;
 
+    Color color;
+
     public Multiplier(Vector3 pos, Vector3 vel, AssetManager assets)
     {
         super(assets);
         init(pos, vel);
         width = 0.125f;
         height = width / 2f;
+
+        color = Color.LIME.cpy();
     }
 
     public void init(Vector3 pos, Vector3 vel)
@@ -77,7 +81,7 @@ public class Multiplier extends Entity
             pos.sub(-width/2f, -height/2f, 0);
             model.createParticle(
                     pos,
-                    Vector3.Zero.cpy(),
+                    Vector3.Zero,
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -87,27 +91,7 @@ public class Multiplier extends Entity
             pos.sub(-width/2f, height/2f, 0);
             model.createParticle(
                     pos,
-                    Vector3.Zero.cpy(),
-                    dim,
-                    MathUtils.random(0.1f, 0.5f),
-                    Color.LIME,
-                    Color.WHITE);
-
-            pos = position.cpy();
-            pos.sub(width/2f, -height/2f, 0);
-            model.createParticle(
-                    pos,
-                    Vector3.Zero.cpy(),
-                    dim,
-                    MathUtils.random(0.1f, 0.5f),
-                    Color.LIME,
-                    Color.WHITE);
-
-            pos = position.cpy();
-            pos.sub(width/2f, height/2f, 0);
-            model.createParticle(
-                    pos,
-                    Vector3.Zero.cpy(),
+                    Vector3.Zero,
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -144,9 +128,9 @@ public class Multiplier extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-        Color c = Color.LIME.cpy();
-        c.a = 0.8f * lifespan / 5f + 0.2f;
-        s.setColor(c);
+
+        color.a = 0.8f * lifespan / 5f + 0.2f;
+        s.setColor(color);
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
                 width / 2, height / 2,

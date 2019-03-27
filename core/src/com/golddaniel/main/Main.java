@@ -11,11 +11,13 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.golddaniel.screens.*;
 
@@ -31,11 +33,19 @@ public class Main extends ApplicationAdapter {
 
     boolean finishedLoading = false;
 
-    ShapeRenderer sh;
+    SpriteBatch s;
+
+    Skin uiSkin;
+    ProgressBar bar;
+
     @Override
     public void create () 
     {
-        sh = new ShapeRenderer();
+        s = new SpriteBatch();
+        uiSkin = new Skin(Gdx.files.internal("ui/neon/skin/neon-ui.json"));
+
+        bar = new ProgressBar(0f, 1f, 0.001f, false, uiSkin);
+        bar.setSize(Gdx.graphics.getWidth(), 50);
 
         assets = new AssetManager();
 
@@ -111,14 +121,12 @@ public class Main extends ApplicationAdapter {
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
             //ghetto loading bar
-            sh.begin(ShapeRenderer.ShapeType.Filled);
-            sh.rect(
-                    0,
-                    Gdx.graphics.getHeight() / 2f,
-                assets.getProgress()*Gdx.graphics.getWidth(),
-                        Gdx.graphics.getHeight()/16f);
-            sh.end();
-
+            s.begin();
+            bar.setPosition(0, Gdx.graphics.getHeight() / 2f);
+            bar.setValue(assets.getProgress());
+            bar.act(Gdx.graphics.getDeltaTime());
+            bar.draw(s, 1);
+            s.end();
 
             finishedLoading = assets.update();
 
@@ -133,6 +141,7 @@ public class Main extends ApplicationAdapter {
                     //initalize our screens with enums to access
                     sm.initalizeScreen(ScreenManager.STATE.MAIN_MENU, new MainMenuScreen(sm, assets));
                     sm.initalizeScreen(ScreenManager.STATE.PLAY, new GameScreen(sm, assets));
+                    sm.initalizeScreen(ScreenManager.STATE.LEVEL_SELECT, new LevelSelectScreen(sm, assets));
                     sm.setScreen(ScreenManager
                             .STATE.MAIN_MENU);
 

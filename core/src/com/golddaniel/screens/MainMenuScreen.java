@@ -5,6 +5,7 @@
  */
 package com.golddaniel.screens;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -210,14 +211,17 @@ public class MainMenuScreen extends VScreen
             uiStage.draw();
         }
 
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER))
+        {
+            sm.setScreen(ScreenManager.STATE.PLAY);
+        }
+
 
         s.setProjectionMatrix(titleCamera.combined);
         s.begin();
         font.setColor(Color.WHITE.cpy().fromHsv(hue, 1f, 1f));
         font.draw(s, "SHAPE SHOOTER", titleCamera.position.x - 172, titleCamera.position.y + 84);
         s.end();
-
-
     }
 
     @Override

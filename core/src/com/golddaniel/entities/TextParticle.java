@@ -8,14 +8,16 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.golddaniel.main.WorldModel;
 
+//TODO: i really have to rework particles
 public class TextParticle extends Entity
 {
     private Vector3 pos;
 
     private String multiplier;
 
-    private float timer = 1f;
+    private float timer = 1.2f;
 
+    private float size;
 
     private static Texture textureX;
     private static Texture texture0;
@@ -53,16 +55,19 @@ public class TextParticle extends Entity
 
     public void update(WorldModel model, float delta)
     {
-        pos.y += 1f * delta;
+        pos.y += 1.5f * delta;
 
         timer -= delta;
+
+        size = 0.25f - 0.15f * timer;
+
         if(timer <= 0) isAlive = false;
     }
 
     public void draw(SpriteBatch s)
     {
         s.setColor(Color.ORANGE);
-        float size = 0.2f - 0.1f * timer;
+
         for(int i = 0; i < multiplier.length(); i++)
         {
             Texture tex = null;

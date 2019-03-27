@@ -36,7 +36,7 @@ import com.golddaniel.main.WorldModel;
  */
 public class Boid extends Entity
 {
-    private static float SPEED_MAX = 0.85f;
+    private static float SPEED_MAX = 0.9f;
 
     private static Array<Boid> boids = new Array<Boid>();
 
@@ -45,6 +45,11 @@ public class Boid extends Entity
 
     private Vector3 velocity;
     private Vector3 acceleration;
+
+
+    private Vector3 cohesion;
+    private Vector3 allignment;
+    private Vector3 separation;
 
     private Color color;
 
@@ -73,6 +78,10 @@ public class Boid extends Entity
         acceleration = new Vector3();
         velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
 
+        cohesion = new Vector3();
+        allignment = new Vector3();
+        separation = new Vector3();
+
         width = 0.25f;
         height = 0.25f;
         color = Color.CYAN.cpy();
@@ -85,13 +94,12 @@ public class Boid extends Entity
      * 
      * @return 
      */
-    private Vector3 cohesion()
+    private void cohesion()
     {
-        Vector3 result = new Vector3();
         int count = 0;
         float range = 5f;
         
-        Vector3 sum = new Vector3();
+        cohesion.setZero();
         for(Boid b : boids)
         {
             float dist = position.dst(b.position);
@@ -102,16 +110,15 @@ public class Boid extends Entity
              */
             if(dist > 0 && dist < range)
             {
-                sum.add(b.position);
+                cohesion.add(b.position);
                 count++;
             }
         }
         if(count > 0)
         {
-            sum.scl(1f/(float)count);
+            cohesion.scl(1f/(float)count);
+            cohesion.limit(SPEED_MAX);
         }
-        
-        return result;
     }
     
     /**
@@ -119,9 +126,8 @@ public class Boid extends Entity
      * 
      * @return
      */
-    private Vector3 allignment()
+    private void allignment()
     {
-        Vector3 result = new Vector3();
         float range = 3.5f;
         int count = 0;
         
@@ -141,11 +147,9 @@ public class Boid extends Entity
         {
             sum.setLength(SPEED_MAX);
             
-            result = sum.sub(velocity);
-            result.limit(SPEED_MAX);
+            allignment.set(sum.sub(velocity));
+            allignment.limit(SPEED_MAX);
         }
-        
-        return result;
     }
     
     /**
@@ -156,10 +160,8 @@ public class Boid extends Entity
      * 
      * @return 
      */
-    private Vector3 separation()
+    private void separation()
     {
-        Vector3 result = new Vector3();
-    
         int count = 0;
         
         float range = 0.75f;
@@ -190,10 +192,9 @@ public class Boid extends Entity
             sum.nor();
             sum.scl(SPEED_MAX);
             
-            result = sum.sub(velocity);
-            result.limit(SPEED_MAX);
+            separation.set(sum.sub(velocity));
+            separation.limit(SPEED_MAX);
         }
-        return result;
     }
     
     private Vector3 seek(Vector3 target)
@@ -256,9 +257,6 @@ public class Boid extends Entity
 
     public void update(float delta)
     {
-        Vector3 separation = separation();
-        Vector3 allignment = allignment();
-        Vector3 cohesion = cohesion();
 
         acceleration.add(separation);
         acceleration.add(allignment);
@@ -282,15 +280,11 @@ public class Boid extends Entity
     {
         if(activeTimer <= 0)
         {
-            borderCheck(model);
-
-            Vector3 separation = separation();
-            Vector3 allignment = allignment();
-            Vector3 cohesion = cohesion();
             Vector3 boundary = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+            boundary.scl(3f);
             Vector3 seek = new Vector3();
 
-            float range = 7f;
+            float range = 10f;
             if (model.getEntityType(Player.class).size > 0)
             {
 
@@ -301,6 +295,11 @@ public class Boid extends Entity
                     seek.set(seek(target));
                 }
             }
+            seek.scl(2f);
+
+            separation();
+            allignment();
+            cohesion();
 
             acceleration.add(separation);
             acceleration.add(allignment);
@@ -317,9 +316,23 @@ public class Boid extends Entity
 
             acceleration.set(0, 0, 0);
 
-            Vector3 pos = position.cpy();
-            pos.z = -0.1f;
-            model.applyRadialForce(position, 150f * delta, width);
+            if(position.x < -model.WORLD_WIDTH / 2f)
+            {
+                position.x = -model.WORLD_WIDTH / 2f;
+            }
+            else if(position.x > model.WORLD_WIDTH / 2f)
+            {
+                position.x = model.WORLD_WIDTH / 2f;
+            }
+
+            if(position.y < -model.WORLD_HEIGHT /2f)
+            {
+                position.y = -model.WORLD_HEIGHT /2f;
+            }
+            else if(position.y > model.WORLD_HEIGHT / 2f)
+            {
+                position.y = model.WORLD_HEIGHT / 2f;
+            }
         }
         else
         {
@@ -341,27 +354,6 @@ public class Boid extends Entity
                                 Color.WHITE,
                                 color);
             }
-        }
-    }
-
-    private void borderCheck(WorldModel model)
-    {
-        if(position.x < -model.WORLD_WIDTH / 2f)
-        {
-            position.x = -model.WORLD_WIDTH / 2f;
-        }
-        else if(position.x > model.WORLD_WIDTH / 2f)
-        {
-            position.x = model.WORLD_WIDTH / 2f;
-        }
-        
-        if(position.y < -model.WORLD_HEIGHT /2f)
-        {
-            position.y = -model.WORLD_HEIGHT /2f;
-        }
-        else if(position.y > model.WORLD_HEIGHT / 2f)
-        {
-            position.y = model.WORLD_HEIGHT / 2f;
         }
     }
     
@@ -405,7 +397,7 @@ public class Boid extends Entity
                 float speed = MathUtils.random(7f, 10f);
 
                 model.createParticle(
-                    position.cpy(),
+                    position,
                     new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
@@ -415,7 +407,7 @@ public class Boid extends Entity
                 speed = MathUtils.random(2f, 3f);
 
                 model.createParticle(
-                        position.cpy(),
+                        position,
                         new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                         dim,
                         MathUtils.random(0.1f, 0.5f),
@@ -427,11 +419,11 @@ public class Boid extends Entity
             pos.z = -0.01f;
 
             model.createMultipliers(position, 3);
-            model.addScore(1);
+            model.addScore(5);
             model.applyRadialForce(
                           pos,
                     22,
-                    (width) * 4f, Color.CYAN.cpy().fromHsv(210f, 0.65f, 0.8f));
+                    (width) * 4f, Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
 
             boids.removeValue(this, true);
 

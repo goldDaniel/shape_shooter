@@ -278,7 +278,7 @@ public class Player extends Entity implements ControllerListener
 
         if (moveDir.isZero())
         {
-            velocity = velocity.lerp(Vector3.Zero, 5f * delta);
+            velocity = velocity.lerp(Vector3.Zero, 3f * delta);
         }
         else
         {
@@ -331,7 +331,7 @@ public class Player extends Entity implements ControllerListener
 
         Vector3 pos = position.cpy();
         pos.z = -0.01f;
-        model.applyRadialForce(pos, 250 * delta, width * 1.5f);
+        model.applyRadialForce(pos, 50 * delta, width * 1.5f);
 
         createParticleTrail(model);
     }
@@ -339,15 +339,15 @@ public class Player extends Entity implements ControllerListener
     private void createParticleTrail(WorldModel model)
     {
         Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
-        Color end = Color.WHITE.cpy();
+        Color end = Color.RED.cpy().fromHsv(hue + 180f, 1f, 1f);
         for (int i = 0; i < 10; i++)
         {
             Vector3 pos = new Vector3(position);
 
             Vector2 dir = new Vector2(velocity.x, velocity.y);
 
-            pos.x -= MathUtils.cos(dir.angleRad()) * width / 2f;
-            pos.y -= MathUtils.sin(dir.angleRad()) * height / 2f;
+            pos.x -= MathUtils.cos(dir.angleRad() + MathUtils.PI / 4f) * width / 1.8f;
+            pos.y -= MathUtils.sin(dir.angleRad() + MathUtils.PI / 4f) * height / 1.8f;
 
             float lifespan = 0.2f + MathUtils.random(-0.1f, 0.1f);
 
@@ -357,6 +357,12 @@ public class Player extends Entity implements ControllerListener
             vel.y += MathUtils.random(-1f, 1f);
 
             Vector3 dim = new Vector3(0.1f, 0.1f, 0.1f);
+
+            model.createParticle(pos, vel, dim, lifespan, start, end);
+
+            pos.set(position);
+            pos.x -= MathUtils.cos(dir.angleRad() - MathUtils.PI / 4f) * width / 1.8f;
+            pos.y -= MathUtils.sin(dir.angleRad() - MathUtils.PI / 4f) * height / 1.8f;
 
             model.createParticle(pos, vel, dim, lifespan, start, end);
         }
@@ -460,7 +466,7 @@ public class Player extends Entity implements ControllerListener
                     Color.CYAN,
                     Color.WHITE);
         }
-        model.applyRadialForce(position, 200, 3, Color.WHITE);
+        model.applyRadialForce(position, 400, 3, Color.WHITE);
         model.killAllEntities();
     }
 

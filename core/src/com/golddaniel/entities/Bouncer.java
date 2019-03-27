@@ -40,7 +40,7 @@ public class Bouncer extends Entity
     Color color;
     
     //should always be normalized
-    Vector3 dir;
+    Vector2 dir;
     float speed;
     
     int prevHealth;
@@ -65,7 +65,7 @@ public class Bouncer extends Entity
         position.x += width/2;
         position.y += height/2;
         //normalize just in case a normal vector was not passed
-        this.dir = dir.nor();
+        this.dir = new Vector2(dir.x, dir.y).nor();
         speed = 2.5f;
         
         color = Color.YELLOW.cpy();
@@ -136,8 +136,6 @@ public class Bouncer extends Entity
             position.y = model.WORLD_HEIGHT / 2f;
             dir.y  = -dir.y;
         }
-
-        model.applyRadialForce(position, 150*delta, width);
     }
 
     @Override
@@ -158,7 +156,7 @@ public class Bouncer extends Entity
                     width / 2, height / 2,
                     width, height,
                     1, 1,
-                    new Vector2(dir.x, dir.y).angle());
+                    dir.angle());
         
         s.setColor(Color.WHITE);
     }
@@ -166,6 +164,7 @@ public class Bouncer extends Entity
     @Override
     public void dispose()
     {
+
     }
 
     @Override
@@ -196,12 +195,10 @@ public class Bouncer extends Entity
 
                     Vector3 dim = new Vector3(0.5f, 0.05f, 0.05f);
 
-                    //reuse speed variable when we kill
-                    //totally was on purpose and not accidental
-                    speed = MathUtils.random(5f, 7f);
+                    float speed = MathUtils.random(5f, 7f);
 
                     model.createParticle(
-                            position.cpy(),
+                            position,
                             new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
@@ -211,7 +208,7 @@ public class Bouncer extends Entity
                     speed = MathUtils.random(5f, 7f);
 
                     model.createParticle(
-                            position.cpy(),
+                            position,
                             new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
@@ -221,7 +218,7 @@ public class Bouncer extends Entity
 
                 isAlive = false;
 
-                model.addScore(2);
+                model.addScore(10);
                 model.createMultipliers(position, 6);
                 model.applyRadialForce(position, 20f,
                                  width * 1.5f,

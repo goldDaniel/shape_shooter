@@ -38,14 +38,14 @@ public class Cuber extends Entity
     
     static Texture tex;
     
-    Timer dirTimer;
-    
     Vector3 dir;
     
     float width;
     float height;
     
     float activeTimer = 2f;
+
+    float dirTimer = 0;
     
     public Cuber(Vector3 pos, AssetManager assets)
     {
@@ -59,9 +59,7 @@ public class Cuber extends Entity
         health = 9;
         isAlive = true;
         position = new Vector3(pos);
-        
-        dirTimer = new Timer();
-        
+
         dir = new Vector3();
         
         width = height = 0.4f;
@@ -99,63 +97,61 @@ public class Cuber extends Entity
     {
         if(activeTimer <= 0)
         {
-            if(dirTimer.isEmpty())
+            if(dirTimer <= 0)
             {
-                dirTimer.scheduleTask(
-                new Timer.Task()
+                dirTimer = 0.5f;
+
+                if(model.getPlayer() != null)
                 {
-                    @Override
-                    public void run()
+                    Vector3 pPos = model.getPlayer().position.cpy();
+
+                    float xDist = pPos.x - position.x;
+                    float yDist = pPos.y - position.y;
+
+                    if(abs(xDist) > abs(yDist))
                     {
-                        if(model.getPlayer() != null)
+                        dir.y = 0;
+                        if(xDist > 0)
                         {
-                            Vector3 pPos = model.getPlayer().position.cpy();
-
-                            float xDist = pPos.x - position.x;
-                            float yDist = pPos.y - position.y;
-
-                            if(abs(xDist) > abs(yDist))
-                            {
-                                dir.y = 0;
-                                if(xDist > 0)
-                                {
-                                    dir.x = 1;
-                                }
-                                else
-                                {
-                                    dir.x = -1;
-                                }
-                            }
-                            else
-                            {
-                                dir.x = 0;
-                                if(yDist > 0)
-                                {
-                                    dir.y = 1;
-                                }
-                                else
-                                {
-                                    dir.y = -1;
-                                }
-                            }
+                            dir.x = 1;
                         }
                         else
                         {
-                            if(abs(dir.x) > 0)
-                            {
-                                dir.x = 0;
-                                dir.y = MathUtils.randomBoolean() ? 1 : -1;
-                            }
-                            else
-                            {
-                                dir.y = 0;
-                                dir.x = MathUtils.randomBoolean() ? 1 : -1;
-                            }
+                            dir.x = -1;
                         }
                     }
-                }, 0.75f);
+                    else
+                    {
+                        dir.x = 0;
+                        if(yDist > 0)
+                        {
+                            dir.y = 1;
+                        }
+                        else
+                        {
+                            dir.y = -1;
+                        }
+                    }
+                }
+                else
+                {
+                    if(abs(dir.x) > 0)
+                    {
+                        dir.x = 0;
+                        dir.y = MathUtils.randomBoolean() ? 1 : -1;
+                    }
+                    else
+                    {
+                        dir.y = 0;
+                        dir.x = MathUtils.randomBoolean() ? 1 : -1;
+                    }
+                }
             }
-            
+            else
+            {
+                dirTimer -= delta;
+            }
+
             position.add(dir.cpy().scl(2f*delta));
             
             if(position.x < -model.WORLD_WIDTH/2f)
@@ -179,8 +175,6 @@ public class Cuber extends Entity
                 position.y = model.WORLD_HEIGHT / 2f;
                 dir.y = -dir.y;
             }
-
-            model.applyRadialForce(getMid(), 200f*delta, width*1.5f);
         }
         else
         {
@@ -231,6 +225,7 @@ public class Cuber extends Entity
             isAlive = false;
             model.applyRadialForce(getMid(), 40f, width *3, Color.RED);
 
+            model.addScore(10);
             model.createMultipliers(position, 5);
 
             int particles = 32;

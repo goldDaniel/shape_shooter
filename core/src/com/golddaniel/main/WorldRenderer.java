@@ -74,7 +74,7 @@ public class WorldRenderer
         float scale;
         if(SharedLibraryLoader.isAndroid)
         {
-            scale = 1f/8f;
+            scale = 1f/4f;
         }
         else
         {
@@ -84,31 +84,29 @@ public class WorldRenderer
         this.viewport = new ExtendViewport(1920, 1080, cam);
         bloom = new Bloom(viewport, scale);
         bloom.setTreshold(0.2f);
-        bloom.setBloomIntesity(1f);
+        bloom.setBloomIntesity(2.5f);
 
         Texture tex = assets.get("skybox.jpg", Texture.class);
 
         ModelBuilder modelBuilder = new ModelBuilder();
+
+        float radius = -128f;
         skyboxModel = modelBuilder.createSphere(
-                                     -256f, -256f, -256f,
-                                            64, 64,
-                                            new Material(TextureAttribute.createDiffuse(tex)),
+                                    radius, radius, radius,
+                                    64, 64,
+                                    new Material(TextureAttribute.createDiffuse(tex)),
                                     VertexAttributes.Usage.Position |
-                                             VertexAttributes.Usage.Normal |
-                                             VertexAttributes.Usage.TextureCoordinates);
+                                    VertexAttributes.Usage.Normal |
+                                    VertexAttributes.Usage.TextureCoordinates);
 
         skybox = new ModelInstance(skyboxModel);
 
         fbo = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), false);
     }
 
-    public void setViewport(ExtendViewport v)
-    {
-        this.viewport = v;
-    }
-
     public void draw(WorldModel model)
     {
+        s.totalRenderCalls = 0;
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
@@ -117,10 +115,11 @@ public class WorldRenderer
         if(rebuildFramebuffer)
         {
             fbo.dispose();
+
             fbo = new FrameBuffer(Pixmap.Format.RGBA8888,
                                   viewport.getScreenWidth(),
                                   viewport.getScreenHeight(),
-                         false);
+                                  false);
             rebuildFramebuffer = false;
         }
 
@@ -129,15 +128,13 @@ public class WorldRenderer
         m.begin(model.getCamera());
         m.render(skybox);
         m.end();
-
         s.enableBlending();
         s.setProjectionMatrix(model.getCamera().combined);
 
-        s.totalRenderCalls = 0;
+        model.getGrid().draw(model.getCamera().combined);
+
         s.begin();
         {
-            model.getGrid().draw(s);
-
             for (int i = 0; i < model.getAllEntities().size; i++)
             {
                 Entity e = model.getAllEntities().get(i);
@@ -163,7 +160,7 @@ public class WorldRenderer
             }
         }
         s.end();
-        //Gdx.app.log("RENDER CALLS", s.totalRenderCalls + "");
+
         fbo.end();
 
         //need to flip that y axis
@@ -180,17 +177,12 @@ public class WorldRenderer
                 0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         s.end();
         if(doBloom) bloom.render();
-
     }
     
     public void resize(int width, int height)
     {
-        //this is here because we do not pass the viewport in the constructor
-        if(viewport != null)
-        {
-            viewport.update(width, height);
-            viewport.apply();
-        }
+        viewport.update(width, height);
+        viewport.apply();
 
         rebuildFramebuffer = true;
     }

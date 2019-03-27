@@ -29,7 +29,7 @@ import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Cuber;
 
 /**
- *
+ *TODO: this is probably not the best way to check collisions, look into it
  * @author wrksttn
  */
 public class CollisionSystem

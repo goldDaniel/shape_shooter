@@ -30,7 +30,6 @@ import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.TextParticle;
 
-import javax.xml.soap.Text;
 
 /**
  * @author wrksttn
@@ -76,6 +75,7 @@ public class WorldModel
     private int scoreMultiplier = 1;
     private int score = 0;
 
+    final float RESPAWN_TIME = 2f;
     private float respawnTimer = 0f;
 
     public PerspectiveCamera getCamera()
@@ -94,7 +94,7 @@ public class WorldModel
 
         cam.position.x = 0;
         cam.position.y = 0;
-        cam.position.z = 30f;
+        cam.position.z = 100f;
 
         cam.lookAt(cam.position.x, cam.position.y, 0f);
 
@@ -160,7 +160,10 @@ public class WorldModel
             {
                 e.dispose();
                 toRemove.add(e);
-                if (e instanceof Bullet) bulletPool.free((Bullet) e);
+                if (e instanceof Bullet)
+                {
+                    bulletPool.free((Bullet) e);
+                }
             }
             else
             {
@@ -220,9 +223,6 @@ public class WorldModel
         }
         if (!editMode)
         {
-            //maintain our rotation around Z axis before lookAt
-            cam.up.set(0f, 1f, 0f);
-
             cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
             cam.position.z = MathUtils.lerp(
@@ -231,18 +231,23 @@ public class WorldModel
                     delta * 2f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
+
+            //maintain our rotation around Z axis before lookAt, otherwise
+            //we get weird rotation due to floating point error with lookAt
+            cam.up.set(0f, 1f, 0f);
         }
         cam.update();
         /////////////////////////////////////////////////////////////////////////////////////////////
 
+
         //WE RESPAWN THE PLAYER IN HERE////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////
-        float respawnTime = 1.5f;
+
         if (player == null)
         {
             respawnTimer += delta;
 
-            int particles = 8;
+            int particles = 16;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float) i / (float) particles * 360f;
@@ -257,8 +262,8 @@ public class WorldModel
                         velocity,
                         new Vector3(0.5f, 0.01f, 0.01f),
                         MathUtils.random(0.25f, 0.4f),
-                        Color.MAGENTA,
-                        Color.CYAN);
+                        Color.PURPLE,
+                        Color.BLUE);
 
                 velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
                 velocity.scl(MathUtils.random(3f, 5f));
@@ -268,13 +273,13 @@ public class WorldModel
                         velocity,
                         new Vector3(0.5f, 0.01f, 0.01f),
                         MathUtils.random(0.25f, 0.4f),
-                        Color.CYAN,
+                        Color.RED,
                         Color.YELLOW);
             }
-            if (respawnTimer >= respawnTime)
+            if (respawnTimer >= RESPAWN_TIME)
             {
                 AudioSystem.playSound(AudioSystem.SoundEffect.RESPAWN);
-                //REPSAWN PLAYER//////////////////
+                //RESPAWN PLAYER
                 addEntity(new Player(null));
                 applyRadialForce(new Vector3(), 2000f * delta, 2.25f);
 
@@ -294,7 +299,7 @@ public class WorldModel
                             new Vector3(0.75f, 0.02f, 0.02f),
                             MathUtils.random(0.7f, 0.9f),
                             Color.MAGENTA,
-                            Color.CYAN);
+                            Color.BLUE);
 
                     velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
 
@@ -304,8 +309,8 @@ public class WorldModel
                             velocity,
                             new Vector3(0.75f, 0.02f, 0.02f),
                             MathUtils.random(0.7f, 0.9f),
-                            Color.CYAN,
-                            Color.WHITE);
+                            Color.PURPLE,
+                            Color.GREEN);
                 }
             }
         }
@@ -314,8 +319,8 @@ public class WorldModel
             respawnTimer = 0;
         }
         //////////////////////////////////////////////////////////////////////////////////
-        float audioLerp = (1f - respawnTimer / respawnTime);
-        AudioSystem.setMusicVolume(0.1f + 0.9f * (float) Math.pow(audioLerp, 4f));
+        float audioLerp = (1f - respawnTimer / RESPAWN_TIME);
+        AudioSystem.setMusicVolume(0.05f + 0.95f * (float) Math.pow(audioLerp, 4f));
         isUpdating = false;
     }
 
@@ -336,23 +341,15 @@ public class WorldModel
         if (e instanceof Player) player = (Player) e;
     }
 
-
-    public float getElapsedTime()
-    {
-        return elapsedTime;
-    }
-
     public float getRemainingTime()
     {
         return remainingTime;
     }
 
-    public int getScore()
+    protected int getScore()
     {
         return score;
     }
-
-    ;
 
     public int getScoreMultiplier()
     {
@@ -475,6 +472,11 @@ public class WorldModel
             e.dispose();
         }
         g.dispose();
+    }
+
+    public float respawnFinishPercent()
+    {
+        return 1f - respawnTimer / RESPAWN_TIME;
     }
 
     public Player getPlayer()

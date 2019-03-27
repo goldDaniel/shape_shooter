@@ -85,5 +85,7 @@ public class AudioSystem
         enemyDeath.dispose();
         pickup.dispose();
         laser.dispose();
+        respawn.dispose();
+        playerDeath.dispose();
     }
 }

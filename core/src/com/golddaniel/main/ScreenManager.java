@@ -14,6 +14,7 @@ public class ScreenManager
     {
         PLAY,
         MAIN_MENU,
+        LEVEL_SELECT,
     }
     
     STATE currentState;
