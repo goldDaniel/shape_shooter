@@ -66,7 +66,7 @@ public class Bouncer extends Entity
         position.y += height/2;
         //normalize just in case a normal vector was not passed
         this.dir = new Vector2(dir.x, dir.y).nor();
-        speed = 2.5f;
+        speed = 2f;
         
         color = Color.YELLOW.cpy();
 
@@ -79,17 +79,19 @@ public class Bouncer extends Entity
     {
         if(activeTimer > 0)
         {
+            Vector3 velocity = new Vector3();
+            Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
                 float angle = MathUtils.PI * activeTimer * (i + 1);
                 float speed = MathUtils.random(12f, 14f);
                 speed *= 0.5f*activeTimer;
-                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+
 
                 model.createParticle(
                         position,
-                        new Vector3(MathUtils.cos(angle) * speed,
+                        velocity.set(MathUtils.cos(angle) * speed,
                                 MathUtils.sin(angle) * speed,
                                 0),
                         dim,
@@ -186,6 +188,8 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
+                Vector3 dim = new Vector3(0.5f, 0.1f, 0.1f);
+                Vector3 velocity = new Vector3();
                 int particles = 32;
                 for (int i = 0; i < particles; i++)
                 {
@@ -193,13 +197,13 @@ public class Bouncer extends Entity
 
                     angle += MathUtils.random(-2.5f, 2.5f);
 
-                    Vector3 dim = new Vector3(0.5f, 0.05f, 0.05f);
+
 
                     float speed = MathUtils.random(5f, 7f);
 
                     model.createParticle(
                             position,
-                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
                             Color.YELLOW,
@@ -209,7 +213,7 @@ public class Bouncer extends Entity
 
                     model.createParticle(
                             position,
-                            new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
                             Color.WHITE,

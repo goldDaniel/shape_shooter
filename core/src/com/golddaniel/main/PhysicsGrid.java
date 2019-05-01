@@ -41,7 +41,7 @@ public class PhysicsGrid
 
 
     //these are here for easy tweaking//////////////////////
-    final float STIFFNESS = 3.5f;
+    final float STIFFNESS = 3.25f;
     final float DAMPING = 2.25f;
     final float INVERSE_MASS = 1f/0.025f;
     ////////////////////////////////////////////////////////
@@ -93,7 +93,9 @@ public class PhysicsGrid
         Point end2;
         
         final float TARGET_LENGTH;
-        
+
+        Vector3 dv = new Vector3();
+
         public Spring(Point end1, Point end2)
         {
             this.end1 = end1;
@@ -114,7 +116,8 @@ public class PhysicsGrid
             {
                 displacement.setLength(len - TARGET_LENGTH);
 
-                Vector3 dv = end2.velocity.cpy().sub(end1.velocity);
+                dv.set(end2.velocity);
+                dv.sub(end1.velocity);
 
                 dv.scl(delta*4f);
 
@@ -478,7 +481,7 @@ public class PhysicsGrid
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 
-        Color disabled = new Color(0.025f, 0.025f, 0.025f, 0f);
+        Color disabled = new Color(0.05f, 0.05f, 0.05f, 0f);
 
         sh.begin(proj, GL20.GL_LINES);
 
@@ -493,7 +496,7 @@ public class PhysicsGrid
                     normal.set( points[i][j].position.x - points[i][j].desiredPosition.x,
                                 points[i][j].position.y - points[i][j].desiredPosition.y,
                                 points[i][j].position.z - points[i][j].desiredPosition.z);
-                    dist = normal.len()*2f;
+                        dist = normal.len()*3f;
                     lerp.set(   lerp(disabled.r, points[i][j].color.r, dist),
                                 lerp(disabled.g, points[i][j].color.g, dist),
                                 lerp(disabled.b, points[i][j].color.b, dist),
@@ -509,7 +512,7 @@ public class PhysicsGrid
                     normal.set( points[i + 1][j].position.x - points[i + 1][j].desiredPosition.x,
                                 points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y,
                                 points[i + 1][j].position.z - points[i + 1][j].desiredPosition.z);
-                    dist = normal.len()*2f;
+                    dist = normal.len()*3f;
                     lerp.set(   lerp(disabled.r, points[i + 1][j].color.r, dist),
                                 lerp(disabled.g, points[i + 1][j].color.g, dist),
                                 lerp(disabled.b, points[i + 1][j].color.b, dist),
@@ -525,7 +528,7 @@ public class PhysicsGrid
                     normal.set( points[i][j].position.x - points[i][j].desiredPosition.x,
                                 points[i][j].position.y - points[i][j].desiredPosition.y,
                                 points[i][j].position.z - points[i][j].desiredPosition.z);
-                    dist = normal.len()*2f;
+                    dist = normal.len()*3f;
                     lerp.set(   lerp(disabled.r, points[i][j].color.r, dist),
                                 lerp(disabled.g, points[i][j].color.g, dist),
                                 lerp(disabled.b, points[i][j].color.b, dist),
@@ -541,7 +544,7 @@ public class PhysicsGrid
                     normal.set( points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x,
                                 points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y,
                                 points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z);
-                    dist = normal.len()*2f;
+                    dist = normal.len()*3f;
                     lerp.set(   lerp(disabled.r, points[i][j + 1].color.r, dist),
                                 lerp(disabled.g, points[i][j + 1].color.g, dist),
                                 lerp(disabled.b, points[i][j + 1].color.b, dist),
@@ -600,7 +603,7 @@ public class PhysicsGrid
                 (points[i][j].position.z     - points[i][j].desiredPosition.z) +
                         (points[i + 1][j].position.z - points[i + 1][j].desiredPosition.z));
         normal.scl(1f/2f);
-        dist = normal.len()*2f;
+        dist = normal.len()*3f;
         lerp.set(
                 lerp(disabled.r, lerp(points[i][j].color.r, points[i + 1][j].color.r, interpolation), dist),
                 lerp(disabled.g, lerp(points[i][j].color.g, points[i + 1][j].color.g, interpolation), dist),
@@ -621,7 +624,7 @@ public class PhysicsGrid
                 (points[i][j + 1].position.z     - points[i][j + 1].desiredPosition.z) +
                         (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
-        dist = normal.len()*2f;
+        dist = normal.len()*3f;
         lerp.set(
                 lerp(disabled.r, lerp(points[i][j + 1].color.r, points[i + 1][j + 1].color.r, interpolation), dist),
                 lerp(disabled.g, lerp(points[i][j + 1].color.g, points[i + 1][j + 1].color.g, interpolation), dist),
@@ -643,7 +646,7 @@ public class PhysicsGrid
                 (points[i][j].position.z     - points[i][j].desiredPosition.z) +
                         (points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
-        dist = normal.len()*2f;
+        dist = normal.len()*3f;
         lerp.set(
                 lerp(disabled.r, lerp(points[i][j].color.r, points[i][j + 1].color.r, interpolation), dist),
                 lerp(disabled.g, lerp(points[i][j].color.g, points[i][j + 1].color.g, interpolation), dist),
@@ -665,7 +668,7 @@ public class PhysicsGrid
                 (points[i + 1][j].position.z     - points[i + 1][j].desiredPosition.z) +
                         (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
-        dist = normal.len()*2f;
+        dist = normal.len()*3f;
         lerp.set(
                 lerp(disabled.r, lerp(points[i + 1][j].color.r, points[i + 1][j + 1].color.r, interpolation), dist),
                 lerp(disabled.g, lerp(points[i + 1][j].color.g, points[i + 1][j + 1].color.g, interpolation), dist),
@@ -684,7 +687,6 @@ public class PhysicsGrid
 
     public void dispose()
     {
-        sh.dispose();
         es.shutdown();
     }
 }

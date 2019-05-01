@@ -44,7 +44,7 @@ public class Main extends ApplicationAdapter {
         s = new SpriteBatch();
         uiSkin = new Skin(Gdx.files.internal("ui/neon/skin/neon-ui.json"));
 
-        bar = new ProgressBar(0f, 1f, 0.001f, false, uiSkin);
+        bar = new ProgressBar(0f, 1f, 0.01f, false, uiSkin);
         bar.setSize(Gdx.graphics.getWidth(), 50);
 
         assets = new AssetManager();
@@ -60,7 +60,7 @@ public class Main extends ApplicationAdapter {
             FreetypeFontLoader.FreeTypeFontLoaderParameter parms72 = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
             parms72.fontFileName = "fonts/Square.ttf";  // path of .ttf file
             parms72.fontParameters.size = 48;
-            assets.load("Square72.ttf", BitmapFont.class, parms72);   // fileName with extension, sameName will use to get from manager
+            assets.load("Square72.ttf", BitmapFont.class, parms72);   // fileName with extension, name will use to get from manager
 
             FreetypeFontLoader.FreeTypeFontLoaderParameter parms32 = new FreetypeFontLoader.FreeTypeFontLoaderParameter();
             parms32.fontFileName = "fonts/Square.ttf";  // path of .ttf file
@@ -75,6 +75,7 @@ public class Main extends ApplicationAdapter {
                     Skin.class, parms);
         }
 
+        assets.load("ui/panel.png", Texture.class);
 
         assets.load("textTextures/x.png", Texture.class);
         assets.load("textTextures/0.png", Texture.class);
@@ -98,6 +99,7 @@ public class Main extends ApplicationAdapter {
         assets.load("lasers/laserBlue03.png", Texture.class);
         assets.load("lasers/laserBlue04.png", Texture.class);
 
+        assets.load("geometric/boid/frame_0.png", Texture.class);
 
         assets.load("sounds/bouncer_death.mp3", Sound.class);
         assets.load("sounds/player_death.wav", Sound.class);
@@ -117,6 +119,8 @@ public class Main extends ApplicationAdapter {
         }
         else
         {
+            LevelBuilder.resetWorldModel();
+
             Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 

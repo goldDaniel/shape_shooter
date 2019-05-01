@@ -74,6 +74,7 @@ public class Player extends Entity implements ControllerListener
     private float cooldown = 0;
     private float currentWeaponCooldown = COOLDOWN_DEFAULT;
 
+    Vector2 scratch = new Vector2();
 
     @Override
     public void connected(Controller controller)
@@ -274,7 +275,7 @@ public class Player extends Entity implements ControllerListener
 
         float MAX_SPEED = 3.5f;
 
-        Vector3 acceleration = moveDir.cpy().scl(60f * delta);
+        Vector3 acceleration = moveDir.cpy().scl(40f * delta);
 
         if (moveDir.isZero())
         {
@@ -329,17 +330,13 @@ public class Player extends Entity implements ControllerListener
 
         cooldown -= delta;
 
-        Vector3 pos = position.cpy();
-        pos.z = -0.01f;
-        model.applyRadialForce(pos, 50 * delta, width * 1.5f);
-
         createParticleTrail(model);
     }
 
     private void createParticleTrail(WorldModel model)
     {
         Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
-        Color end = Color.RED.cpy().fromHsv(hue + 180f, 1f, 1f);
+        Color end = Color.WHITE;
         for (int i = 0; i < 10; i++)
         {
             Vector3 pos = new Vector3(position);
@@ -466,7 +463,9 @@ public class Player extends Entity implements ControllerListener
                     Color.CYAN,
                     Color.WHITE);
         }
-        model.applyRadialForce(position, 400, 3, Color.WHITE);
+        model.applyRadialForce(position, 100, 3, Color.CYAN);
+        model.applyRadialForce(position, 50,  2, Color.YELLOW);
+        model.applyRadialForce(position, 25,  1, Color.RED);
         model.killAllEntities();
     }
 

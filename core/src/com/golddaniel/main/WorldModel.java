@@ -94,7 +94,7 @@ public class WorldModel
 
         cam.position.x = 0;
         cam.position.y = 0;
-        cam.position.z = 100f;
+        cam.position.z = 64f;
 
         cam.lookAt(cam.position.x, cam.position.y, 0f);
 
@@ -220,6 +220,12 @@ public class WorldModel
             {
                 target.y = WORLD_HEIGHT / 2f;
             }
+
+            target.z = 5.5f;
+        }
+        else
+        {
+            target.z = 16.5f;
         }
         if (!editMode)
         {
@@ -227,7 +233,7 @@ public class WorldModel
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
             cam.position.z = MathUtils.lerp(
                     cam.position.z,
-                    (abs(cam.position.x) + WORLD_WIDTH + WORLD_HEIGHT + abs(cam.position.y)) / 4.5f,
+                    target.z,
                     delta * 2f);
 
             cam.lookAt(cam.position.x, cam.position.y, 0f);
@@ -240,28 +246,31 @@ public class WorldModel
         /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-        //WE RESPAWN THE PLAYER IN HERE////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////
-
+        //WE RESPAWN THE PLAYER IN HERE////////////////////////////////////////////////////////////
         if (player == null)
         {
             respawnTimer += delta;
 
             int particles = 16;
+
+            Vector3 velocity = new Vector3();
+            Vector3 dim = new Vector3(0.75f, 0.025f, 0.025f);
+
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float) i / (float) particles * 360f;
 
                 angle += MathUtils.random(-30f, 30f);
 
-                Vector3 velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+                velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
                 velocity.scl(MathUtils.random(2f, 4f));
+
 
                 createParticle(
                         Vector3.Zero,
                         velocity,
-                        new Vector3(0.5f, 0.01f, 0.01f),
-                        MathUtils.random(0.25f, 0.4f),
+                        dim,
+                        MathUtils.random(0.4f, 0.6f),
                         Color.PURPLE,
                         Color.BLUE);
 
@@ -271,8 +280,8 @@ public class WorldModel
                 createParticle(
                         Vector3.Zero,
                         velocity,
-                        new Vector3(0.5f, 0.01f, 0.01f),
-                        MathUtils.random(0.25f, 0.4f),
+                        dim,
+                        MathUtils.random(0.4f, 0.6f),
                         Color.RED,
                         Color.YELLOW);
             }
@@ -290,24 +299,24 @@ public class WorldModel
 
                     angle += MathUtils.random(-10f, 10f);
 
-                    Vector3 velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+                    velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
 
                     velocity.scl(MathUtils.random(10f, 14f));
                     createParticle(
                             Vector3.Zero,
                             velocity,
-                            new Vector3(0.75f, 0.02f, 0.02f),
+                            dim.set(0.75f, 0.1f, 0.1f),
                             MathUtils.random(0.7f, 0.9f),
                             Color.MAGENTA,
                             Color.BLUE);
 
-                    velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
+                    velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
 
                     velocity.scl(MathUtils.random(8f, 14f));
                     createParticle(
                             Vector3.Zero,
                             velocity,
-                            new Vector3(0.75f, 0.02f, 0.02f),
+                            dim,
                             MathUtils.random(0.7f, 0.9f),
                             Color.PURPLE,
                             Color.GREEN);
@@ -378,18 +387,12 @@ public class WorldModel
     */
     public void applyRadialForce(Vector3 pos, float force, float radius)
     {
-        if (g != null)
-            g.applyRadialForce(pos, force, radius);
-        else
-            Gdx.app.log("WORLD-MODEL", "NO GRID TO APPLY FORCE TO");
+        g.applyRadialForce(pos, force, radius);
     }
 
     public void applyRadialForce(Vector3 pos, float force, float radius, Color c)
     {
-        if (g != null)
-            g.applyRadialForce(pos, force, radius, c);
-        else
-            Gdx.app.log("WORLD-MODEL", "NO GRID TO APPLY FORCE TO");
+        g.applyRadialForce(pos, force, radius, c);
     }
     //////////////////////////////////////////////////////////////////////////////
 
@@ -415,16 +418,16 @@ public class WorldModel
 
     public void createMultipliers(Vector3 pos, int count)
     {
+        Vector3 vel = new Vector3();
         for (int i = 0; i < count; i++)
         {
             float angle = ((float) (i) / (float) count) * 360f;
             float speed = MathUtils.random(0.5f, 1.5f);
 
-            Vector3 vel = new Vector3();
             vel.x = MathUtils.cos(angle) * speed;
             vel.y = MathUtils.sin(angle) * speed;
 
-            Multiplier m = new Multiplier(pos.cpy(), vel, null);
+            Multiplier m = new Multiplier(pos.cpy(), vel.cpy(), null);
             addEntity(m);
         }
     }
@@ -472,11 +475,6 @@ public class WorldModel
             e.dispose();
         }
         g.dispose();
-    }
-
-    public float respawnFinishPercent()
-    {
-        return 1f - respawnTimer / RESPAWN_TIME;
     }
 
     public Player getPlayer()

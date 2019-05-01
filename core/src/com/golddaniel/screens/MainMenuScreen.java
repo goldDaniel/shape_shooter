@@ -107,15 +107,7 @@ public class MainMenuScreen extends VScreen
         playBtn.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y){
-                sm.setScreen(ScreenManager.STATE.PLAY);
-            }
-        });
-
-        final TextButton optionsBtn = new TextButton("OPTIONS", uiSkin, "default");
-        optionsBtn.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-
+                sm.setScreen(ScreenManager.STATE.LEVEL_SELECT);
             }
         });
 
@@ -133,8 +125,6 @@ public class MainMenuScreen extends VScreen
         table.setPosition(0, -32);
         table.row();
         table.add(playBtn).fill();
-        table.row();
-        table.add(optionsBtn).fill();
         table.row();
         table.add(quitBtn).fill();
     }
@@ -209,11 +199,6 @@ public class MainMenuScreen extends VScreen
             camera.update();
             uiStage.act();
             uiStage.draw();
-        }
-
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ENTER))
-        {
-            sm.setScreen(ScreenManager.STATE.PLAY);
         }
 
 

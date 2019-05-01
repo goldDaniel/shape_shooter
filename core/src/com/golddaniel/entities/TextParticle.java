@@ -33,6 +33,7 @@ public class TextParticle extends Entity
 
     public static void loadTextures(AssetManager assets)
     {
+
         textureX = assets.get("textTextures/x.png", Texture.class);
         texture0 = assets.get("textTextures/0.png", Texture.class);
         texture1 = assets.get("textTextures/1.png", Texture.class);

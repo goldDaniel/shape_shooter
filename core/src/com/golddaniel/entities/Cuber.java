@@ -178,17 +178,19 @@ public class Cuber extends Entity
         }
         else
         {
+            Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+            Vector3 velocity = new Vector3();
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
                 float angle = MathUtils.PI * activeTimer * (i + 1);
                 float speed = MathUtils.random(12f, 14f);
                 speed *= 0.5f*activeTimer;
-                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+
 
                 model.createParticle(
                         position,
-                        new Vector3(MathUtils.cos(angle) * speed,
+                        velocity.set(MathUtils.cos(angle) * speed,
                                 MathUtils.sin(angle) * speed,
                                 0),
                         dim,

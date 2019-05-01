@@ -16,9 +16,11 @@
  */
 package com.golddaniel.entities;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -60,12 +62,14 @@ public class Boid extends Entity
 
     private float activeTimer = 2f;
 
+    float widthAngle = 0;
+
     public static void loadTextures(AssetManager assets)
     {
         if(circleTex == null)
             circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
         if(tex == null)
-            tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
+            tex = new TextureRegion(assets.get("geometric/boid/frame_0.png", Texture.class));
     }
 
     public Boid(Vector3 position, AssetManager assets)
@@ -257,6 +261,10 @@ public class Boid extends Entity
 
     public void update(float delta)
     {
+        separation();
+        allignment();
+        cohesion();
+
 
         acceleration.add(separation);
         acceleration.add(allignment);
@@ -270,9 +278,6 @@ public class Boid extends Entity
         position.add(velocity);
 
         acceleration.set(0, 0, 0);
-
-        Vector3 pos = position.cpy();
-        pos.z = -0.1f;
     }
 
     @Override
@@ -280,6 +285,9 @@ public class Boid extends Entity
     {
         if(activeTimer <= 0)
         {
+            width = 0.1f + 0.4f * MathUtils.sin(widthAngle)*MathUtils.sin(widthAngle);
+            widthAngle += MathUtils.PI * delta;
+
             Vector3 boundary = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             boundary.scl(3f);
             Vector3 seek = new Vector3();
@@ -336,17 +344,18 @@ public class Boid extends Entity
         }
         else
         {
+            Vector3 veloctiy = new Vector3();
+            Vector3 dim = new Vector3(0.35f, 0.1f, 0.1f);
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
                 float angle = MathUtils.PI * activeTimer * (i + 1);
                 float speed = MathUtils.random(12f, 14f);
                 speed *= 0.5f*activeTimer;
-                Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
 
                 model.createParticle(
                                 position,
-                                new Vector3(MathUtils.cos(angle) * speed,
+                                veloctiy.set(MathUtils.cos(angle) * speed,
                                             MathUtils.sin(angle) * speed,
                                             0),
                                 dim,
@@ -360,7 +369,6 @@ public class Boid extends Entity
     @Override
     public void draw(SpriteBatch s)
     {
-
         Color c = color.cpy();
         if(activeTimer > 0)
         {
@@ -385,6 +393,8 @@ public class Boid extends Entity
         if(activeTimer <= 0) health--;
         if(health <= 0)
         {
+            Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
+            Vector3 velocity = new Vector3();
             int particles = 32;
             for (int i = 0; i < particles; i++)
             {
@@ -392,13 +402,13 @@ public class Boid extends Entity
 
                 angle += MathUtils.random(-1.5f, 1.5f);
 
-                Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
+
 
                 float speed = MathUtils.random(7f, 10f);
 
                 model.createParticle(
                     position,
-                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.WHITE,
@@ -408,7 +418,7 @@ public class Boid extends Entity
 
                 model.createParticle(
                         position,
-                        new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                        velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                         dim,
                         MathUtils.random(0.1f, 0.5f),
                         Color.MAGENTA,
@@ -421,9 +431,10 @@ public class Boid extends Entity
             model.createMultipliers(position, 3);
             model.addScore(5);
             model.applyRadialForce(
-                          pos,
-                    22,
-                    (width) * 4f, Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
+                            pos,
+                            22,
+                            1f,
+                            Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
 
             boids.removeValue(this, true);
 
@@ -441,9 +452,9 @@ public class Boid extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x - width / 2f,
-                             position.y - height / 2f,
-                                width, height);
+        return new Rectangle(position.x - 0.5f / 2f,
+                             position.y - 0.5f / 2f,
+                                0.5f, 0.5f);
     }
 
     @Override

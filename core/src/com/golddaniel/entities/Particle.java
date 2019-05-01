@@ -104,7 +104,7 @@ public class Particle implements Pool.Poolable
     public void update(WorldModel world, float delta)
     {
 
-        pos.add(velocity.cpy().scl(delta));
+        pos.add(velocity.x * delta, velocity.y * delta, velocity.z * delta);
 
         lerpColor();
 

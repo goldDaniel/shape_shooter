@@ -30,10 +30,11 @@ public class Multiplier extends Entity
     {
         super(assets);
         init(pos, vel);
-        width = 0.125f;
+        width = 0.20f;
         height = width / 2f;
 
         color = Color.LIME.cpy();
+        color.a = 0.5f;
     }
 
     public void init(Vector3 pos, Vector3 vel)
@@ -129,7 +130,7 @@ public class Multiplier extends Entity
     public void draw(SpriteBatch s)
     {
 
-        color.a = 0.8f * lifespan / 5f + 0.2f;
+        color.a = 0.5f * lifespan / 5f + 0.2f;
         s.setColor(color);
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
@@ -144,16 +145,18 @@ public class Multiplier extends Entity
     {
         isAlive = false;
         int particles = 8;
+        Vector3 dim = new Vector3(0.25f, 0.025f, 0.025f);
+        Vector3 velocity = new Vector3();
         for (int i = 0; i < particles; i++)
         {
             float angle = (float) i / (float) particles * 360f;
-            Vector3 dim = new Vector3(0.25f, 0.025f, 0.025f);
+
 
             float speed = MathUtils.random(8f, 14f);
 
             model.createParticle(
-                    position.cpy(),
-                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    position,
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                     dim,
                     MathUtils.random(0.05f, 0.15f),
                     Color.LIME,
@@ -162,8 +165,8 @@ public class Multiplier extends Entity
             speed = MathUtils.random(4f, 6f);
 
             model.createParticle(
-                    position.cpy(),
-                    new Vector3(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    position,
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
                     dim,
                     MathUtils.random(0.05f, 0.15f),
                     Color.LIME,
