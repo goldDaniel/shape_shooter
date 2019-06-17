@@ -16,11 +16,9 @@
  */
 package com.golddaniel.entities;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
@@ -28,7 +26,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Timer;
 import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
 
@@ -50,7 +47,7 @@ public class Boid extends Entity
 
 
     private Vector3 cohesion;
-    private Vector3 allignment;
+    private Vector3 alignment;
     private Vector3 separation;
 
     private Color color;
@@ -62,7 +59,9 @@ public class Boid extends Entity
 
     private float activeTimer = 2f;
 
-    float widthAngle = 0;
+    private float widthAngle = 0;
+
+    private Vector2 scratch = new Vector2();
 
     public static void loadTextures(AssetManager assets)
     {
@@ -83,7 +82,7 @@ public class Boid extends Entity
         velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
 
         cohesion = new Vector3();
-        allignment = new Vector3();
+        alignment = new Vector3();
         separation = new Vector3();
 
         width = 0.25f;
@@ -94,9 +93,8 @@ public class Boid extends Entity
     }
     
     /**
-     *  Returns direction vector based on position of all boids in range
-     * 
-     * @return 
+     *  Sets direction vector based on position of all boids in range
+     *
      */
     private void cohesion()
     {
@@ -126,9 +124,8 @@ public class Boid extends Entity
     }
     
     /**
-     *  Returns direction vector based on velocity of all boids in range
-     * 
-     * @return
+     *  Sets direction vector based on velocity of all boids in range
+     *
      */
     private void allignment()
     {
@@ -151,18 +148,16 @@ public class Boid extends Entity
         {
             sum.setLength(SPEED_MAX);
             
-            allignment.set(sum.sub(velocity));
-            allignment.limit(SPEED_MAX);
+            alignment.set(sum.sub(velocity));
+            alignment.limit(SPEED_MAX);
         }
     }
     
     /**
-     *  Returns direction vector based on separation of all boids in range.
+     *  sets direction vector based on separation of all boids in range.
      * 
      * if a boid is in range, add a vector to the sum and give the opposite direction
-     * 
-     * 
-     * @return 
+     *
      */
     private void separation()
     {
@@ -267,7 +262,7 @@ public class Boid extends Entity
 
 
         acceleration.add(separation);
-        acceleration.add(allignment);
+        acceleration.add(alignment);
         acceleration.add(cohesion);
 
         acceleration.limit(SPEED_MAX / 32f * delta);
@@ -310,7 +305,7 @@ public class Boid extends Entity
             cohesion();
 
             acceleration.add(separation);
-            acceleration.add(allignment);
+            acceleration.add(alignment);
             acceleration.add(cohesion);
             acceleration.add(boundary);
             acceleration.add(seek);
@@ -356,8 +351,8 @@ public class Boid extends Entity
                 model.createParticle(
                                 position,
                                 veloctiy.set(MathUtils.cos(angle) * speed,
-                                            MathUtils.sin(angle) * speed,
-                                            0),
+                                             MathUtils.sin(angle) * speed,
+                                             0),
                                 dim,
                                 MathUtils.random(0.1f, 0.25f),
                                 Color.WHITE,
@@ -375,14 +370,14 @@ public class Boid extends Entity
             c.a = 0.5f;
         }
         s.setColor(c);
-        Vector2 dir = new Vector2(velocity.x, velocity.y);
+        scratch.set(velocity.x, velocity.y);
 
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
                 width / 2, height / 2,
                 width, height,
                 1, 1,
-                dir.angle());
+                scratch.angle());
 
         s.setColor(Color.WHITE);
     }

@@ -27,6 +27,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.PerformanceCounter;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +39,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class PhysicsGrid
 {
+    private static float abs(float a) { return a < 0 ? -a : a; }
 
+    private static float lerp(float a, float b, float t)
+    {
+        return a + (b-a)*t;
+    }
 
     //these are here for easy tweaking//////////////////////
     final float STIFFNESS = 3.25f;
@@ -91,7 +97,7 @@ public class PhysicsGrid
     {
         Point end1;
         Point end2;
-        
+
         final float TARGET_LENGTH;
 
         Vector3 dv = new Vector3();
@@ -100,12 +106,12 @@ public class PhysicsGrid
         {
             this.end1 = end1;
             this.end2 = end2;
-            
+
             TARGET_LENGTH = Vector3.dst(
                     end1.position.x, end1.position.y, end1.position.z,
                     end2.position.x, end2.position.y, end2.position.z);
         }
-        
+
         public void update(float delta)
         {
             Vector3 displacement = end1.position.cpy().sub(end2.position);
@@ -140,7 +146,7 @@ public class PhysicsGrid
 
         Vector3 velocity;
         Vector3 acceleration;
-        
+
         float inverseMass;
 
         Color desiredColor;
@@ -182,7 +188,7 @@ public class PhysicsGrid
             float forceZ = springForceZ - dampingForceZ;
 
             applyForce(forceX, forceY, forceZ);
-		
+
 
             velocity.x += acceleration.x * delta;
             velocity.y += acceleration.y * delta;
@@ -236,6 +242,8 @@ public class PhysicsGrid
     Array<ForceData> forceDataList;
 
     //USED IN DRAW TO AVOID GARBAGE COLLECTION EACH FRAME
+    //creating a normal vector for every point was madness,
+    //800MB of allocations after about 20 seconds
     final Vector3 normal = new Vector3();
     final Color lerp = new Color();
     //////////////////////////////////////////////////////
@@ -342,7 +350,7 @@ public class PhysicsGrid
         }
 
         runnables = new Array<PointRunnable>();
-        buildThreads(runnables, 8);
+        buildThreads(runnables, Runtime.getRuntime().availableProcessors());
     }
 
     private void buildThreads(Array<PointRunnable> runnables, int threadCount)
@@ -371,10 +379,11 @@ public class PhysicsGrid
 
     public void update( float delta)
     {
+
         isUpdating = true;
 
         borderHue += 45f*delta;
-        
+
         color.fromHsv(borderHue, 1f, 1f);
 
         delta = 1f/60f;
@@ -383,6 +392,7 @@ public class PhysicsGrid
         {
             s.update(delta);
         }
+
 
         for(PointRunnable r : runnables)
         {
@@ -411,6 +421,7 @@ public class PhysicsGrid
             }
         }
         forceDataList.clear();
+
     }
 
     protected void applyRadialForce(Vector3 pos, float force, float radius)
@@ -451,7 +462,7 @@ public class PhysicsGrid
                     if (dist < radius)
                     {
                         Vector3 dir = point.position.cpy().sub(pos);
-                        dir.nor().scl(force * (1f - (dist / radius)));
+                        dir.nor().scl(force*2 * (1f - (dist / radius)));
                         point.applyForce(dir.x, dir.y, dir.z);
                         point.color.set(c);
                     }
@@ -464,15 +475,7 @@ public class PhysicsGrid
         }
     }
 
-    private float abs(float a)
-    {
-        return a < 0 ? -a : a;
-    }
 
-    float lerp(float a, float b, float t)
-    {
-        return a + (b-a)*t;
-    }
 
     public void draw(Matrix4 proj)
     {

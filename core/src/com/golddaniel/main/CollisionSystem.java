@@ -15,12 +15,8 @@
  */
 package com.golddaniel.main;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.golddaniel.entities.BlackHole;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Multiplier;
@@ -124,32 +120,6 @@ public class CollisionSystem
                 if(p.overlaps(cb.getBoundingBox()))
                 {
                     model.getPlayer().kill(model);
-                }
-            }
-        }
-        for(BlackHole b : model.getEntityType(BlackHole.class))
-        {
-            if(!b.isActive()) continue;
-            
-            if(model.getPlayer() != null)
-            {
-                Rectangle p = model.getPlayer().getBoundingBox();
-                if(p.overlaps(b.getBoundingBox()))
-                {
-                    model.getPlayer().kill(model);
-                }
-            }
-            for(Bullet bullet : bullets)
-            {
-                Rectangle bulletRect = bullet.getBoundingBox();
-                
-                if(bullet.isAlive() && b.isAlive())
-                {
-                    if(bulletRect.overlaps(b.getBoundingBox()))
-                    {
-                        b.kill(model);
-                        bullet.kill(model);
-                    }
                 }
             }
         }

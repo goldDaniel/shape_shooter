@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.PerformanceCounter;
 import com.golddaniel.screens.*;
 
 /**
@@ -37,6 +38,8 @@ public class Main extends ApplicationAdapter {
 
     Skin uiSkin;
     ProgressBar bar;
+
+
 
     @Override
     public void create () 
@@ -75,7 +78,6 @@ public class Main extends ApplicationAdapter {
                     Skin.class, parms);
         }
 
-        assets.load("ui/panel.png", Texture.class);
 
         assets.load("textTextures/x.png", Texture.class);
         assets.load("textTextures/0.png", Texture.class);

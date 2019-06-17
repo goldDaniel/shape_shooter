@@ -45,7 +45,7 @@ public class Particle implements Pool.Poolable
 
 
     Vector3 pos;
-    Vector3 velocity;
+    Vector2 velocity;
     Vector3 dim;
 
     float lifespan;
@@ -79,7 +79,7 @@ public class Particle implements Pool.Poolable
             float lifespan, Color startColor, Color endColor)
     {
         this.pos = pos;
-        this.velocity = velocity;
+        this.velocity = new Vector2(velocity.x, velocity.y);
         this.dim = dim;
 
         START_LIFESPAN = lifespan;
@@ -104,7 +104,7 @@ public class Particle implements Pool.Poolable
     public void update(WorldModel world, float delta)
     {
 
-        pos.add(velocity.x * delta, velocity.y * delta, velocity.z * delta);
+        pos.add(velocity.x * delta, velocity.y * delta, 0);
 
         lerpColor();
 
@@ -122,7 +122,7 @@ public class Particle implements Pool.Poolable
                 dim.x / 2f, dim.y / 2f,
                 dim.x, dim.y,
                 1f, 1f,
-                new Vector2(velocity.x, velocity.y).angle());
+                velocity.angle());
         s.setColor(Color.WHITE);
     }
 
@@ -140,7 +140,7 @@ public class Particle implements Pool.Poolable
     public void reset()
     {
         pos.set(-1000, -1000, -1000);
-        velocity.set(0, 0, 0);
+        velocity.set(0, 0);
         dim.set(0, 0, 0);
         isAlive = true;
 

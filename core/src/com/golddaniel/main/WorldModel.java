@@ -15,7 +15,6 @@
  */
 package com.golddaniel.main;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
@@ -137,6 +136,7 @@ public class WorldModel
     public void update(float delta)
     {
         delta *= TIMESCALE;
+
         isUpdating = true;
 
         elapsedTime += delta;
@@ -197,38 +197,39 @@ public class WorldModel
         g.update(delta);
 
         //CAMERA LOGIC///////////////////////////////////////////////////////////////////////////
-        Vector3 target = new Vector3();
-        if (player != null)
-        {
-            target.set(player.position);
 
-            if (player.position.x < -WORLD_WIDTH / 2f)
-            {
-                target.x = -WORLD_WIDTH / 2f;
-            }
-            if (player.position.x > WORLD_WIDTH / 2f)
-            {
-                target.x = WORLD_WIDTH / 2f;
-            }
-
-            if (player.position.y < -WORLD_HEIGHT / 2f)
-            {
-                target.y = -WORLD_HEIGHT / 2f;
-            }
-
-            if (player.position.y > WORLD_HEIGHT / 2f)
-            {
-                target.y = WORLD_HEIGHT / 2f;
-            }
-
-            target.z = 5.5f;
-        }
-        else
-        {
-            target.z = 16.5f;
-        }
         if (!editMode)
         {
+            Vector3 target = new Vector3();
+            if (player != null)
+            {
+                target.set(player.position);
+
+                if (player.position.x < -WORLD_WIDTH / 2f)
+                {
+                    target.x = -WORLD_WIDTH / 2f;
+                }
+                if (player.position.x > WORLD_WIDTH / 2f)
+                {
+                    target.x = WORLD_WIDTH / 2f;
+                }
+
+                if (player.position.y < -WORLD_HEIGHT / 2f)
+                {
+                    target.y = -WORLD_HEIGHT / 2f;
+                }
+
+                if (player.position.y > WORLD_HEIGHT / 2f)
+                {
+                    target.y = WORLD_HEIGHT / 2f;
+                }
+
+                target.z = 5.5f;
+            }
+            else
+            {
+                target.z = 16.5f;
+            }
             cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
             cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
             cam.position.z = MathUtils.lerp(

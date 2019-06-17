@@ -95,7 +95,7 @@ public class Bullet extends Entity implements Pool.Poolable
         this.position = position.cpy();
         this.dir = dir;
         this.speed = speed;
-        
+
         if(type != null)
         {
             switch(type)
@@ -124,10 +124,10 @@ public class Bullet extends Entity implements Pool.Poolable
 
         this.position.x -= width / 2f;
         this.position.y -= height / 2f;
-        
+
         isAlive = true;
     }
-    
+
     @Override
     public void update(WorldModel model, float delta)
     {

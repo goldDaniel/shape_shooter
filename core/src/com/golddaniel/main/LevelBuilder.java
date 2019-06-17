@@ -258,12 +258,33 @@ public class LevelBuilder
 
         model.setGrid(g);
 
+
         m = model;
     }
 
     public static void buildLevel5(AssetManager assets)
     {
         resetWorldModel();
+
+        ArrayMap<Integer, Array<Entity>> toSpawn = new ArrayMap<Integer, Array<Entity>>();
+
+        float worldWidth = 7;
+        float worldHeight = 10;
+
+        float levelTime = 50;
+
+        WorldModel model = new WorldModel(worldWidth, worldHeight, toSpawn, levelTime);
+        Array<Entity> toAdd = new Array<Entity>();
+
+
+        PhysicsGrid g = new PhysicsGrid(
+                new Vector2(model.WORLD_WIDTH,
+                        model.WORLD_HEIGHT),
+                0.4f);
+
+        model.setGrid(g);
+
+        m = model;
     }
 
     public static void buildLevel6(AssetManager assets)

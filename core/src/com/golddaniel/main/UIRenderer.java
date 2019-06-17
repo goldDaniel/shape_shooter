@@ -81,9 +81,8 @@ public class UIRenderer
         multiplierLabel.setFontScale(2);
 
         endLabel = new Label("LEVEL COMPLETE", uiSkin);
+        endLabel.setFontScale(8f);
         endLabel.setPosition(800 / 2f, 600 / 2f);
-        endLabel.setFontScale(2);
-        endLabel.scaleBy(4f);
         endLabel.setVisible(false);
 
 

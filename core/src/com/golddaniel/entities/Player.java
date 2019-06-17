@@ -341,10 +341,10 @@ public class Player extends Entity implements ControllerListener
         {
             Vector3 pos = new Vector3(position);
 
-            Vector2 dir = new Vector2(velocity.x, velocity.y);
+            scratch.set(velocity.x, velocity.y);
 
-            pos.x -= MathUtils.cos(dir.angleRad() + MathUtils.PI / 4f) * width / 1.8f;
-            pos.y -= MathUtils.sin(dir.angleRad() + MathUtils.PI / 4f) * height / 1.8f;
+            pos.x -= MathUtils.cos(scratch.angleRad() + MathUtils.PI / 4f) * width / 1.8f;
+            pos.y -= MathUtils.sin(scratch.angleRad() + MathUtils.PI / 4f) * height / 1.8f;
 
             float lifespan = 0.2f + MathUtils.random(-0.1f, 0.1f);
 
@@ -358,8 +358,8 @@ public class Player extends Entity implements ControllerListener
             model.createParticle(pos, vel, dim, lifespan, start, end);
 
             pos.set(position);
-            pos.x -= MathUtils.cos(dir.angleRad() - MathUtils.PI / 4f) * width / 1.8f;
-            pos.y -= MathUtils.sin(dir.angleRad() - MathUtils.PI / 4f) * height / 1.8f;
+            pos.x -= MathUtils.cos(scratch.angleRad() - MathUtils.PI / 4f) * width / 1.8f;
+            pos.y -= MathUtils.sin(scratch.angleRad() - MathUtils.PI / 4f) * height / 1.8f;
 
             model.createParticle(pos, vel, dim, lifespan, start, end);
         }
@@ -403,7 +403,7 @@ public class Player extends Entity implements ControllerListener
 
     public void draw(SpriteBatch s)
     {
-        Vector2 dir = new Vector2(velocity.x, velocity.y);
+        scratch.set(velocity.x, velocity.y);
 
         s.setColor(Color.WHITE);
         s.draw(tex,
@@ -411,7 +411,7 @@ public class Player extends Entity implements ControllerListener
                 width / 2, height / 2,
                 width, height,
                 1f, 1f,
-                dir.angle());
+                scratch.angle());
     }
 
     public void dispose()
@@ -440,7 +440,7 @@ public class Player extends Entity implements ControllerListener
             float speed = MathUtils.random(15f, 22f);
 
             model.createParticle(
-                    position.cpy(),
+                    position,
                     new Vector3(
                             MathUtils.cosDeg(pAngle) * speed,
                             MathUtils.sinDeg(pAngle) * speed,
@@ -453,7 +453,7 @@ public class Player extends Entity implements ControllerListener
             speed = MathUtils.random(10f, 14f);
 
             model.createParticle(
-                    position.cpy(),
+                    position,
                     new Vector3(
                             MathUtils.cosDeg(pAngle) * speed,
                             MathUtils.sinDeg(pAngle) * speed,

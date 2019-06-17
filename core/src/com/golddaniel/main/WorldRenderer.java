@@ -32,6 +32,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.PerformanceCounter;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Entity;
@@ -63,6 +64,9 @@ public class WorldRenderer
     boolean rebuildFramebuffer = false;
 
     boolean doBloom = true;
+
+
+
 
     public WorldRenderer(PerspectiveCamera cam, AssetManager assets)
     {
@@ -177,6 +181,7 @@ public class WorldRenderer
                 0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         s.end();
         if(doBloom) bloom.render();
+
     }
     
     public void resize(int width, int height)

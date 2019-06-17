@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.PerformanceCounter;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
@@ -36,6 +37,7 @@ public class GameScreen extends VScreen
     private ShapeRenderer sh;
 
     private boolean finishedLoading = false;
+
 
     public GameScreen(ScreenManager sm, AssetManager assets)
     {
@@ -118,9 +120,7 @@ public class GameScreen extends VScreen
                     uiRenderer.draw(model);
                 }
             }
-
         }
-
     }
 
     @Override
@@ -153,7 +153,8 @@ public class GameScreen extends VScreen
     @Override
     public void resize(int width, int height)
     {
-        //these rely on worldmodel existing
+        //these rely on worldmodel existing, bad design but
+        //I have to finish the game eventually
         if(model != null)
         {
             uiRenderer.resize(width, height);
