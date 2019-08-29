@@ -378,24 +378,21 @@ public class Player extends Entity implements ControllerListener
             bulletPos.y = position.y + height / 2f;
 
             float speed = 25f;
-            model.createBullet(bulletPos,
-                    speed,
-                    dir.angle(),
-                    Bullet.TYPE.LASER_1);
+            model.createBullet( bulletPos,
+                                speed,
+                                dir.angle());
 
             float dif = 1.5f;
             //adds this amount of bullets to each side
             //i.e. extrabullets*2 gets added
             for (int i = 0; i < extraStreams; i++)
             {
-                model.createBullet(bulletPos,
-                        speed,
-                        dir.angle() + dif * (i + 1),
-                        Bullet.TYPE.LASER_1);
-                model.createBullet(bulletPos,
-                        speed,
-                        dir.angle() - dif * (i + 1),
-                        Bullet.TYPE.LASER_1);
+                model.createBullet( bulletPos,
+                                    speed,
+                                dir.angle() + dif * (i + 1));
+                model.createBullet( bulletPos,
+                                    speed,
+                                dir.angle() - dif * (i + 1));
             }
             cooldown = currentWeaponCooldown;
         }

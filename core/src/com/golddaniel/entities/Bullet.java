@@ -41,23 +41,9 @@ public class Bullet extends Entity implements Pool.Poolable
     {
 
     }
-
-    public enum TYPE
-    {
-        LASER_1,
-        LASER_2,
-        LASER_3,
-        LASER_4,
-    }
     
     private static TextureRegion LASER_1;
-    
-    private static TextureRegion LASER_2;
-    
-    private static TextureRegion LASER_3;
-    
-    private static TextureRegion LASER_4;
-    
+
     float dir;
     
     TextureRegion tex;
@@ -70,54 +56,20 @@ public class Bullet extends Entity implements Pool.Poolable
         {
             LASER_1 = new TextureRegion(assets.get("lasers/laserRed14.png", Texture.class));
         }
-        if(LASER_2 == null)
-        {
-            LASER_2 = new TextureRegion(assets.get("lasers/laserBlue02.png", Texture.class));
-        }
-        if(LASER_3 == null)
-        {
-            LASER_3 = new TextureRegion(assets.get("lasers/laserBlue03.png", Texture.class));
-        }
-        if(LASER_4 == null)
-        {
-            LASER_4 = new TextureRegion(assets.get("lasers/laserBlue04.png", Texture.class));
-        }
     }
 
-    public Bullet(Vector3 position, float speed, float dir, TYPE type, AssetManager assets)
+    public Bullet(Vector3 position, float speed, float dir, AssetManager assets)
     {
         super(assets);
-        init(position, speed, dir, type);
+        init(position, speed, dir);
     }
     
-    public final void init(Vector3 position, float speed, float dir, TYPE type)
+    public final void init(Vector3 position, float speed, float dir)
     {
         this.position = position.cpy();
         this.dir = dir;
         this.speed = speed;
-
-        if(type != null)
-        {
-            switch(type)
-            {
-                case LASER_1:
-                    tex = LASER_1;
-                    break;
-                case LASER_2:
-                    tex = LASER_2;
-                    break;
-                case LASER_3:
-                    tex = LASER_3;
-                    break;
-                case LASER_4:
-                    tex = LASER_4;
-                    break;
-            }
-        }
-        else
-        {
-           tex = new TextureRegion();
-        }
+        tex = LASER_1;
 
         width = 0.05f;
         height = 0.65f;

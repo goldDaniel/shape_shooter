@@ -127,7 +127,7 @@ public class WorldModel
         {
             protected Bullet newObject()
             {
-                return new Bullet(Vector3.Zero, 0, 0, null, null);
+                return new Bullet(Vector3.Zero, 0, 0, null);
             }
         };
     }
@@ -247,6 +247,7 @@ public class WorldModel
         /////////////////////////////////////////////////////////////////////////////////////////////
 
 
+        //////////////////////////////////////////////////////////////////////////////////
         //WE RESPAWN THE PLAYER IN HERE////////////////////////////////////////////////////////////
         if (player == null)
         {
@@ -329,6 +330,8 @@ public class WorldModel
             respawnTimer = 0;
         }
         //////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////
+
         float audioLerp = (1f - respawnTimer / RESPAWN_TIME);
         AudioSystem.setMusicVolume(0.05f + 0.95f * (float) Math.pow(audioLerp, 4f));
         isUpdating = false;
@@ -381,11 +384,6 @@ public class WorldModel
         return a > 0 ? a : -a;
     }
 
-    /*/////////////////////////////////////////////////////////////////////////
-        maybe change?
-        currently null checking as this is how we use grid, but
-        sometimes we dont have a grid, when we are testing
-    */
     public void applyRadialForce(Vector3 pos, float force, float radius)
     {
         g.applyRadialForce(pos, force, radius);
@@ -395,12 +393,11 @@ public class WorldModel
     {
         g.applyRadialForce(pos, force, radius, c);
     }
-    //////////////////////////////////////////////////////////////////////////////
 
-    public void createBullet(Vector3 pos, float speed, float dir, Bullet.TYPE type)
+    public void createBullet(Vector3 pos, float speed, float dir)
     {
         Bullet b = bulletPool.obtain();
-        b.init(pos, speed, dir, type);
+        b.init(pos, speed, dir);
         addEntity(b);
     }
 

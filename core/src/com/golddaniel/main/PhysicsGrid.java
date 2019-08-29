@@ -293,7 +293,7 @@ public class PhysicsGrid
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
 
-        sh = new ImmediateModeRenderer20(rows*cols*8, true, true, 0);
+        sh = new ImmediateModeRenderer20(rows*cols*64, true, true, 0);
         ShaderProgram shader = new ShaderProgram(createVertexShader(), createFragmentShader());
 
         if(!shader.isCompiled())
@@ -621,11 +621,11 @@ public class PhysicsGrid
                 lerp(points[i][j].position.z,  points[i + 1][j].position.z, interpolation));
 
         normal.set( (points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x) +
-                        (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
-                (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y) +
-                        (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
-                (points[i][j + 1].position.z     - points[i][j + 1].desiredPosition.z) +
-                        (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
+                            (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
+                    (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y) +
+                            (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
+                    (points[i][j + 1].position.z     - points[i][j + 1].desiredPosition.z) +
+                            (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
         dist = normal.len()*3f;
         lerp.set(
@@ -643,11 +643,11 @@ public class PhysicsGrid
 
 
         normal.set( (points[i][j].position.x - points[i][j].desiredPosition.x) +
-                        (points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x),
-                (points[i][j].position.y - points[i][j].desiredPosition.y) +
-                        (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y),
-                (points[i][j].position.z     - points[i][j].desiredPosition.z) +
-                        (points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z));
+                            (points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x),
+                    (points[i][j].position.y - points[i][j].desiredPosition.y) +
+                            (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y),
+                    (points[i][j].position.z     - points[i][j].desiredPosition.z) +
+                            (points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
         dist = normal.len()*3f;
         lerp.set(
@@ -665,11 +665,11 @@ public class PhysicsGrid
 
 
         normal.set( (points[i + 1][j].position.x - points[i + 1][j].desiredPosition.x) +
-                        (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
-                (points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y) +
-                        (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
-                (points[i + 1][j].position.z     - points[i + 1][j].desiredPosition.z) +
-                        (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
+                            (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
+                    (points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y) +
+                            (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
+                    (points[i + 1][j].position.z     - points[i + 1][j].desiredPosition.z) +
+                            (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
         normal.scl(1f/2f);
         dist = normal.len()*3f;
         lerp.set(

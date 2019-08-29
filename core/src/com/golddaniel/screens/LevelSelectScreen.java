@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -29,23 +30,13 @@ import com.sun.java.accessibility.util.TopLevelWindowListener;
 public class LevelSelectScreen extends VScreen
 {
 
-    private Texture texture0;
-    private Texture texture1;
-    private Texture texture2;
-    private Texture texture3;
-    private Texture texture4;
-    private Texture texture5;
-    private Texture texture6;
-    private Texture texture7;
-    private Texture texture8;
-    private Texture texture9;
-
-    Texture panelTexture;
 
     OrthographicCamera cam;
     ExtendViewport view;
 
     Stage uiStage;
+
+
 
     /**
      * @param sm
@@ -60,18 +51,7 @@ public class LevelSelectScreen extends VScreen
 
         Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json",Skin.class);
         uiStage = new Stage(view);
-
-        texture0 = assets.get("textTextures/0.png", Texture.class);
-        texture1 = assets.get("textTextures/1.png", Texture.class);
-        texture2 = assets.get("textTextures/2.png", Texture.class);
-        texture3 = assets.get("textTextures/3.png", Texture.class);
-        texture4 = assets.get("textTextures/4.png", Texture.class);
-        texture5 = assets.get("textTextures/5.png", Texture.class);
-        texture6 = assets.get("textTextures/6.png", Texture.class);
-        texture7 = assets.get("textTextures/7.png", Texture.class);
-        texture8 = assets.get("textTextures/8.png", Texture.class);
-        texture9 = assets.get("textTextures/9.png", Texture.class);
-
+        
 
         Table table = new Table();
         table.setFillParent(true);
@@ -157,6 +137,12 @@ public class LevelSelectScreen extends VScreen
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         Gdx.input.setInputProcessor(uiStage);
+
+        uiStage.getBatch().setProjectionMatrix(new Matrix4().idt());
+        uiStage.getBatch().begin();
+        uiStage.getBatch().draw(assets.get("skybox.jpg", Texture.class), -1, -1, 2, 2);
+        uiStage.getBatch().end();
+
         uiStage.act(delta);
         uiStage.draw();
 

@@ -32,7 +32,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.PerformanceCounter;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.golddaniel.entities.Entity;
@@ -82,7 +81,7 @@ public class WorldRenderer
         }
         else
         {
-            scale = 1;
+            scale = 0.5f;
 
         }
         this.viewport = new ExtendViewport(1920, 1080, cam);

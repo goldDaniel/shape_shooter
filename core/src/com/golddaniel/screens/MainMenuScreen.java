@@ -8,7 +8,17 @@ package com.golddaniel.screens;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -18,6 +28,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.golddaniel.entities.Particle;
@@ -27,6 +38,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+import javax.management.PersistentMBean;
 
 /**
  *
@@ -51,6 +64,7 @@ public class MainMenuScreen extends VScreen
     float hue;
 
     float dist = 5000;
+    Texture tex;
 
     private Pool<Particle> particlePool = new Pool<Particle>(2048)
     {
@@ -98,22 +112,14 @@ public class MainMenuScreen extends VScreen
             }
         });
 
-        final TextButton quitBtn = new TextButton("QUIT", uiSkin, "default");
-        quitBtn.addListener(new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                Gdx.app.exit();
-            }
-        });
-
         final TextButton spacer = new TextButton("", uiSkin, "default");
         spacer.setDisabled(true);
 
         table.setPosition(0, -32);
         table.row();
         table.add(playBtn).fill();
-        table.row();
-        table.add(quitBtn).fill();
+
+        tex = assets.get("skybox.jpg", Texture.class);
     }
     
     @Override
@@ -162,12 +168,16 @@ public class MainMenuScreen extends VScreen
             particles.removeAll(toRemove, true);
         }
 
-
         titleCamera.position.x = viewport.getWorldWidth()  / 2f;
         titleCamera.position.y = viewport.getWorldHeight() / 2f;
         titleCamera.position.z = dist;
         titleCamera.update();
 
+
+        s.setProjectionMatrix(new Matrix4().idt());
+        s.begin();
+        s.draw(tex, -1, -1, 2, 2);
+        s.end();
 
         s.setProjectionMatrix(camera.combined);
         s.begin();

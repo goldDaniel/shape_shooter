@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.PerformanceCounter;
@@ -39,7 +40,7 @@ public class Main extends ApplicationAdapter {
     Skin uiSkin;
     ProgressBar bar;
 
-
+    Texture skyboxTex;
 
     @Override
     public void create () 
@@ -110,6 +111,8 @@ public class Main extends ApplicationAdapter {
         assets.load("sounds/respawn.wav", Sound.class);
 
         assets.load("sounds/background.mp3", Music.class);
+
+        skyboxTex  = new Texture("skybox.jpg");
     }
 
     @Override
@@ -128,7 +131,8 @@ public class Main extends ApplicationAdapter {
 
             //ghetto loading bar
             s.begin();
-            bar.setPosition(0, Gdx.graphics.getHeight() / 2f);
+            s.draw(skyboxTex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            bar.setPosition(0, Gdx.graphics.getHeight() / 2);
             bar.setValue(assets.getProgress());
             bar.act(Gdx.graphics.getDeltaTime());
             bar.draw(s, 1);

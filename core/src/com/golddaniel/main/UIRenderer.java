@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 
 public class UIRenderer
@@ -26,47 +27,33 @@ public class UIRenderer
         Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
 
         uiStage = new Stage(new ExtendViewport(800, 600));
-        Touchpad leftPad = new Touchpad(0.25f, uiSkin);
-        Touchpad rightPad = new Touchpad(0.25f, uiSkin);
 
-        float size = 216;
-        leftPad.setSize(size, size);
-        rightPad.setSize(size, size);
-
-        leftPad.addListener(new ChangeListener()
+        if(SharedLibraryLoader.isAndroid)
         {
-            @Override
-            public void changed(ChangeEvent event, Actor actor)
-            {
-                if (model.getPlayer() != null)
-                {
-                    // This is run when anything is changed on this actor.
-                    float deltaX = ((Touchpad) actor).getKnobPercentX();
-                    float deltaY = ((Touchpad) actor).getKnobPercentY();
-                    model.getPlayer().setMoveDir(deltaX, deltaY);
-                }
-            }
-        });
-        rightPad.addListener(new ChangeListener()
-        {
-            @Override
-            public void changed(ChangeEvent event, Actor actor)
-            {
-                if (model.getPlayer() != null)
-                {
-                    // This is run when anything is changed on this actor.
-                    float deltaX = ((Touchpad) actor).getKnobPercentX();
-                    float deltaY = ((Touchpad) actor).getKnobPercentY();
-                    model.getPlayer().setShootDir(deltaX, deltaY);
-                }
-            }
-        });
+            Touchpad leftPad = new Touchpad(0.25f, uiSkin);
 
-        leftPad.setPosition(96, 96);
-        rightPad.setPosition(uiStage.getWidth() - size - 96, 96);
+            float size = 216;
+            leftPad.setSize(size, size);
 
-        uiStage.addActor(leftPad);
-        uiStage.addActor(rightPad);
+            leftPad.addListener(new ChangeListener()
+            {
+                @Override
+                public void changed(ChangeEvent event, Actor actor)
+                {
+                    if (model.getPlayer() != null)
+                    {
+                        // This is run when anything is changed on this actor.
+                        float deltaX = ((Touchpad) actor).getKnobPercentX();
+                        float deltaY = ((Touchpad) actor).getKnobPercentY();
+                        model.getPlayer().setMoveDir(deltaX, deltaY);
+                        model.getPlayer().setShootDir(deltaX, deltaY);
+                    }
+                }
+            });
+
+            leftPad.setPosition(96, 96);
+            uiStage.addActor(leftPad);
+        }
 
         timerLabel = new Label("", uiSkin);
         timerLabel.setPosition(0, 600 - 32);
