@@ -46,7 +46,9 @@ public class Cuber extends Entity
     float activeTimer = 2f;
 
     float dirTimer = 0;
-    
+
+    Rectangle boundingBox = new Rectangle();
+
     public Cuber(Vector3 pos, AssetManager assets)
     {
         super(assets);
@@ -231,6 +233,8 @@ public class Cuber extends Entity
             model.createMultipliers(position, 5);
 
             int particles = 32;
+            Vector3 vel = new Vector3();
+            Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
@@ -239,13 +243,13 @@ public class Cuber extends Entity
 
                 float speed = 5f + MathUtils.random(-2f, 2f);
 
-                Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
+
+                vel .set(
+                        MathUtils.cosDeg(angle)*speed,
+                        MathUtils.sinDeg(angle)*speed,
+                        0);
 
 
-                Vector3 vel = new Vector3(
-                                MathUtils.cosDeg(angle)*speed,
-                                MathUtils.sinDeg(angle)*speed,
-                                0);
 
                 model.createParticle(
                         position,
@@ -261,7 +265,8 @@ public class Cuber extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-    return new Rectangle(position.x - width / 2f, position.y - width / 2f, width, height);
+        boundingBox.set(position.x - width / 2f, position.y - width / 2f, width, height);
+        return boundingBox;
     }
 
     @Override

@@ -28,6 +28,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.golddaniel.main.AudioSystem;
 import com.golddaniel.main.WorldModel;
+import com.golddaniel.utils.QuadTree;
 
 /**
  *
@@ -37,14 +38,13 @@ public class Boid extends Entity
 {
     private static float SPEED_MAX = 0.9f;
 
-    private static Array<Boid> boids = new Array<Boid>();
-
     private static TextureRegion circleTex;
     private static TextureRegion tex;
 
+    private Array<Boid> nearbyBoids;
+
     private Vector3 velocity;
     private Vector3 acceleration;
-
 
     private Vector3 cohesion;
     private Vector3 alignment;
@@ -62,6 +62,8 @@ public class Boid extends Entity
     private float widthAngle = 0;
 
     private Vector2 scratch = new Vector2();
+
+    Rectangle boundingBox = new Rectangle();
 
     public static void loadTextures(AssetManager assets)
     {
@@ -89,7 +91,7 @@ public class Boid extends Entity
         height = 0.25f;
         color = Color.CYAN.cpy();
 
-        boids.add(this);
+        nearbyBoids = new Array<Boid>();
     }
     
     /**
@@ -102,7 +104,7 @@ public class Boid extends Entity
         float range = 5f;
         
         cohesion.setZero();
-        for(Boid b : boids)
+        for(Boid b : nearbyBoids)
         {
             float dist = position.dst(b.position);
             
@@ -133,7 +135,7 @@ public class Boid extends Entity
         int count = 0;
         
         Vector3 sum = new Vector3();
-        for(Boid b : boids)
+        for(Boid b : nearbyBoids)
         {
             float dist = position.dst(b.position);
             
@@ -166,7 +168,7 @@ public class Boid extends Entity
         float range = 0.75f;
         
         Vector3 sum = new Vector3();
-        for(Boid b : boids)
+        for(Boid b : nearbyBoids)
         {
             float dist = position.dst(b.position);
             
@@ -254,32 +256,13 @@ public class Boid extends Entity
     }
 
 
-    public void update(float delta)
-    {
-        separation();
-        allignment();
-        cohesion();
-
-
-        acceleration.add(separation);
-        acceleration.add(alignment);
-        acceleration.add(cohesion);
-
-        acceleration.limit(SPEED_MAX / 32f * delta);
-
-        velocity.add(acceleration);
-        velocity.limit(SPEED_MAX * delta);
-
-        position.add(velocity);
-
-        acceleration.set(0, 0, 0);
-    }
-
     @Override
     public void update(WorldModel model, float delta)
     {
         if(activeTimer <= 0)
         {
+            nearbyBoids = model.getNearbyBoids(nearbyBoids, this);
+
             width = 0.1f + 0.4f * MathUtils.sin(widthAngle)*MathUtils.sin(widthAngle);
             widthAngle += MathUtils.PI * delta;
 
@@ -431,7 +414,6 @@ public class Boid extends Entity
                             1f,
                             Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
 
-            boids.removeValue(this, true);
 
             AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
 
@@ -447,14 +429,15 @@ public class Boid extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x - 0.5f / 2f,
+        boundingBox.set(position.x - 0.5f / 2f,
                              position.y - 0.5f / 2f,
                                 0.5f, 0.5f);
+        return boundingBox;
     }
 
     @Override
     public void dispose()
     {
-        boids.removeValue(this, true);
+
     }
 }

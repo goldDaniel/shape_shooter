@@ -18,16 +18,19 @@ package com.golddaniel.main;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Pool;
+import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.TextParticle;
+import com.golddaniel.utils.QuadTree;
 
 
 /**
@@ -35,6 +38,8 @@ import com.golddaniel.entities.TextParticle;
  */
 public class WorldModel
 {
+
+    private QuadTree<Boid> boids;
 
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
@@ -66,8 +71,6 @@ public class WorldModel
 
     private float remainingTime;
     private float elapsedTime = 0;
-
-    public boolean editMode = false;
 
     public float TIMESCALE = 1f;
 
@@ -119,7 +122,7 @@ public class WorldModel
                 return new Particle(new Vector3(-1000, -1000, -1000),
                         new Vector3(0, 0, 0),
                         new Vector3(0, 0, 0),
-                        0, null, null);
+                        0, new Color(), new Color());
             }
         };
 
@@ -130,6 +133,8 @@ public class WorldModel
                 return new Bullet(Vector3.Zero, 0, 0, null);
             }
         };
+
+        boids = new QuadTree<Boid>(0, new Rectangle(-WORLD_WIDTH / 2f, -WORLD_HEIGHT / 2f, WORLD_WIDTH / 2f, WORLD_HEIGHT / 2f));
     }
 
 
@@ -154,6 +159,12 @@ public class WorldModel
             toSpawn.removeKey((int) elapsedTime);
         }
 
+        boids.clear();
+        Array<Boid> b = getEntityType(Boid.class);
+        for(Boid boid : b)
+        {
+            boids.insert(boid);
+        }
         for (Entity e : entities)
         {
             if (!e.isAlive())
@@ -198,51 +209,49 @@ public class WorldModel
 
         //CAMERA LOGIC///////////////////////////////////////////////////////////////////////////
 
-        if (!editMode)
+        Vector3 target = new Vector3();
+        if (player != null)
         {
-            Vector3 target = new Vector3();
-            if (player != null)
+            target.set(player.position);
+
+            if (player.position.x < -WORLD_WIDTH / 2f)
             {
-                target.set(player.position);
-
-                if (player.position.x < -WORLD_WIDTH / 2f)
-                {
-                    target.x = -WORLD_WIDTH / 2f;
-                }
-                if (player.position.x > WORLD_WIDTH / 2f)
-                {
-                    target.x = WORLD_WIDTH / 2f;
-                }
-
-                if (player.position.y < -WORLD_HEIGHT / 2f)
-                {
-                    target.y = -WORLD_HEIGHT / 2f;
-                }
-
-                if (player.position.y > WORLD_HEIGHT / 2f)
-                {
-                    target.y = WORLD_HEIGHT / 2f;
-                }
-
-                target.z = 5.5f;
+                target.x = -WORLD_WIDTH / 2f;
             }
-            else
+            if (player.position.x > WORLD_WIDTH / 2f)
             {
-                target.z = 16.5f;
+                target.x = WORLD_WIDTH / 2f;
             }
-            cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
-            cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-            cam.position.z = MathUtils.lerp(
-                    cam.position.z,
-                    target.z,
-                    delta * 2f);
 
-            cam.lookAt(cam.position.x, cam.position.y, 0f);
+            if (player.position.y < -WORLD_HEIGHT / 2f)
+            {
+                target.y = -WORLD_HEIGHT / 2f;
+            }
 
-            //maintain our rotation around Z axis before lookAt, otherwise
-            //we get weird rotation due to floating point error with lookAt
-            cam.up.set(0f, 1f, 0f);
+            if (player.position.y > WORLD_HEIGHT / 2f)
+            {
+                target.y = WORLD_HEIGHT / 2f;
+            }
+
+            target.z = 5.5f;
         }
+        else
+        {
+            target.z = 16.5f;
+        }
+        cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
+        cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
+        cam.position.z = MathUtils.lerp(
+                cam.position.z,
+                target.z,
+                delta * 2f);
+
+        cam.lookAt(cam.position.x, cam.position.y, 0f);
+
+        //maintain our rotation around Z axis after lookAt, otherwise
+        //we get weird rotation due to floating point error
+        cam.up.set(0f, 1f, 0f);
+
         cam.update();
         /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -337,6 +346,12 @@ public class WorldModel
         isUpdating = false;
     }
 
+    public Array<Boid> getNearbyBoids(Array<Boid> toReturn, Boid b)
+    {
+        toReturn.clear();
+        return boids.retrieve(toReturn, b);
+    }
+
 
     public void addEntity(Entity e)
     {
@@ -379,11 +394,6 @@ public class WorldModel
         this.score += score * scoreMultiplier;
     }
 
-    private float abs(float a)
-    {
-        return a > 0 ? a : -a;
-    }
-
     public void applyRadialForce(Vector3 pos, float force, float radius)
     {
         g.applyRadialForce(pos, force, radius);
@@ -410,7 +420,7 @@ public class WorldModel
     public void createParticle(Vector3 pos, Vector3 vel, Vector3 dim, float lifespan, Color startColor, Color endColor)
     {
         Particle p = particlePool.obtain();
-        p.init(pos.cpy(), vel.cpy(), dim.cpy(), lifespan, startColor, endColor);
+        p.init(pos, vel, dim, lifespan, startColor, endColor);
         particles.add(p);
     }
 

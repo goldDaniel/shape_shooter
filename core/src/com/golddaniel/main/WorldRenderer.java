@@ -81,13 +81,13 @@ public class WorldRenderer
         }
         else
         {
-            scale = 0.5f;
+            scale = 1f;
 
         }
         this.viewport = new ExtendViewport(1920, 1080, cam);
         bloom = new Bloom(viewport, scale);
         bloom.setTreshold(0.2f);
-        bloom.setBloomIntesity(2.25f);
+        bloom.setBloomIntesity(2f);
 
         Texture tex = assets.get("skybox.jpg", Texture.class);
 

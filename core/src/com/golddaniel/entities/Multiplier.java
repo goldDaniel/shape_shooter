@@ -63,7 +63,7 @@ public class Multiplier extends Entity
         //they have left range
         if(lifespan < 4f)
         {
-            if (p.position.dst(position) < 2f) inRangeOfPlayer = true;
+            if (p.position.dst2(position) < 2f*2f) inRangeOfPlayer = true;
         }
         if(inRangeOfPlayer)
         {

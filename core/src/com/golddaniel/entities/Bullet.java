@@ -94,9 +94,7 @@ public class Bullet extends Entity implements Pool.Poolable
            
             isAlive = false;
         }
-
-        Vector3 pos = position.cpy();
-        model.applyRadialForce(pos, 35 * delta, height);
+        model.applyRadialForce(position, 35 * delta, height);
     }
 
     

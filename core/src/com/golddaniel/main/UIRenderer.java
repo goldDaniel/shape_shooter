@@ -1,6 +1,8 @@
 package com.golddaniel.main;
 
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -19,21 +21,24 @@ public class UIRenderer
     private Label scoreLabel;
     private Label multiplierLabel;
 
-    private Label endLabel;
-
+    BitmapFont endFont;
 
     public UIRenderer(final WorldModel model, AssetManager assets)
     {
         Skin uiSkin = assets.get("ui/neon/skin/neon-ui.json", Skin.class);
+
+        endFont = assets.get("Square72.ttf", BitmapFont.class);
 
         uiStage = new Stage(new ExtendViewport(800, 600));
 
         if(SharedLibraryLoader.isAndroid)
         {
             Touchpad leftPad = new Touchpad(0.25f, uiSkin);
+            Touchpad rightPad = new Touchpad(0.25f, uiSkin);
 
             float size = 216;
             leftPad.setSize(size, size);
+            rightPad.setSize(size, size);
 
             leftPad.addListener(new ChangeListener()
             {
@@ -46,13 +51,28 @@ public class UIRenderer
                         float deltaX = ((Touchpad) actor).getKnobPercentX();
                         float deltaY = ((Touchpad) actor).getKnobPercentY();
                         model.getPlayer().setMoveDir(deltaX, deltaY);
+                    }
+                }
+            });
+            rightPad.addListener(new ChangeListener()
+            {
+                @Override
+                public void changed(ChangeEvent event, Actor actor)
+                {
+                    if (model.getPlayer() != null)
+                    {
+                        // This is run when anything is changed on this actor.
+                        float deltaX = ((Touchpad) actor).getKnobPercentX();
+                        float deltaY = ((Touchpad) actor).getKnobPercentY();
                         model.getPlayer().setShootDir(deltaX, deltaY);
                     }
                 }
             });
 
             leftPad.setPosition(96, 96);
+            rightPad.setPosition(800 - 88, 96);
             uiStage.addActor(leftPad);
+            uiStage.addActor(rightPad);
         }
 
         timerLabel = new Label("", uiSkin);
@@ -67,16 +87,10 @@ public class UIRenderer
         multiplierLabel.setPosition(0, 600 - 32 - 32 - 32);
         multiplierLabel.setFontScale(2);
 
-        endLabel = new Label("LEVEL COMPLETE", uiSkin);
-        endLabel.setFontScale(8f);
-        endLabel.setPosition(800 / 2f, 600 / 2f);
-        endLabel.setVisible(false);
-
 
         uiStage.addActor(timerLabel);
         uiStage.addActor(scoreLabel);
         uiStage.addActor(multiplierLabel);
-        uiStage.addActor(endLabel);
     }
 
     public Stage getStage()
@@ -92,16 +106,21 @@ public class UIRenderer
             scoreLabel.setText("SCORE: " + model.getScore());
             multiplierLabel.setText("MULTIPLIER: " + model.getScoreMultiplier());
         }
-        else
-        {
-            endLabel.setVisible(true);
-        }
         uiStage.act();
     }
 
     public void draw(WorldModel model)
     {
         uiStage.draw();
+
+        if(model.getRemainingTime() <= 0)
+        {
+            uiStage.getBatch().setColor(Color.WHITE);
+            uiStage.getBatch().begin();
+            endFont.draw(uiStage.getBatch(), "LEVEL COMPLETE",
+                         uiStage.getWidth() / 3, uiStage.getHeight() / 2);
+            uiStage.getBatch().end();
+        }
     }
 
     public void dispose()

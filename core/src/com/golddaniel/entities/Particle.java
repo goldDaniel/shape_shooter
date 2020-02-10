@@ -71,24 +71,30 @@ public class Particle implements Pool.Poolable
             Vector3 pos, Vector3 velocity, Vector3 dim,
             float lifespan, Color startColor, Color endColor)
     {
-        init(pos, velocity, dim, lifespan, startColor, endColor);
-    }
+        this.pos = pos;
+        this.velocity = new Vector2(velocity.x, velocity.y);
+        this.dim = dim;
+        this.lifespan = lifespan;
+        this.startColor = startColor.cpy();
+        this.endColor = endColor.cpy();
+        this.color = new Color();
+}
 
     public void init(
             Vector3 pos, Vector3 velocity, Vector3 dim,
             float lifespan, Color startColor, Color endColor)
     {
-        this.pos = pos;
-        this.velocity = new Vector2(velocity.x, velocity.y);
-        this.dim = dim;
+        this.pos.set(pos);
+        this.velocity.set(velocity.x, velocity.y);
+        this.dim.set(dim);
 
         START_LIFESPAN = lifespan;
         this.lifespan = lifespan;
 
-        this.startColor = startColor;
-        this.endColor = endColor;
+        this.startColor.set(startColor);
+        this.endColor.set(endColor);
 
-        color = new Color();
+        color.set(startColor);
 
         isAlive = true;
     }

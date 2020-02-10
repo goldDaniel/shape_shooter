@@ -30,19 +30,14 @@ public class GameScreen extends VScreen
     private WorldModel model;
     private UIRenderer uiRenderer;
     private WorldRenderer worldRenderer;
-    private boolean runSim;
     private float gameRestart = 5f;
 
 
-    private ShapeRenderer sh;
-
-    private boolean finishedLoading = false;
-
+    float accumulate = 0;
 
     public GameScreen(ScreenManager sm, AssetManager assets)
     {
         super(sm, assets);
-        sh = new ShapeRenderer();
         Bullet.loadTextures(assets);
         Multiplier.loadTextures(assets);
         Player.loadTextures(assets);
@@ -64,38 +59,24 @@ public class GameScreen extends VScreen
             worldRenderer = new WorldRenderer(model.getCamera(), assets);
 
             resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            finishedLoading = true;
+
         }
-
-        if(!finishedLoading) return;
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F1))
-        {
-            model.editMode = !model.editMode;
-            runSim = false;
-        }
-
-        if (model.editMode)
-        {
-            AudioSystem.pauseMusic();
-            if (runSim)
-            {
-
-                model.update(delta);
-                CollisionSystem.update(model);
-            }
-            worldRenderer.draw(model);
-        }
-
         else
         {
             Gdx.input.setInputProcessor(uiRenderer.getStage());
+
             if (model.getRemainingTime() > 0)
             {
                 AudioSystem.startMusic();
 
+
                 model.update(delta);
                 CollisionSystem.update(model);
+
+
+
+
+
                 worldRenderer.draw(model);
                 uiRenderer.update(model);
                 uiRenderer.draw(model);
@@ -146,7 +127,6 @@ public class GameScreen extends VScreen
         worldRenderer = null;
 
         gameRestart = 5f;
-        finishedLoading = false;
         LevelBuilder.resetWorldModel();
     }
 

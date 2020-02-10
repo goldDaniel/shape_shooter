@@ -24,7 +24,7 @@ android {
         applicationId "com.golddaniel.main"
         minSdkVersion 9
         targetSdkVersion 26
-        versionCode 15
+        versionCode 20
         versionName "1.0"
     }
     buildTypes {

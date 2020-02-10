@@ -337,10 +337,12 @@ public class Player extends Entity implements ControllerListener
     {
         Color start = Color.RED.cpy().fromHsv(hue, 1f, 1f);
         Color end = Color.WHITE;
+        Vector3 pos = new Vector3();
+        Vector3 dim = new Vector3(0.1f, 0.1f, 0.1f);
         for (int i = 0; i < 10; i++)
         {
-            Vector3 pos = new Vector3(position);
 
+            pos.set(position);
             scratch.set(velocity.x, velocity.y);
 
             pos.x -= MathUtils.cos(scratch.angleRad() + MathUtils.PI / 4f) * width / 1.8f;
@@ -353,7 +355,7 @@ public class Player extends Entity implements ControllerListener
             vel.x += MathUtils.random(-1f, 1f);
             vel.y += MathUtils.random(-1f, 1f);
 
-            Vector3 dim = new Vector3(0.1f, 0.1f, 0.1f);
+
 
             model.createParticle(pos, vel, dim, lifespan, start, end);
 

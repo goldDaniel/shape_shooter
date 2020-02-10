@@ -86,7 +86,7 @@ public class CollisionSystem
                 }
             }
            
-            if(boid.isActive() && boid.isAlive() && model.getEntityType(Player.class).size > 0)
+            if(boid.isActive() && boid.isAlive() && model.getPlayer() != null)
             {
                 Rectangle playerRect = model.getPlayer().getBoundingBox();
                 if(playerRect.overlaps(bouncerRect) || bouncerRect.overlaps(playerRect))

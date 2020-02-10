@@ -30,7 +30,7 @@ public class LevelBuilder
         float levelTime = 50;
 
         WorldModel model = new WorldModel(worldWidth, worldHeight, toSpawn, levelTime);
-        Array<Entity> toAdd = new Array<Entity>();
+        Array<Entity> toAdd;
 
         int time = 2;
         toAdd = new Array<Entity>();
@@ -84,7 +84,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 
@@ -170,7 +170,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 
@@ -229,7 +229,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 
@@ -254,7 +254,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 
@@ -280,7 +280,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 
@@ -403,7 +403,7 @@ public class LevelBuilder
         PhysicsGrid g = new PhysicsGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
-                0.4f);
+                0.2f);
 
         model.setGrid(g);
 

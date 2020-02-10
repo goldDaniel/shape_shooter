@@ -51,6 +51,11 @@ public class Bouncer extends Entity
 
     float activeTimer = 2f;
 
+    Rectangle boundingBox = new Rectangle();
+
+    //used for particles
+    Vector3 velocity = new Vector3();
+
     public Bouncer(Vector3 pos, Vector3 dir, AssetManager assets)
     {
         super(assets);
@@ -79,7 +84,7 @@ public class Bouncer extends Entity
     {
         if(activeTimer > 0)
         {
-            Vector3 velocity = new Vector3();
+
             Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
@@ -172,7 +177,8 @@ public class Bouncer extends Entity
     @Override
     public Rectangle getBoundingBox()
     {
-        return new Rectangle(position.x - width / 2f, position.y - height /2f, height, height);
+        boundingBox.set(position.x - width / 2f, position.y - height /2f, height, height);
+        return boundingBox;
     }
     
     public void kill()

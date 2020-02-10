@@ -53,45 +53,6 @@ public class PhysicsGrid
     ////////////////////////////////////////////////////////
 
 
-    //can play with the shader easily///////////////////////
-    static private String createVertexShader()
-    {
-        String shader =
-
-        "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" +
-        "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
-        "attribute vec3 " + ShaderProgram.NORMAL_ATTRIBUTE   + ";\n" +
-        "uniform mat4 u_projModelView;\n" +
-        "\n" +
-        "varying vec4 v_col;\n" +
-        "varying vec3 barycentric;\n" +
-        "void main() {\n" +
-        "   gl_Position = u_projModelView * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n"+
-        "   v_col = " + ShaderProgram.COLOR_ATTRIBUTE    + ";\n" +
-        "   barycentric = " + ShaderProgram.NORMAL_ATTRIBUTE    + ";\n" +
-        "}\n";
-
-        return shader;
-    }
-
-    static private String createFragmentShader()
-    {
-        String shader =
-
-        "#ifdef GL_ES\n" +
-        "precision mediump float;\n" +
-        "#endif\n" +
-        "#define PI 3.1415926535897932384626433832795\n" +
-        "varying vec4 v_col;\n" +
-        "varying vec3 barycentric;\n" +
-        "void main() {\n" +
-            "gl_FragColor = v_col;\n" +
-        "}\n";
-
-        return shader;
-    }
-    //can play with the shader easily///////////////////////
-
     //SPRING///////////////////////////////////////////////////////////////////////////////
     private class Spring
     {
@@ -114,23 +75,28 @@ public class PhysicsGrid
 
         public void update(float delta)
         {
-            Vector3 displacement = end1.position.cpy().sub(end2.position);
+            float len2 = end1.position.dst2(end2.position);
 
-            float len = displacement.len();
-
-            if(len > TARGET_LENGTH)
+            if(len2 > TARGET_LENGTH*TARGET_LENGTH)
             {
-                displacement.setLength(len - TARGET_LENGTH);
-
                 dv.set(end2.velocity);
                 dv.sub(end1.velocity);
 
-                dv.scl(delta*4f);
+                dv.scl(delta*4f*DAMPING);
 
-                Vector3 force = displacement.scl(STIFFNESS).sub(dv.scl(DAMPING));
 
-                end2.applyForce(force.x, force.y, force.z);
-                end1.applyForce(-force.x, -force.y, -force.z);
+
+                float forceX  = (end1.position.x - end2.position.x) * STIFFNESS;
+                forceX -= dv.x;
+
+                float forceY  = (end1.position.y - end2.position.y) * STIFFNESS;
+                forceY -= dv.y;
+
+                float forceZ  = (end1.position.z - end2.position.z) * STIFFNESS;
+                forceZ -= dv.z;
+
+                end2.applyForce(forceX, forceY, forceZ);
+                end1.applyForce(-forceX, -forceY, -forceZ);
             }
         }
     }
@@ -197,6 +163,7 @@ public class PhysicsGrid
             position.x += velocity.x * delta;
             position.y += velocity.y * delta;
             position.z += velocity.z * delta;
+            //only want positive Z, as that is how the alpha color on the grid is determined
             position.z = abs(position.z);
 
             //not really accurate but it works
@@ -236,6 +203,8 @@ public class PhysicsGrid
 
     private ExecutorService es;
 
+    private float spacing;
+
     boolean isUpdating;
 
 
@@ -244,8 +213,8 @@ public class PhysicsGrid
     //USED IN DRAW TO AVOID GARBAGE COLLECTION EACH FRAME
     //creating a normal vector for every point was madness,
     //800MB of allocations after about 20 seconds
-    final Vector3 normal = new Vector3();
     final Color lerp = new Color();
+    final Vector3 scratch = new Vector3();
     //////////////////////////////////////////////////////
 
 
@@ -292,20 +261,15 @@ public class PhysicsGrid
         this.rows = (int)(gridDimensions.x/spacing);
         this.cols = (int)(gridDimensions.y/spacing);
         this.gridDimensions = gridDimensions;
+        this.spacing = spacing;
 
-        sh = new ImmediateModeRenderer20(rows*cols*64, true, true, 0);
-        ShaderProgram shader = new ShaderProgram(createVertexShader(), createFragmentShader());
+        sh = new ImmediateModeRenderer20(rows*cols*7, false, true, 0);
 
-        if(!shader.isCompiled())
-        {
-            Gdx.app.log("SHADER", shader.getLog());
-        }
 
         forceDataList = new Array<ForceData>();
 
         color = Color.BLUE.cpy();
 
-        sh.setShader(shader);
 
         points = new Point[rows + 1][cols + 1];
         
@@ -322,16 +286,14 @@ public class PhysicsGrid
                     invMass = 0;
                 }
 
-                float color = 30f + i * 360f + j * 360f;
-                float saturation = 0.8f;
                 float alpha = 1f;
                 Color c = Color.WHITE.cpy().fromHsv(0f, 0f, 0.55f);
                 c.a = alpha;
 
                 points[i][j] = new Point(
                         new Vector3(i * gridDimensions.x / rows - gridDimensions.x / 2f,
-                                j * gridDimensions.y / cols - gridDimensions.y / 2f,
-                                0),
+                                    j * gridDimensions.y / cols - gridDimensions.y / 2f,
+                                    0),
                         invMass,
                         c);
             }
@@ -428,18 +390,30 @@ public class PhysicsGrid
     {
         if(!isUpdating)
         {
+
             for (Point[] pointArr : points)
             {
                 for (Point point : pointArr)
                 {
-                    float dist = Vector3.dst(pos.x, pos.y, pos.z,
-                            point.position.x, point.position.y, point.position.z);
-                    if (dist < radius)
+
+                    if(point.position.x < pos.x + radius && point.position.x > pos.x - radius &&
+                       point.position.y < pos.y + radius && point.position.y > pos.y - radius)
                     {
-                        Vector3 dir = point.position.cpy().sub(pos);
-                        dir.nor().scl(force * (1f - (dist / radius)));
-                        point.applyForce(dir.x, dir.y, dir.z);
+                        float dist = Vector3.dst(pos.x, pos.y, pos.z,
+                                point.position.x, point.position.y, point.position.z);
+                        if (dist < radius)
+                        {
+
+                            scratch.x = point.position.x - pos.x;
+                            scratch.y = point.position.y - pos.y;
+                            scratch.z = point.position.z - pos.z;
+
+
+                            scratch.nor().scl(force * (1f - (dist / radius)));
+                            point.applyForce(scratch.x, scratch.y, scratch.z);
+                        }
                     }
+
                 }
             }
         }
@@ -457,14 +431,25 @@ public class PhysicsGrid
             {
                 for (Point point : pointArr)
                 {
-                    float dist = Vector3.dst(pos.x, pos.y, pos.z,
-                            point.position.x, point.position.y, point.position.z);
-                    if (dist < radius)
+
+                    if(point.position.x < pos.x + radius && point.position.x > pos.x - radius &&
+                            point.position.y < pos.y + radius && point.position.y > pos.y - radius)
                     {
-                        Vector3 dir = point.position.cpy().sub(pos);
-                        dir.nor().scl(force*2 * (1f - (dist / radius)));
-                        point.applyForce(dir.x, dir.y, dir.z);
-                        point.color.set(c);
+                        float dist = Vector3.dst(pos.x, pos.y, pos.z,
+                                point.position.x, point.position.y, point.position.z);
+                        if (dist < radius)
+                        {
+
+                            scratch.x = point.position.x - pos.x;
+                            scratch.y = point.position.y - pos.y;
+                            scratch.z = point.position.z - pos.z;
+
+
+                            scratch.nor().scl(force * (1f - (dist / radius)));
+                            point.applyForce(scratch.x, scratch.y, scratch.z);
+
+                            point.color.set(c);
+                        }
                     }
                 }
             }
@@ -484,7 +469,8 @@ public class PhysicsGrid
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 
-        Color disabled = new Color(0.05f, 0.05f, 0.05f, 0f);
+        Color disabled = new Color().fromHsv(borderHue, 0.5f, 0.5f);
+        disabled.a = 0f;
 
         sh.begin(proj, GL20.GL_LINES);
 
@@ -495,75 +481,52 @@ public class PhysicsGrid
             {
                 {
                     float dist;
+                    final float DIST_SCALE = 5f;
 
-                    normal.set( points[i][j].position.x - points[i][j].desiredPosition.x,
-                                points[i][j].position.y - points[i][j].desiredPosition.y,
-                                points[i][j].position.z - points[i][j].desiredPosition.z);
-                        dist = normal.len()*3f;
+                    dist = points[i][j].position.dst2(points[i][j].desiredPosition) * DIST_SCALE;
                     lerp.set(   lerp(disabled.r, points[i][j].color.r, dist),
                                 lerp(disabled.g, points[i][j].color.g, dist),
                                 lerp(disabled.b, points[i][j].color.b, dist),
                                 lerp(disabled.a, points[i][j].color.a, dist));
-                    normal.nor();
-                    sh.normal(normal.x, normal.y, normal.z);
                     sh.color(lerp);
                     sh.vertex(
                             points[i][j].position.x,
                             points[i][j].position.y,
                             points[i][j].position.z);
 
-                    normal.set( points[i + 1][j].position.x - points[i + 1][j].desiredPosition.x,
-                                points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y,
-                                points[i + 1][j].position.z - points[i + 1][j].desiredPosition.z);
-                    dist = normal.len()*3f;
+                    dist = points[i + 1][j].position.dst2(points[i + 1][j].desiredPosition) * DIST_SCALE;
                     lerp.set(   lerp(disabled.r, points[i + 1][j].color.r, dist),
                                 lerp(disabled.g, points[i + 1][j].color.g, dist),
                                 lerp(disabled.b, points[i + 1][j].color.b, dist),
                                 lerp(disabled.a, points[i + 1][j].color.a, dist));
-                    normal.nor();
-                    sh.normal(normal.x, normal.y, normal.z);
                     sh.color(lerp);
                     sh.vertex(
                             points[i + 1][j].position.x,
                             points[i + 1][j].position.y,
                             points[i + 1][j].position.z);
 
-                    normal.set( points[i][j].position.x - points[i][j].desiredPosition.x,
-                                points[i][j].position.y - points[i][j].desiredPosition.y,
-                                points[i][j].position.z - points[i][j].desiredPosition.z);
-                    dist = normal.len()*3f;
+                    dist = points[i][j].position.dst2(points[i][j].desiredPosition) * DIST_SCALE;
                     lerp.set(   lerp(disabled.r, points[i][j].color.r, dist),
                                 lerp(disabled.g, points[i][j].color.g, dist),
                                 lerp(disabled.b, points[i][j].color.b, dist),
                                 lerp(disabled.a, points[i][j].color.a, dist));
-                    normal.nor();
-                    sh.normal(normal.x, normal.y, normal.z);
                     sh.color(lerp);
                     sh.vertex(
                             points[i][j].position.x,
                             points[i][j].position.y,
                             points[i][j].position.z);
 
-                    normal.set( points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x,
-                                points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y,
-                                points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z);
-                    dist = normal.len()*3f;
+                    dist = points[i][j + 1].position.dst2(points[i][j + 1].desiredPosition) * DIST_SCALE;
                     lerp.set(   lerp(disabled.r, points[i][j + 1].color.r, dist),
                                 lerp(disabled.g, points[i][j + 1].color.g, dist),
                                 lerp(disabled.b, points[i][j + 1].color.b, dist),
                                 lerp(disabled.a, points[i][j + 1].color.a, dist));
-                    normal.nor();
-                    sh.normal(normal.x, normal.y, normal.z);
                     sh.color(lerp);
                     sh.vertex(
                             points[i][j + 1].position.x,
                             points[i][j + 1].position.y,
                             points[i][j + 1].position.z);
 
-                    //INTERPOLATED LINES============================================================
-                    float interpolation = 0.5f;
-                    doInterpolatedLines(disabled, i, j, interpolation);
-                    //==============================================================================
                 }
             }
         }
@@ -593,98 +556,6 @@ public class PhysicsGrid
         sh.vertex(gridDimensions.x/2f, gridDimensions.y/2f, 0);
 
         sh.end();
-    }
-
-    private void doInterpolatedLines(Color disabled, int i, int j, float interpolation)
-    {
-        float dist;
-        //note: fuck I miss operator overloading
-        normal.set( (points[i][j].position.x - points[i][j].desiredPosition.x) +
-                        (points[i + 1][j].position.x - points[i + 1][j].desiredPosition.x),
-                (points[i][j].position.y - points[i][j].desiredPosition.y) +
-                        (points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y),
-                (points[i][j].position.z     - points[i][j].desiredPosition.z) +
-                        (points[i + 1][j].position.z - points[i + 1][j].desiredPosition.z));
-        normal.scl(1f/2f);
-        dist = normal.len()*3f;
-        lerp.set(
-                lerp(disabled.r, lerp(points[i][j].color.r, points[i + 1][j].color.r, interpolation), dist),
-                lerp(disabled.g, lerp(points[i][j].color.g, points[i + 1][j].color.g, interpolation), dist),
-                lerp(disabled.b, lerp(points[i][j].color.b, points[i + 1][j].color.b, interpolation), dist),
-                lerp(disabled.a, lerp(points[i][j].color.a, points[i + 1][j].color.a, interpolation), dist));
-        normal.nor();
-        sh.normal(normal.x, normal.y, normal.z);
-        sh.color(lerp);
-        sh.vertex(
-                lerp(points[i][j].position.x, points[i + 1][j].position.x, interpolation),
-                lerp(points[i][j].position.y,  points[i + 1][j].position.y, interpolation),
-                lerp(points[i][j].position.z,  points[i + 1][j].position.z, interpolation));
-
-        normal.set( (points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x) +
-                            (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
-                    (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y) +
-                            (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
-                    (points[i][j + 1].position.z     - points[i][j + 1].desiredPosition.z) +
-                            (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
-        normal.scl(1f/2f);
-        dist = normal.len()*3f;
-        lerp.set(
-                lerp(disabled.r, lerp(points[i][j + 1].color.r, points[i + 1][j + 1].color.r, interpolation), dist),
-                lerp(disabled.g, lerp(points[i][j + 1].color.g, points[i + 1][j + 1].color.g, interpolation), dist),
-                lerp(disabled.b, lerp(points[i][j + 1].color.b, points[i + 1][j + 1].color.b, interpolation), dist),
-                lerp(disabled.a, lerp(points[i][j + 1].color.a, points[i + 1][j + 1].color.a, interpolation), dist));
-        normal.nor();
-        sh.normal(normal.x, normal.y, normal.z);
-        sh.color(lerp);
-        sh.vertex(
-                lerp(points[i][j + 1].position.x, points[i + 1][j + 1].position.x, interpolation),
-                lerp(points[i][j + 1].position.y, points[i + 1][j + 1].position.y, interpolation),
-                lerp(points[i][j + 1].position.z, points[i + 1][j + 1].position.z, interpolation));
-
-
-        normal.set( (points[i][j].position.x - points[i][j].desiredPosition.x) +
-                            (points[i][j + 1].position.x - points[i][j + 1].desiredPosition.x),
-                    (points[i][j].position.y - points[i][j].desiredPosition.y) +
-                            (points[i][j + 1].position.y - points[i][j + 1].desiredPosition.y),
-                    (points[i][j].position.z     - points[i][j].desiredPosition.z) +
-                            (points[i][j + 1].position.z - points[i][j + 1].desiredPosition.z));
-        normal.scl(1f/2f);
-        dist = normal.len()*3f;
-        lerp.set(
-                lerp(disabled.r, lerp(points[i][j].color.r, points[i][j + 1].color.r, interpolation), dist),
-                lerp(disabled.g, lerp(points[i][j].color.g, points[i][j + 1].color.g, interpolation), dist),
-                lerp(disabled.b, lerp(points[i][j].color.b, points[i][j + 1].color.b, interpolation), dist),
-                lerp(disabled.a, lerp(points[i][j].color.a, points[i][j + 1].color.a, interpolation), dist));
-        normal.nor();
-        sh.normal(normal.x, normal.y, normal.z);
-        sh.color(lerp);
-        sh.vertex(
-                lerp(points[i][j].position.x, points[i][j + 1].position.x, interpolation),
-                lerp(points[i][j].position.y, points[i][j + 1].position.y, interpolation),
-                lerp(points[i][j].position.z, points[i][j + 1].position.z, interpolation));
-
-
-        normal.set( (points[i + 1][j].position.x - points[i + 1][j].desiredPosition.x) +
-                            (points[i + 1][j + 1].position.x - points[i + 1][j + 1].desiredPosition.x),
-                    (points[i + 1][j].position.y - points[i + 1][j].desiredPosition.y) +
-                            (points[i + 1][j + 1].position.y - points[i + 1][j + 1].desiredPosition.y),
-                    (points[i + 1][j].position.z     - points[i + 1][j].desiredPosition.z) +
-                            (points[i + 1][j + 1].position.z - points[i + 1][j + 1].desiredPosition.z));
-        normal.scl(1f/2f);
-        dist = normal.len()*3f;
-        lerp.set(
-                lerp(disabled.r, lerp(points[i + 1][j].color.r, points[i + 1][j + 1].color.r, interpolation), dist),
-                lerp(disabled.g, lerp(points[i + 1][j].color.g, points[i + 1][j + 1].color.g, interpolation), dist),
-                lerp(disabled.b, lerp(points[i + 1][j].color.b, points[i + 1][j + 1].color.b, interpolation), dist),
-                lerp(disabled.a, lerp(points[i + 1][j].color.a, points[i + 1][j + 1].color.a, interpolation), dist));
-        normal.nor();
-        sh.normal(normal.x, normal.y, normal.z);
-        sh.color(lerp);
-        sh.vertex(
-                lerp(points[i + 1][j].position.x, points[i + 1][j + 1].position.x, interpolation),
-                lerp(points[i + 1][j].position.y, points[i + 1][j + 1].position.y, interpolation),
-                lerp(points[i + 1][j].position.z, points[i + 1][j + 1].position.z, interpolation));
-
     }
 
 

@@ -18,7 +18,9 @@ public class AudioSystem
     private static Music backgroundMusic;
 
     private static Sound enemyDeath;
+
     private static Sound pickup;
+
     private static Sound laser;
     private static Sound respawn;
     private static Sound playerDeath;
