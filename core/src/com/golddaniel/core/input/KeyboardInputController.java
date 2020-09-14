@@ -4,10 +4,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.IntMap;
 import com.golddaniel.entities.Player;
 
+/**
+ * controls player input for desktop platforms
+ */
 public class KeyboardInputController extends PlayerInputController
 {
     private IntMap<Boolean> inputMap;
-
     private InputConfig inputConfig;
 
     public KeyboardInputController(Player player, InputConfig inputConfig)

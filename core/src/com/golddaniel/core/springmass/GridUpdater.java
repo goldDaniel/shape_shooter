@@ -5,19 +5,24 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
+/**
+ * Updates the grid data
+ */
 public class GridUpdater
 {
-
     private SpringMassGrid grid;
 
     //Any forces that were applied during the iteration will be held in this list
     //this way nothing wonky happens when iterating
     private Array<ForceData> forceDataList;
 
-
     private final Vector3 scratch = new Vector3();
     private boolean isUpdating = false;
 
+    /**
+     *
+     * @param grid
+     */
     public GridUpdater(SpringMassGrid grid)
     {
         this.grid = grid;
@@ -25,11 +30,18 @@ public class GridUpdater
         forceDataList = new Array<ForceData>();
     }
 
+    /**
+     *
+     * @return
+     */
     public SpringMassGrid getGrid()
     {
         return grid;
     }
 
+    /**
+     * Updates the positions for all points in the grid
+     */
     public void update()
     {
         isUpdating  = true;
@@ -64,6 +76,12 @@ public class GridUpdater
         forceDataList.clear();
     }
 
+    /**
+     *
+     * @param pos
+     * @param force
+     * @param radius
+     */
     public void applyRadialForce(Vector2 pos, float force, float radius)
     {
         if(!isUpdating)
@@ -98,6 +116,13 @@ public class GridUpdater
         }
     }
 
+    /**
+     *
+     * @param pos
+     * @param force
+     * @param radius
+     * @param c
+     */
     public void applyRadialForce(Vector2 pos, float force, float radius, Color c)
     {
         if(!isUpdating)

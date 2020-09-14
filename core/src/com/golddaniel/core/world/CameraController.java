@@ -6,13 +6,16 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.golddaniel.entities.Player;
 
+/**
+ * Calculates the details for camera movement
+ */
 public class CameraController
 {
     private WorldModel model;
 
     private PerspectiveCamera cam;
 
-    private Vector3 target;
+    private Vector3 targetPosition;
 
     public CameraController(WorldModel model)
     {
@@ -26,56 +29,57 @@ public class CameraController
         cam.lookAt(cam.position.x, cam.position.y, 0f);
 
         cam.near = 1f;
-        cam.far = 5000f;
+        cam.far = 1000f;
 
-        target = new Vector3();
+        targetPosition = new Vector3();
     }
 
     public void update(float dt)
     {
         Player player = model.getPlayer();
 
+        //if we lock the camera within the area bounds here
         if(player.isAlive())
         {
-            target.set(player.position, 5.5f);
+            targetPosition.set(player.position, 5.5f);
 
             if (player.position.x < -model.WORLD_WIDTH / 2f)
             {
-                target.x = -model.WORLD_WIDTH / 2f;
+                targetPosition.x = -model.WORLD_WIDTH / 2f;
             }
             if (player.position.x > model.WORLD_WIDTH / 2f)
             {
-                target.x = model.WORLD_WIDTH / 2f;
+                targetPosition.x = model.WORLD_WIDTH / 2f;
             }
 
             if (player.position.y < -model.WORLD_HEIGHT / 2f)
             {
-                target.y = -model.WORLD_HEIGHT / 2f;
+                targetPosition.y = -model.WORLD_HEIGHT / 2f;
             }
 
             if (player.position.y > model.WORLD_HEIGHT / 2f)
             {
-                target.y = model.WORLD_HEIGHT / 2f;
+                targetPosition.y = model.WORLD_HEIGHT / 2f;
             }
         }
         else
         {
-            target.x = 0;
-            target.y = 0;
-            target.z = 16.5f;
+            //zoom the camera out if the player is not alive
+            targetPosition.x = 0;
+            targetPosition.y = 0;
+            targetPosition.z = 16.5f;
         }
 
-        cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
-        cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
+        cam.position.x = MathUtils.lerp(cam.position.x, targetPosition.x, 0.05f);
+        cam.position.y = MathUtils.lerp(cam.position.y, targetPosition.y, 0.05f);
         cam.position.z = MathUtils.lerp(
                 cam.position.z,
-                target.z,
+                targetPosition.z,
                 dt * 2f);
 
         cam.lookAt(cam.position.x, cam.position.y, 0f);
 
-        //maintain our rotation around Z axis after lookAt, otherwise
-        //we get weird rotation due to floating point error
+        //maintain our rotation around Z axis after lookAt, otherwise we get weird rotation issues
         cam.up.set(0f, 1f, 0f);
 
         cam.update();

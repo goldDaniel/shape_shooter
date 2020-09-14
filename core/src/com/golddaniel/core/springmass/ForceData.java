@@ -3,6 +3,9 @@ package com.golddaniel.core.springmass;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 
+/**
+ * holds the parameters for applying force to the grid
+ */
 public class ForceData
 {
     public Vector2 pos;

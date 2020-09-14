@@ -23,7 +23,7 @@ public class Boid extends Entity
 
     private static TextureRegion tex;
 
-    private Array<Boid> nearbyBoids;
+    private static Array<Boid> allBoids = new Array<Boid>();
 
     private Vector2 velocity;
     private Vector2 acceleration;
@@ -70,8 +70,6 @@ public class Boid extends Entity
         width = 0.25f;
         height = 0.25f;
         color = Color.CYAN.cpy();
-
-        nearbyBoids = new Array<Boid>();
     }
     
     /**
@@ -84,7 +82,7 @@ public class Boid extends Entity
         float range = 5f;
         
         cohesion.setZero();
-        for(Boid b : nearbyBoids)
+        for(Boid b : allBoids)
         {
             float dist = position.dst(b.position);
             
@@ -115,7 +113,7 @@ public class Boid extends Entity
         int count = 0;
         
         Vector2 sum = new Vector2();
-        for(Boid b : nearbyBoids)
+        for(Boid b : allBoids)
         {
             float dist = position.dst(b.position);
             
@@ -148,7 +146,7 @@ public class Boid extends Entity
         float range = 0.75f;
         
         Vector2 sum = new Vector2();
-        for(Boid b : nearbyBoids)
+        for(Boid b : allBoids)
         {
             float dist = position.dst(b.position);
             
@@ -241,8 +239,6 @@ public class Boid extends Entity
     {
         if(activeTimer <= 0)
         {
-            nearbyBoids = model.getNearbyBoids(nearbyBoids, this);
-
             width = 0.1f + 0.4f * MathUtils.sin(widthAngle)*MathUtils.sin(widthAngle);
             widthAngle += MathUtils.PI * delta;
 
@@ -305,6 +301,8 @@ public class Boid extends Entity
             Vector2 veloctiy = new Vector2();
             Vector2 dim = new Vector2(0.35f, 0.1f);
             activeTimer -= delta;
+            if(activeTimer <= 0) allBoids.add(this);
+
             for(int i = 0; i < 6; i++)
             {
                 float angle = MathUtils.PI * activeTimer * (i + 1);
@@ -390,6 +388,7 @@ public class Boid extends Entity
 
             AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
 
+            allBoids.removeValue(this, true);
             isAlive = false;
         }
     }

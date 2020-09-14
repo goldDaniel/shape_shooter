@@ -1,5 +1,9 @@
 package com.golddaniel.core.input;
 
+/**
+ * holds the keyboard controls for player input
+ * Use Gdx.input.keys when constructing
+ */
 public class InputConfig
 {
     public final int MOVE_LEFT;

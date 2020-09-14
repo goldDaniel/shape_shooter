@@ -2,10 +2,11 @@ package com.golddaniel.core.input;
 
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 
+/**
+ * holds the axes codes for a dualshock 4 controller
+ */
 public class PS4Map
 {
-
-
     public static final int AXIS_LEFT_HORIZONTAL;
     public static final int AXIS_LEFT_VERTICAL;
     public static final int AXIS_RIGHT_HORIZONTAL;

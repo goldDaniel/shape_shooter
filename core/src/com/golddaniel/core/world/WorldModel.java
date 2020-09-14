@@ -42,11 +42,8 @@ import com.golddaniel.utils.QuadTree;
  */
 public class WorldModel
 {
-    private QuadTree<Boid> boids;
-
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
-
 
     private Array<Entity> entities;
 
@@ -121,8 +118,6 @@ public class WorldModel
             }
         };
 
-        boids = new QuadTree<Boid>(0, new Rectangle(-WORLD_WIDTH / 2f, -WORLD_HEIGHT / 2f, WORLD_WIDTH / 2f, WORLD_HEIGHT / 2f));
-
         addEntity(player = new Player());
     }
 
@@ -148,12 +143,6 @@ public class WorldModel
             toSpawn.removeKey((int) elapsedTime);
         }
 
-        boids.clear();
-        Array<Boid> b = getEntityType(Boid.class);
-        for(Boid boid : b)
-        {
-            boids.insert(boid);
-        }
         for (Entity e : entities)
         {
             if (!e.isAlive())
@@ -205,13 +194,6 @@ public class WorldModel
         AudioSystem.setMusicVolume(0.05f + 0.95f * (float) Math.pow(audioLerp, 4f));
         isUpdating = false;
     }
-
-    public Array<Boid> getNearbyBoids(Array<Boid> toReturn, Boid b)
-    {
-        toReturn.clear();
-        return boids.retrieve(toReturn, b);
-    }
-
 
     public void addEntity(Entity e)
     {
