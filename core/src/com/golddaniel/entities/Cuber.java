@@ -211,7 +211,7 @@ public class Cuber extends Entity
         {
             AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             isAlive = false;
-            model.applyRadialForce(getMid(), 55f, width * 5, Color.RED);
+            model.applyRadialForce(getMid(), 55f, width * 5, Color.CYAN);
 
             model.addScore(10);
             model.createMultipliers(position, 5);

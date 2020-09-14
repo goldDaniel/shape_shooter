@@ -382,8 +382,8 @@ public class Boid extends Entity
             model.applyRadialForce(
                             pos,
                             32,
-                            1.5f,
-                            Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
+                            1.25f,
+                            Color.ORANGE);
 
 
             AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);

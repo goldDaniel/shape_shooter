@@ -59,6 +59,8 @@ public class GridUpdater
                 p.update(delta);
             }
         }
+
+        grid.updateBorderColor(delta);
         isUpdating = false;
 
         //applies any forces that were applied during the iteration

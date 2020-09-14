@@ -215,9 +215,9 @@ public class Bouncer extends Entity
 
                 model.addScore(10);
                 model.createMultipliers(position, 6);
-                model.applyRadialForce(position, 24f,
-                                 width * 1.5f,
-                                        Color.YELLOW.cpy().fromHsv(55, 0.55f, 0.75f));
+                model.applyRadialForce(position, 48f,
+                                        2f,
+                                        Color.MAGENTA);
 
                 AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             }
