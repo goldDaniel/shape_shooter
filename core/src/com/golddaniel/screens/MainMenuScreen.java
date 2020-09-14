@@ -9,16 +9,9 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -28,18 +21,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.golddaniel.entities.Particle;
-import com.golddaniel.main.ScreenManager;
+import com.golddaniel.core.ScreenManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-import javax.management.PersistentMBean;
 
 /**
  *
@@ -71,7 +61,7 @@ public class MainMenuScreen extends VScreen
         @Override
         protected Particle newObject()
         {
-            return new Particle(new Vector3(), new Vector3(), new Vector3(), 0, Color.WHITE, Color.WHITE);
+            return new Particle(new Vector2(), new Vector2(), new Vector2(), 0, Color.WHITE, Color.WHITE);
         }
     };
     Array<Particle> particles = new Array<Particle>();
@@ -145,12 +135,12 @@ public class MainMenuScreen extends VScreen
 
         if((int)hue % 5 == 0)
         {
-            Vector3 pos = new Vector3(MathUtils.random(-1400, -200), MathUtils.random(-1300, -400), 0);
+            Vector2 pos = new Vector2(MathUtils.random(-1400, -200), MathUtils.random(-1300, -400));
 
             float speed = MathUtils.random(600, 900);
 
-            Vector3 velocity = new Vector3(speed, speed, 0f);
-            Vector3 dim = new Vector3(50f, 1f, 1f);
+            Vector2 velocity = new Vector2(speed, speed);
+            Vector2 dim = new Vector2(50f, 1f);
 
 
             Particle p = particlePool.obtain();

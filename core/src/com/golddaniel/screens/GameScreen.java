@@ -1,39 +1,38 @@
 
 package com.golddaniel.screens;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ArrayMap;
-import com.badlogic.gdx.utils.PerformanceCounter;
+import com.golddaniel.core.input.AndroidInputController;
+import com.golddaniel.core.input.InputConfig;
+import com.golddaniel.core.input.KeyboardInputController;
+import com.golddaniel.core.input.PlayerInputController;
+import com.golddaniel.core.world.CollisionSystem;
+import com.golddaniel.core.world.WorldModel;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Cuber;
-import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
 import com.golddaniel.entities.TextParticle;
-import com.golddaniel.main.*;
+import com.golddaniel.core.*;
 
 /**
  * @author wrksttn
  */
 public class GameScreen extends VScreen
 {
+    private PlayerInputController playerInput;
     private WorldModel model;
     private UIRenderer uiRenderer;
     private WorldRenderer worldRenderer;
     private float gameRestart = 5f;
 
-
-    float accumulate = 0;
 
     public GameScreen(ScreenManager sm, AssetManager assets)
     {
@@ -45,6 +44,8 @@ public class GameScreen extends VScreen
         AudioSystem.loadSounds(assets);
         Boid.loadTextures(assets);
         TextParticle.loadTextures(assets);
+        Bouncer.LoadTextures(assets);
+        Cuber.LoadTextures(assets);
     }
 
 
@@ -55,29 +56,54 @@ public class GameScreen extends VScreen
         {
             model = LevelBuilder.getWorldModel();
 
+
+            InputConfig playerInputKeys = new InputConfig(
+                                            Input.Keys.A,
+                                            Input.Keys.D,
+                                            Input.Keys.W,
+                                            Input.Keys.S,
+                                            Input.Keys.LEFT,
+                                            Input.Keys.RIGHT,
+                                            Input.Keys.UP,
+                                            Input.Keys.DOWN);
+
+            if(Gdx.app.getType() == Application.ApplicationType.Desktop)
+            {
+                playerInput = new KeyboardInputController(model.getPlayer(), playerInputKeys);
+            }
+            if(Gdx.app.getType() == Application.ApplicationType.Android)
+            {
+                playerInput = new AndroidInputController(model.getPlayer());
+            }
+
+
+
+
+
+
             uiRenderer = new UIRenderer(model, assets);
-            worldRenderer = new WorldRenderer(model.getCamera(), assets);
+            worldRenderer = new WorldRenderer(model, assets);
 
             resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
+            InputMultiplexer input = new InputMultiplexer(playerInput,
+                    uiRenderer.getStage());
+            Gdx.input.setInputProcessor(input);
         }
         else
         {
-            Gdx.input.setInputProcessor(uiRenderer.getStage());
 
             if (model.getRemainingTime() > 0)
             {
                 AudioSystem.startMusic();
 
+                playerInput.update();
 
                 model.update(delta);
                 CollisionSystem.update(model);
 
 
-
-
-
-                worldRenderer.draw(model);
+                worldRenderer.draw(delta);
                 uiRenderer.update(model);
                 uiRenderer.draw(model);
             }
@@ -96,7 +122,7 @@ public class GameScreen extends VScreen
                 else
                 {
                     gameRestart -= delta;
-                    worldRenderer.draw(model);
+                    worldRenderer.draw(delta);
                     uiRenderer.update(model);
                     uiRenderer.draw(model);
                 }

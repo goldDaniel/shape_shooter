@@ -1,11 +1,11 @@
 
 package com.golddaniel.entities;
 
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
-import com.golddaniel.main.WorldModel;
+import com.badlogic.gdx.math.Vector2;
+import com.golddaniel.core.world.WorldModel;
+
 
 /**
  *
@@ -13,11 +13,11 @@ import com.golddaniel.main.WorldModel;
  */
 public abstract class Entity 
 {
-    public Vector3 position;
+    public Vector2 position;
 
     protected boolean isAlive;
 
-    public Entity(AssetManager assets)
+    public Entity()
     {
         isAlive = true;
     }

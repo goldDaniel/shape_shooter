@@ -1,4 +1,4 @@
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -6,7 +6,6 @@ import android.view.View;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.golddaniel.main.Main;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override

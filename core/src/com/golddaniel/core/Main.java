@@ -1,4 +1,4 @@
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -16,18 +16,16 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.PerformanceCounter;
 import com.golddaniel.screens.*;
 
 /**
  * entry point for our logic
  * @author wrksttn
  */
-public class Main extends ApplicationAdapter {
+public class Main extends ApplicationAdapter
+{
     
     ScreenManager sm;
 
@@ -79,18 +77,18 @@ public class Main extends ApplicationAdapter {
                     Skin.class, parms);
         }
 
-
-        assets.load("textTextures/x.png", Texture.class);
-        assets.load("textTextures/0.png", Texture.class);
-        assets.load("textTextures/1.png", Texture.class);
-        assets.load("textTextures/2.png", Texture.class);
-        assets.load("textTextures/3.png", Texture.class);
-        assets.load("textTextures/4.png", Texture.class);
-        assets.load("textTextures/5.png", Texture.class);
-        assets.load("textTextures/6.png", Texture.class);
-        assets.load("textTextures/7.png", Texture.class);
-        assets.load("textTextures/8.png", Texture.class);
-        assets.load("textTextures/9.png", Texture.class);
+//
+//        assets.load("textTextures/x.png", Texture.class);
+//        assets.load("textTextures/0.png", Texture.class);
+//        assets.load("textTextures/1.png", Texture.class);
+//        assets.load("textTextures/2.png", Texture.class);
+//        assets.load("textTextures/3.png", Texture.class);
+//        assets.load("textTextures/4.png", Texture.class);
+//        assets.load("textTextures/5.png", Texture.class);
+//        assets.load("textTextures/6.png", Texture.class);
+//        assets.load("textTextures/7.png", Texture.class);
+//        assets.load("textTextures/8.png", Texture.class);
+//        assets.load("textTextures/9.png", Texture.class);
 
         assets.load("skybox.jpg", Texture.class);
         assets.load("geometric/dashedCircle.png", Texture.class);
@@ -102,7 +100,7 @@ public class Main extends ApplicationAdapter {
         assets.load("lasers/laserBlue03.png", Texture.class);
         assets.load("lasers/laserBlue04.png", Texture.class);
 
-        assets.load("geometric/boid/frame_0.png", Texture.class);
+        assets.load("geometric/boid.png", Texture.class);
 
         assets.load("sounds/bouncer_death.mp3", Sound.class);
         assets.load("sounds/player_death.wav", Sound.class);

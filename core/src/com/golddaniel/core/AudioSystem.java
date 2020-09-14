@@ -1,4 +1,4 @@
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;

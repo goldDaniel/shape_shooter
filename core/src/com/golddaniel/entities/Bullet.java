@@ -22,9 +22,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Pool;
-import com.golddaniel.main.WorldModel;
+import com.golddaniel.core.world.WorldModel;
 
 /**
  *
@@ -58,13 +59,12 @@ public class Bullet extends Entity implements Pool.Poolable
         }
     }
 
-    public Bullet(Vector3 position, float speed, float dir, AssetManager assets)
+    public Bullet(Vector2 position, float speed, float dir)
     {
-        super(assets);
         init(position, speed, dir);
     }
     
-    public final void init(Vector3 position, float speed, float dir)
+    public final void init(Vector2 position, float speed, float dir)
     {
         this.position = position.cpy();
         this.dir = dir;

@@ -1,22 +1,25 @@
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
+import com.golddaniel.core.springmass.SpringMassGrid;
+import com.golddaniel.core.world.WorldModel;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Cuber;
 import com.golddaniel.entities.Entity;
 
 
+/**
+ * TODO: this is currently how we edit levels, please change this
+ */
 public class LevelBuilder
 {
 
     private static WorldModel m;
-
-
 
     public static void buildLevel1(AssetManager assets)
     {
@@ -34,28 +37,28 @@ public class LevelBuilder
 
         int time = 2;
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(-worldWidth/2f, worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(-worldWidth/2f, worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(-worldWidth/2f, -worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(-worldWidth/2f, -worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth/2f, worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth/2f, worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth/2f, -worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth/2f, -worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(-worldWidth/2f, worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(-worldWidth/2f, worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(-worldWidth/2f, -worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(-worldWidth/2f, -worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth/2f, worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth/2f, worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth/2f, -worldHeight/2f, 0f), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth/2f, -worldHeight/2f)));
         toSpawn.put(time+=2, toAdd);
 
 
@@ -72,16 +75,16 @@ public class LevelBuilder
             }
             left = !left;
 
-            toAdd.add(new Boid(new Vector3(x, worldHeight / 2f - pos, 0), assets));
-            toAdd.add(new Boid(new Vector3(x, pos - worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(x, worldHeight / 2f - pos, 0), assets));
-            toAdd.add(new Boid(new Vector3(x, pos - worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(x, worldHeight / 2f - pos)));
+            toAdd.add(new Boid(new Vector2(x, pos - worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(x, worldHeight / 2f - pos)));
+            toAdd.add(new Boid(new Vector2(x, pos - worldHeight / 2f)));
 
             toSpawn.put(time, toAdd);
             time++;
         }
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);
@@ -109,7 +112,7 @@ public class LevelBuilder
 
         for(float pos = -worldHeight/2f + 0.5f; pos < worldHeight/2f - 0.5f; pos += 2)
         {
-            toAdd.add(new Bouncer(new Vector3(-worldWidth/2f, pos, 0), new Vector3(1, 0, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(-worldWidth/2f, pos), new Vector2(1, 0)));
         }
 
         toSpawn.put(4, toAdd);
@@ -117,7 +120,7 @@ public class LevelBuilder
         toAdd = new Array<Entity>();
         for(float pos = -worldWidth/2f + 0.5f; pos < worldWidth/2f - 0.5f; pos += 1.5f)
         {
-            toAdd.add(new Bouncer(new Vector3(pos, worldHeight/2f, 0), new Vector3(0, 1, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, worldHeight/2f), new Vector2(0, 1)));
         }
         toSpawn.put(12, toAdd);
 
@@ -125,10 +128,10 @@ public class LevelBuilder
         for(int i = 0; i < 10; i++)
         {
             toAdd = new Array<Entity>();
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth /2f, -worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth /2f, worldHeight/2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth /2f, -worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth /2f, worldHeight/2f)));
             toSpawn.put(time++, toAdd);
         }
 
@@ -136,7 +139,7 @@ public class LevelBuilder
         toAdd = new Array<Entity>();
         for(float pos = -worldWidth/2f + 0.5f; pos < worldWidth/2f - 0.5f; pos += 2f)
         {
-            toAdd.add(new Bouncer(new Vector3(pos, -worldHeight/2f, 0), new Vector3(0, 1, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, -worldHeight/2f), new Vector2(0, 1)));
         }
         toSpawn.put(time, toAdd);
 
@@ -145,10 +148,10 @@ public class LevelBuilder
          for(int i = 0; i < 3; i++)
          {
              toAdd = new Array<Entity>();
-             toAdd.add(new Cuber(new Vector3(-worldWidth/2f, worldHeight/2f, 0), assets));
-             toAdd.add(new Cuber(new Vector3(-worldWidth/2f, -worldHeight/2f, 0), assets));
-             toAdd.add(new Cuber(new Vector3(worldWidth/2f, worldHeight/2f, 0), assets));
-             toAdd.add(new Cuber(new Vector3(worldWidth/2f, -worldHeight/2f, 0), assets));
+             toAdd.add(new Cuber(new Vector2(-worldWidth/2f, worldHeight/2f)));
+             toAdd.add(new Cuber(new Vector2(-worldWidth/2f, -worldHeight/2f)));
+             toAdd.add(new Cuber(new Vector2(worldWidth/2f, worldHeight/2f)));
+             toAdd.add(new Cuber(new Vector2(worldWidth/2f, -worldHeight/2f)));
 
              toSpawn.put(time, toAdd);
 
@@ -159,15 +162,15 @@ public class LevelBuilder
         for(int i = 0; i < 14; i++)
         {
             toAdd = new Array<Entity>();
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth /2f, -worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight/2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth /2f, worldHeight/2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth /2f, -worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight/2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth /2f, worldHeight/2f)));
             toSpawn.put(time++, toAdd);
         }
 
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);
@@ -191,18 +194,18 @@ public class LevelBuilder
         WorldModel model = new WorldModel(worldWidth, worldHeight, toSpawn, levelTime);
         Array<Entity> toAdd = new Array<Entity>();
 
-        toAdd.add(new Bouncer(new Vector3(-worldWidth/2f, worldHeight/2f, 0), new Vector3(1f, -1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(-worldWidth/2f, -worldHeight/2f, 0), new Vector3(1f, 1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(worldWidth/2f, worldHeight/2f, 0), new Vector3(-1f, -1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(worldWidth/2f, -worldHeight/2f, 0), new Vector3(-1f, 1f, 0), assets));
+        toAdd.add(new Bouncer(new Vector2(-worldWidth/2f, worldHeight/2f), new Vector2(1f, -1f)));
+        toAdd.add(new Bouncer(new Vector2(-worldWidth/2f, -worldHeight/2f), new Vector2(1f, 1f)));
+        toAdd.add(new Bouncer(new Vector2(worldWidth/2f, worldHeight/2f), new Vector2(-1f, -1f)));
+        toAdd.add(new Bouncer(new Vector2(worldWidth/2f, -worldHeight/2f), new Vector2(-1f, 1f)));
         toSpawn.put(4, toAdd);
 
         toAdd = new Array<Entity>();
 
-        toAdd.add(new Bouncer(new Vector3(-worldWidth/2f, worldHeight/4f, 0), new Vector3(1f, -1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(-worldWidth/2f, -worldHeight/4f, 0), new Vector3(1f, 1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(worldWidth/2f, worldHeight/4f, 0), new Vector3(-1f, -1f, 0), assets));
-        toAdd.add(new Bouncer(new Vector3(worldWidth/2f, -worldHeight/4f, 0), new Vector3(-1f, 1f, 0), assets));
+        toAdd.add(new Bouncer(new Vector2(-worldWidth/2f, worldHeight/4f), new Vector2(1f, -1f)));
+        toAdd.add(new Bouncer(new Vector2(-worldWidth/2f, -worldHeight/4f), new Vector2(1f, 1f)));
+        toAdd.add(new Bouncer(new Vector2(worldWidth/2f, worldHeight/4f), new Vector2(-1f, -1f)));
+        toAdd.add(new Bouncer(new Vector2(worldWidth/2f, -worldHeight/4f), new Vector2(-1f, 1f)));
         toSpawn.put(8, toAdd);
 
 
@@ -210,9 +213,9 @@ public class LevelBuilder
         for(float pos = -worldWidth / 2f; pos < worldWidth /2f; pos += 0.25f)
         {
             toAdd = new Array<Entity>();
-            toAdd.add(new Bouncer(new Vector3(pos, worldHeight/2f, 0), new Vector3(0, -1f, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, worldHeight/2f), new Vector2(0, -1f)));
             pos += 0.2f;
-            toAdd.add(new Bouncer(new Vector3(pos, worldHeight/2f, 0), new Vector3(0, -1f, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, worldHeight/2f), new Vector2(0, -1f)));
             toSpawn.put(time++, toAdd);
         }
 
@@ -220,13 +223,13 @@ public class LevelBuilder
         for(float pos = -worldWidth / 2f; pos < worldWidth /2f; pos += 0.25f)
         {
             toAdd = new Array<Entity>();
-            toAdd.add(new Bouncer(new Vector3(pos, worldHeight/2f, 0), new Vector3(0, -1f, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, worldHeight/2f), new Vector2(0, -1f)));
             pos += 0.2f;
-            toAdd.add(new Bouncer(new Vector3(pos, worldHeight/2f, 0), new Vector3(0, -1f, 0), assets));
+            toAdd.add(new Bouncer(new Vector2(pos, worldHeight/2f), new Vector2(0, -1f)));
             toSpawn.put(time++, toAdd);
         }
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);
@@ -251,7 +254,7 @@ public class LevelBuilder
         Array<Entity> toAdd = new Array<Entity>();
 
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);
@@ -277,7 +280,7 @@ public class LevelBuilder
         Array<Entity> toAdd = new Array<Entity>();
 
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);
@@ -304,14 +307,14 @@ public class LevelBuilder
         {
             Array<Entity> toAdd = new Array<Entity>();
 
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
 
             toSpawn.put(i, toAdd);
         }
@@ -320,18 +323,16 @@ public class LevelBuilder
 
         for (int i = 0; i < worldHeight / 2; i++)
         {
-            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f, -worldHeight / 2f + 2 * (i + 1), 0),
-                    new Vector3(1, 0, 0),
-                    assets));
+            toAdd.add(new Bouncer(new Vector2(-worldWidth / 2f, -worldHeight / 2f + 2 * (i + 1)),
+                    new Vector2(1, 0)));
         }
         toSpawn.put(24, toAdd);
         toAdd = new Array<Entity>();
 
         for (int i = 0; i < worldHeight / 2; i++)
         {
-            toAdd.add(new Bouncer(new Vector3(worldWidth / 2f, -worldHeight / 2f + 2 * (i), 0),
-                    new Vector3(-1, 0, 0),
-                    assets));
+            toAdd.add(new Bouncer(new Vector2(worldWidth / 2f, -worldHeight / 2f + 2 * (i)),
+                    new Vector2(-1, 0)));
         }
         toSpawn.put(32, toAdd);
 
@@ -340,17 +341,15 @@ public class LevelBuilder
 
         for (int i = 0; i < worldWidth / 2; i++)
         {
-            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f + 2 * (i), -worldHeight / 2f, 0),
-                    new Vector3(0, 1, 0),
-                    assets));
+            toAdd.add(new Bouncer(new Vector2(-worldWidth / 2f + 2 * (i), -worldHeight / 2f),
+                    new Vector2(0, 1)));
         }
         toSpawn.put(42, toAdd);
 
         for (int i = 0; i < worldWidth / 2; i++)
         {
-            toAdd.add(new Bouncer(new Vector3(-worldWidth / 2f + 2 * (i), worldHeight / 2f, 0),
-                    new Vector3(0, -1, 0),
-                    assets));
+            toAdd.add(new Bouncer(new Vector2(-worldWidth / 2f + 2 * (i), worldHeight / 2f),
+                    new Vector2(0, -1)));
         }
         toSpawn.put(46, toAdd);
 
@@ -358,29 +357,29 @@ public class LevelBuilder
         {
             toAdd = new Array<Entity>();
 
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
 
             toSpawn.put(i, toAdd);
         }
 
 
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
 
         toSpawn.put(78, toAdd);
 
 
         toAdd = new Array<Entity>();
-        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-        toAdd.add(new Cuber(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+        toAdd.add(new Cuber(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+        toAdd.add(new Cuber(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
 
         toSpawn.put(85, toAdd);
 
@@ -388,19 +387,19 @@ public class LevelBuilder
         {
             toAdd = new Array<Entity>();
 
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(worldWidth / 2f, -worldHeight / 2f, 0), assets));
-            toAdd.add(new Boid(new Vector3(-worldWidth / 2f, -worldHeight / 2f, 0), assets));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(worldWidth / 2f, -worldHeight / 2f)));
+            toAdd.add(new Boid(new Vector2(-worldWidth / 2f, -worldHeight / 2f)));
 
             toSpawn.put(i, toAdd);
         }
 
-        PhysicsGrid g = new PhysicsGrid(
+        SpringMassGrid g = new SpringMassGrid(
                 new Vector2(model.WORLD_WIDTH,
                         model.WORLD_HEIGHT),
                 0.2f);

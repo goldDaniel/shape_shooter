@@ -1,4 +1,4 @@
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
@@ -7,11 +7,12 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.golddaniel.core.input.AndroidInputController;
+import com.golddaniel.core.world.WorldModel;
 
 public class UIRenderer
 {
@@ -50,7 +51,7 @@ public class UIRenderer
                         // This is run when anything is changed on this actor.
                         float deltaX = ((Touchpad) actor).getKnobPercentX();
                         float deltaY = ((Touchpad) actor).getKnobPercentY();
-                        model.getPlayer().setMoveDir(deltaX, deltaY);
+                        AndroidInputController.moveDir.set(deltaX, deltaY);
                     }
                 }
             });
@@ -64,7 +65,7 @@ public class UIRenderer
                         // This is run when anything is changed on this actor.
                         float deltaX = ((Touchpad) actor).getKnobPercentX();
                         float deltaY = ((Touchpad) actor).getKnobPercentY();
-                        model.getPlayer().setShootDir(deltaX, deltaY);
+                        AndroidInputController.shootDir.set(deltaX, deltaY);
                     }
                 }
             });

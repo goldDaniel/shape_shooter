@@ -1,8 +1,7 @@
 
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.utils.ArrayMap;
-import com.golddaniel.screens.GameScreen;
 import com.golddaniel.screens.VScreen;
 
 /**

@@ -24,11 +24,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.golddaniel.main.AudioSystem;
-import com.golddaniel.main.WorldModel;
-import com.golddaniel.utils.QuadTree;
+import com.golddaniel.core.AudioSystem;
+import com.golddaniel.core.world.WorldModel;
 
 /**
  *
@@ -38,17 +37,16 @@ public class Boid extends Entity
 {
     private static float SPEED_MAX = 0.9f;
 
-    private static TextureRegion circleTex;
     private static TextureRegion tex;
 
     private Array<Boid> nearbyBoids;
 
-    private Vector3 velocity;
-    private Vector3 acceleration;
+    private Vector2 velocity;
+    private Vector2 acceleration;
 
-    private Vector3 cohesion;
-    private Vector3 alignment;
-    private Vector3 separation;
+    private Vector2 cohesion;
+    private Vector2 alignment;
+    private Vector2 separation;
 
     private Color color;
 
@@ -67,25 +65,23 @@ public class Boid extends Entity
 
     public static void loadTextures(AssetManager assets)
     {
-        if(circleTex == null)
-            circleTex = new TextureRegion(assets.get("circle.png", Texture.class));
         if(tex == null)
-            tex = new TextureRegion(assets.get("geometric/boid/frame_0.png", Texture.class));
+            tex = new TextureRegion(assets.get("geometric/boid.png", Texture.class));
     }
 
-    public Boid(Vector3 position, AssetManager assets)
+    public Boid(Vector2 position)
     {
-        super(assets);
+        super();
 
-        this.position = new Vector3(position);
+        this.position = new Vector2(position);
 
         float angle = MathUtils.random(MathUtils.PI*2);
-        acceleration = new Vector3();
-        velocity = new Vector3(MathUtils.cos(angle), MathUtils.sin(angle), 0).scl(SPEED_MAX);
+        acceleration = new Vector2();
+        velocity = new Vector2(MathUtils.cos(angle), MathUtils.sin(angle)).scl(SPEED_MAX);
 
-        cohesion = new Vector3();
-        alignment = new Vector3();
-        separation = new Vector3();
+        cohesion = new Vector2();
+        alignment = new Vector2();
+        separation = new Vector2();
 
         width = 0.25f;
         height = 0.25f;
@@ -134,7 +130,7 @@ public class Boid extends Entity
         float range = 3.5f;
         int count = 0;
         
-        Vector3 sum = new Vector3();
+        Vector2 sum = new Vector2();
         for(Boid b : nearbyBoids)
         {
             float dist = position.dst(b.position);
@@ -167,14 +163,14 @@ public class Boid extends Entity
         
         float range = 0.75f;
         
-        Vector3 sum = new Vector3();
+        Vector2 sum = new Vector2();
         for(Boid b : nearbyBoids)
         {
             float dist = position.dst(b.position);
             
             if(dist > 0 && dist < range)
             {
-                Vector3 diff = position.cpy().sub(b.position);
+                Vector2 diff = position.cpy().sub(b.position);
                 diff.nor();
                 diff.scl(1f/dist);
                 sum.add(diff);
@@ -198,21 +194,21 @@ public class Boid extends Entity
         }
     }
     
-    private Vector3 seek(Vector3 target)
+    private Vector2 seek(Vector2 target)
     {
-        Vector3 desiredVelocity = target.cpy().sub(position);
+        Vector2 desiredVelocity = target.cpy().sub(position);
         desiredVelocity.setLength(SPEED_MAX);
         
         return desiredVelocity.sub(velocity).setLength(SPEED_MAX);
     }
 
-    private Vector3 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
+    private Vector2 calculateBoundary(float WORLD_WIDTH, float WORLD_HEIGHT)
     {
-        Vector3 result = new Vector3();
+        Vector2 result = new Vector2();
 
         float range = 4f;
 
-        Vector3 wallCheck = new Vector3();
+        Vector2 wallCheck = new Vector2();
 
         //left wall
         wallCheck.x = -WORLD_WIDTH/2f;
@@ -221,7 +217,7 @@ public class Boid extends Entity
 
         if(dist < range)
         {
-            result.add(SPEED_MAX*(1f - dist/range), 0, 0);
+            result.add(SPEED_MAX*(1f - dist/range), 0);
         }
 
         //right wall
@@ -230,7 +226,7 @@ public class Boid extends Entity
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(-SPEED_MAX*(1f - dist/range), 0, 0);
+            result.add(-SPEED_MAX*(1f - dist/range), 0);
         }
 
         //bottom wall
@@ -240,7 +236,7 @@ public class Boid extends Entity
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(0, SPEED_MAX*(1f - dist/range), 0);
+            result.add(0, SPEED_MAX*(1f - dist/range));
         }
 
         //top wall
@@ -249,7 +245,7 @@ public class Boid extends Entity
         dist = position.dst(wallCheck);
         if(dist < range)
         {
-            result.add(0, -SPEED_MAX*(1f - dist/range), 0);
+            result.add(0, -SPEED_MAX*(1f - dist/range));
         }
 
         return result;
@@ -266,15 +262,15 @@ public class Boid extends Entity
             width = 0.1f + 0.4f * MathUtils.sin(widthAngle)*MathUtils.sin(widthAngle);
             widthAngle += MathUtils.PI * delta;
 
-            Vector3 boundary = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
+            Vector2 boundary = calculateBoundary(model.WORLD_WIDTH, model.WORLD_HEIGHT);
             boundary.scl(3f);
-            Vector3 seek = new Vector3();
+            Vector2 seek = new Vector2();
 
             float range = 10f;
             if (model.getEntityType(Player.class).size > 0)
             {
 
-                Vector3 target = model.getEntityType(Player.class).first().position;
+                Vector2 target = model.getEntityType(Player.class).first().position;
                 float dist = target.dst(position);
                 if (dist < range)
                 {
@@ -300,7 +296,7 @@ public class Boid extends Entity
 
             position.add(velocity);
 
-            acceleration.set(0, 0, 0);
+            acceleration.set(0, 0);
 
             if(position.x < -model.WORLD_WIDTH / 2f)
             {
@@ -322,8 +318,8 @@ public class Boid extends Entity
         }
         else
         {
-            Vector3 veloctiy = new Vector3();
-            Vector3 dim = new Vector3(0.35f, 0.1f, 0.1f);
+            Vector2 veloctiy = new Vector2();
+            Vector2 dim = new Vector2(0.35f, 0.1f);
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
@@ -334,8 +330,7 @@ public class Boid extends Entity
                 model.createParticle(
                                 position,
                                 veloctiy.set(MathUtils.cos(angle) * speed,
-                                             MathUtils.sin(angle) * speed,
-                                             0),
+                                             MathUtils.sin(angle) * speed),
                                 dim,
                                 MathUtils.random(0.1f, 0.25f),
                                 Color.WHITE,
@@ -371,47 +366,41 @@ public class Boid extends Entity
         if(activeTimer <= 0) health--;
         if(health <= 0)
         {
-            Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
-            Vector3 velocity = new Vector3();
-            int particles = 32;
+            Vector2 dim = new Vector2(0.5f, 0.075f);
+            Vector2 velocity = new Vector2();
+            int particles = 256;
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
 
-                angle += MathUtils.random(-1.5f, 1.5f);
-
-
-
-                float speed = MathUtils.random(7f, 10f);
-
+                float speed = MathUtils.random(14f, 22f);
                 model.createParticle(
                     position,
-                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                     dim,
                     MathUtils.random(0.1f, 0.5f),
-                    Color.WHITE,
-                    Color.CYAN);
+                    Color.CYAN,
+                    Color.WHITE);
 
-                speed = MathUtils.random(2f, 3f);
+                speed = MathUtils.random(5f, 8f);
 
                 model.createParticle(
                         position,
-                        velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                        velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                         dim,
                         MathUtils.random(0.1f, 0.5f),
-                        Color.MAGENTA,
+                        Color.FOREST,
                         Color.WHITE);
             }
 
-            Vector3 pos = position.cpy();
-            pos.z = -0.01f;
+            Vector2 pos = position.cpy();
 
             model.createMultipliers(position, 3);
             model.addScore(5);
             model.applyRadialForce(
                             pos,
-                            22,
-                            1f,
+                            32,
+                            1.5f,
                             Color.CYAN.cpy().fromHsv(210f, 0.65f, 1f));
 
 

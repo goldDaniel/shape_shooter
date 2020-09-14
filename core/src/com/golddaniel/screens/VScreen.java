@@ -6,7 +6,7 @@
 package com.golddaniel.screens;
 
 import com.badlogic.gdx.assets.AssetManager;
-import com.golddaniel.main.ScreenManager;
+import com.golddaniel.core.ScreenManager;
 import com.badlogic.gdx.Screen;
 
 /**

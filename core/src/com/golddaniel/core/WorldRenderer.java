@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.golddaniel.main;
+package com.golddaniel.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -32,10 +32,20 @@ import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.SharedLibraryLoader;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.golddaniel.core.world.CameraController;
+import com.golddaniel.core.world.WorldModel;
+import com.golddaniel.entities.Boid;
+import com.golddaniel.entities.Bouncer;
+import com.golddaniel.entities.Bullet;
+import com.golddaniel.entities.Cuber;
 import com.golddaniel.entities.Entity;
+import com.golddaniel.entities.Multiplier;
+import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
+import com.golddaniel.entities.TextParticle;
+import com.sun.org.apache.xpath.internal.operations.Mult;
 
 import bloom.Bloom;
 
@@ -56,38 +66,30 @@ public class WorldRenderer
     private Model skyboxModel;
     private ModelInstance skybox;
 
-    private AssetManager assets;
-
     private FrameBuffer fbo;
 
     boolean rebuildFramebuffer = false;
 
     boolean doBloom = true;
 
+    WorldModel model;
 
+    CameraController cameraController;
 
-
-    public WorldRenderer(PerspectiveCamera cam, AssetManager assets)
+    public WorldRenderer(WorldModel model, AssetManager assets)
     {
         s = new SpriteBatch();
         m = new ModelBatch();
 
-        this.assets = assets;
+        this.model = model;
 
-        float scale;
-        if(SharedLibraryLoader.isAndroid)
-        {
-            scale = 1f/4f;
-        }
-        else
-        {
-            scale = 1f;
+        cameraController = new CameraController(model);
 
-        }
-        this.viewport = new ExtendViewport(1920, 1080, cam);
+        float scale = 1f;
+        this.viewport = new ExtendViewport(1920, 1080, cameraController.getCamera());
         bloom = new Bloom(viewport, scale);
-        bloom.setTreshold(0.2f);
-        bloom.setBloomIntesity(2f);
+        bloom.setTreshold(0.35f);
+        bloom.setBloomIntesity(2.f);
 
         Texture tex = assets.get("skybox.jpg", Texture.class);
 
@@ -107,11 +109,13 @@ public class WorldRenderer
         fbo = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), false);
     }
 
-    public void draw(WorldModel model)
+    public void draw(float dt)
     {
         s.totalRenderCalls = 0;
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+        cameraController.update(dt);
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)) doBloom = !doBloom;
 
@@ -128,36 +132,41 @@ public class WorldRenderer
 
         fbo.begin();
 
-        m.begin(model.getCamera());
+        m.begin(cameraController.getCamera());
         m.render(skybox);
         m.end();
         s.enableBlending();
-        s.setProjectionMatrix(model.getCamera().combined);
+        s.setProjectionMatrix(cameraController.getCamera().combined);
 
-        model.getGrid().draw(model.getCamera().combined);
+        model.getGrid().draw(cameraController.getCamera().combined);
 
         s.begin();
         {
-            for (int i = 0; i < model.getAllEntities().size; i++)
-            {
-                Entity e = model.getAllEntities().get(i);
-                if (!(e instanceof Player))
-                {
-                    e.draw(s);
-                }
-            }
-            for (int i = 0; i < model.getAllParticles().size; i++)
-            {
-                model.getAllParticles().get(i).draw(s);
-            }
+            Array<Boid> boids = model.getEntityType(Boid.class);
+            for (Boid b : boids) b.draw(s);
 
-            for (int i = 0; i < model.getTextParticles().size; i++)
-            {
-                model.getTextParticles().get(i).draw(s);
-            }
+            Array<Bouncer> bouncers = model.getEntityType(Bouncer.class);
+            for(Bouncer b : bouncers) b.draw(s);
+
+
+            Array<Cuber> cubers = model.getEntityType(Cuber.class);
+            for(Cuber c : cubers) c.draw(s);
+
+
+            Array<Bullet> bullets = model.getEntityType(Bullet.class);
+            for(Bullet b : bullets) b.draw(s);
+
+            Array<Multiplier> multipliers = model.getEntityType(Multiplier.class);
+            for(Multiplier m : multipliers) m.draw(s);
+
+
+            for (Particle p : model.getAllParticles()) p.draw(s);
+
+            for (TextParticle t : model.getTextParticles()) t.draw(s);
+
 
             //draw player on top
-            if (model.getPlayer() != null)
+            if (model.getPlayer().isAlive())
             {
                 model.getPlayer().draw(s);
             }

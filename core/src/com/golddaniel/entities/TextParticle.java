@@ -5,13 +5,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.golddaniel.main.WorldModel;
+import com.golddaniel.core.world.WorldModel;
 
 //TODO: i really have to rework particles
 public class TextParticle extends Entity
 {
-    private Vector3 pos;
+    private Vector2 pos;
 
     private String multiplier;
 
@@ -34,22 +35,21 @@ public class TextParticle extends Entity
     public static void loadTextures(AssetManager assets)
     {
 
-        textureX = assets.get("textTextures/x.png", Texture.class);
-        texture0 = assets.get("textTextures/0.png", Texture.class);
-        texture1 = assets.get("textTextures/1.png", Texture.class);
-        texture2 = assets.get("textTextures/2.png", Texture.class);
-        texture3 = assets.get("textTextures/3.png", Texture.class);
-        texture4 = assets.get("textTextures/4.png", Texture.class);
-        texture5 = assets.get("textTextures/5.png", Texture.class);
-        texture6 = assets.get("textTextures/6.png", Texture.class);
-        texture7 = assets.get("textTextures/7.png", Texture.class);
-        texture8 = assets.get("textTextures/8.png", Texture.class);
-        texture9 = assets.get("textTextures/9.png", Texture.class);
+//        textureX = assets.get("textTextures/x.png", Texture.class);
+//        texture0 = assets.get("textTextures/0.png", Texture.class);
+//        texture1 = assets.get("textTextures/1.png", Texture.class);
+//        texture2 = assets.get("textTextures/2.png", Texture.class);
+//        texture3 = assets.get("textTextures/3.png", Texture.class);
+//        texture4 = assets.get("textTextures/4.png", Texture.class);
+//        texture5 = assets.get("textTextures/5.png", Texture.class);
+//        texture6 = assets.get("textTextures/6.png", Texture.class);
+//        texture7 = assets.get("textTextures/7.png", Texture.class);
+//        texture8 = assets.get("textTextures/8.png", Texture.class);
+//        texture9 = assets.get("textTextures/9.png", Texture.class);
     }
 
-    public TextParticle(AssetManager assets, String num, Vector3 pos)
+    public TextParticle(String num, Vector2 pos)
     {
-        super(assets);
         this.pos = pos.cpy();
         multiplier = num;
     }
@@ -117,7 +117,7 @@ public class TextParticle extends Entity
                 tex = texture9;
             }
 
-            s.draw(tex, pos.x + size*i, pos.y, size, size);
+//            s.draw(tex, pos.x + size*i, pos.y, size, size);
         }
         s.setColor(Color.WHITE);
     }

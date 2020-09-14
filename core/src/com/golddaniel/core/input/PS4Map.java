@@ -1,4 +1,4 @@
-package com.golddaniel.main;
+package com.golddaniel.core.input;
 
 import com.badlogic.gdx.utils.SharedLibraryLoader;
 

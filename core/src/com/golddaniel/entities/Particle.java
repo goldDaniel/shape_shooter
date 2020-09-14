@@ -16,24 +16,15 @@
 package com.golddaniel.entities;
 
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Pool;
-import com.golddaniel.main.WorldModel;
+import com.golddaniel.core.world.WorldModel;
 
 /**
  *
@@ -44,9 +35,9 @@ public class Particle implements Pool.Poolable
 {
 
 
-    Vector3 pos;
+    Vector2 pos;
     Vector2 velocity;
-    Vector3 dim;
+    Vector2 dim;
 
     float lifespan;
 
@@ -68,7 +59,7 @@ public class Particle implements Pool.Poolable
     }
 
     public Particle(
-            Vector3 pos, Vector3 velocity, Vector3 dim,
+            Vector2 pos, Vector2 velocity, Vector2 dim,
             float lifespan, Color startColor, Color endColor)
     {
         this.pos = pos;
@@ -81,7 +72,7 @@ public class Particle implements Pool.Poolable
 }
 
     public void init(
-            Vector3 pos, Vector3 velocity, Vector3 dim,
+            Vector2 pos, Vector2 velocity, Vector2 dim,
             float lifespan, Color startColor, Color endColor)
     {
         this.pos.set(pos);
@@ -110,7 +101,7 @@ public class Particle implements Pool.Poolable
     public void update(WorldModel world, float delta)
     {
 
-        pos.add(velocity.x * delta, velocity.y * delta, 0);
+        pos.add(velocity.x * delta, velocity.y * delta);
 
         lerpColor();
 
@@ -145,9 +136,9 @@ public class Particle implements Pool.Poolable
     @Override
     public void reset()
     {
-        pos.set(-1000, -1000, -1000);
+        pos.set(-1000, -1000);
         velocity.set(0, 0);
-        dim.set(0, 0, 0);
+        dim.set(0, 0);
         isAlive = true;
 
 

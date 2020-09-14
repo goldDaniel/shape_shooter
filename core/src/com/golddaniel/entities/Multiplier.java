@@ -7,12 +7,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
-import com.golddaniel.main.WorldModel;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector2;
+import com.golddaniel.core.world.WorldModel;
 
 public class Multiplier extends Entity
 {
-    Vector3 velocity;
+    Vector2 velocity;
 
     static TextureRegion tex;
 
@@ -26,18 +27,17 @@ public class Multiplier extends Entity
 
     Color color;
 
-    public Multiplier(Vector3 pos, Vector3 vel, AssetManager assets)
+    public Multiplier(Vector2 pos, Vector2 vel)
     {
-        super(assets);
         init(pos, vel);
         width = 0.20f;
         height = width / 2f;
 
         color = Color.LIME.cpy();
-        color.a = 0.5f;
+        color.a = 1.f;
     }
 
-    public void init(Vector3 pos, Vector3 vel)
+    public void init(Vector2 pos, Vector2 vel)
     {
         this.position = pos;
         this.velocity = vel;
@@ -67,32 +67,32 @@ public class Multiplier extends Entity
         }
         if(inRangeOfPlayer)
         {
-            Vector3 dir = p.position.cpy().sub(position);
+            Vector2 dir = p.position.cpy().sub(position);
             dir.nor().scl(velocity.len());
             velocity.set(dir);
 
             //increase acceleration the closer we are to the player
-            Vector3 toAdd = velocity.cpy().nor();
+            Vector2 toAdd = velocity.cpy().nor();
             toAdd.scl(25f * delta * 1f / p.position.dst(position));
             velocity.add(toAdd);
 
 
-            Vector3 dim = new Vector3(0.015f, 0.015f, 0.015f);
-            Vector3 pos = position.cpy();
-            pos.sub(-width/2f, -height/2f, 0);
+            Vector2 dim = new Vector2(0.07f, 0.07f);
+            Vector2 pos = position.cpy();
+            pos.sub(-width/2f, -height/2f);
             model.createParticle(
                     pos,
-                    Vector3.Zero,
+                    Vector2.Zero,
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
                     Color.WHITE);
 
             pos = position.cpy();
-            pos.sub(-width/2f, height/2f, 0);
+            pos.sub(-width/2f, height/2f);
             model.createParticle(
                     pos,
-                    Vector3.Zero,
+                    Vector2.Zero,
                     dim,
                     MathUtils.random(0.1f, 0.5f),
                     Color.LIME,
@@ -130,7 +130,8 @@ public class Multiplier extends Entity
     public void draw(SpriteBatch s)
     {
 
-        color.a = 0.5f * lifespan / 5f + 0.2f;
+        color.a = 1.f - 0.5f * (1.f - lifespan / 5.f);
+
         s.setColor(color);
         s.draw(tex,
                 position.x - width / 2f, position.y - height / 2f,
@@ -144,29 +145,28 @@ public class Multiplier extends Entity
     public void kill(WorldModel model)
     {
         isAlive = false;
-        int particles = 8;
-        Vector3 dim = new Vector3(0.25f, 0.025f, 0.025f);
-        Vector3 velocity = new Vector3();
+        int particles = 64;
+        Vector2 dim = new Vector2(0.25f, 0.025f);
+        Vector2 velocity = new Vector2();
         for (int i = 0; i < particles; i++)
         {
             float angle = (float) i / (float) particles * 360f;
-
 
             float speed = MathUtils.random(8f, 14f);
 
             model.createParticle(
                     position,
-                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                     dim,
                     MathUtils.random(0.05f, 0.15f),
-                    Color.LIME,
-                    Color.WHITE);
+                    Color.FIREBRICK,
+                    Color.GREEN);
 
             speed = MathUtils.random(4f, 6f);
 
             model.createParticle(
                     position,
-                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                     dim,
                     MathUtils.random(0.05f, 0.15f),
                     Color.LIME,

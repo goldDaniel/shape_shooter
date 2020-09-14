@@ -1,8 +1,8 @@
-package com.golddaniel.main.desktop;
+package com.golddaniel.core.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.golddaniel.main.Main;
+import com.golddaniel.core.Main;
 
 public class DesktopLauncher
 {

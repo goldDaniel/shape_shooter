@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.golddaniel.main;
+package com.golddaniel.core.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Pool;
+import com.golddaniel.core.AudioSystem;
+import com.golddaniel.core.springmass.GridUpdater;
+import com.golddaniel.core.springmass.SpringMassGrid;
 import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Entity;
@@ -38,13 +42,14 @@ import com.golddaniel.utils.QuadTree;
  */
 public class WorldModel
 {
-
     private QuadTree<Boid> boids;
 
     public final float WORLD_WIDTH;
     public final float WORLD_HEIGHT;
 
+
     private Array<Entity> entities;
+
 
     private ArrayMap<Integer, Array<Entity>> toSpawn;
 
@@ -63,11 +68,10 @@ public class WorldModel
 
     private Player player;
 
-    private PhysicsGrid g;
+    private GridUpdater g;
 
     private boolean isUpdating;
 
-    private PerspectiveCamera cam;
 
     private float remainingTime;
     private float elapsedTime = 0;
@@ -80,28 +84,11 @@ public class WorldModel
     final float RESPAWN_TIME = 2f;
     private float respawnTimer = 0f;
 
-    public PerspectiveCamera getCamera()
-    {
-        return cam;
-    }
 
     public WorldModel(float width, float height, ArrayMap<Integer, Array<Entity>> toSpawn, float levelTime)
     {
         this.toSpawn = toSpawn;
         this.remainingTime = levelTime;
-        float vWidth = 1920;
-        float vHeight = 1080;
-
-        cam = new PerspectiveCamera(67, vWidth, vHeight);
-
-        cam.position.x = 0;
-        cam.position.y = 0;
-        cam.position.z = 64f;
-
-        cam.lookAt(cam.position.x, cam.position.y, 0f);
-
-        cam.near = 1f;
-        cam.far = 5000f;
 
         WORLD_WIDTH = width;
         WORLD_HEIGHT = height;
@@ -119,9 +106,9 @@ public class WorldModel
         {
             protected Particle newObject()
             {
-                return new Particle(new Vector3(-1000, -1000, -1000),
-                        new Vector3(0, 0, 0),
-                        new Vector3(0, 0, 0),
+                return new Particle(new Vector2(-1000, -1000),
+                        new Vector2(0, 0),
+                        new Vector2(0, 0),
                         0, new Color(), new Color());
             }
         };
@@ -130,11 +117,13 @@ public class WorldModel
         {
             protected Bullet newObject()
             {
-                return new Bullet(Vector3.Zero, 0, 0, null);
+                return new Bullet(Vector2.Zero, 0, 0);
             }
         };
 
         boids = new QuadTree<Boid>(0, new Rectangle(-WORLD_WIDTH / 2f, -WORLD_HEIGHT / 2f, WORLD_WIDTH / 2f, WORLD_HEIGHT / 2f));
+
+        addEntity(player = new Player());
     }
 
 
@@ -205,141 +194,12 @@ public class WorldModel
         }
         textParticles.removeAll(toRemove, true);
 
-        g.update(delta);
+        g.update();
 
-        //CAMERA LOGIC///////////////////////////////////////////////////////////////////////////
-
-        Vector3 target = new Vector3();
-        if (player != null)
+        if(!player.isAlive())
         {
-            target.set(player.position);
-
-            if (player.position.x < -WORLD_WIDTH / 2f)
-            {
-                target.x = -WORLD_WIDTH / 2f;
-            }
-            if (player.position.x > WORLD_WIDTH / 2f)
-            {
-                target.x = WORLD_WIDTH / 2f;
-            }
-
-            if (player.position.y < -WORLD_HEIGHT / 2f)
-            {
-                target.y = -WORLD_HEIGHT / 2f;
-            }
-
-            if (player.position.y > WORLD_HEIGHT / 2f)
-            {
-                target.y = WORLD_HEIGHT / 2f;
-            }
-
-            target.z = 5.5f;
+            player.update(this, delta);
         }
-        else
-        {
-            target.z = 16.5f;
-        }
-        cam.position.x = MathUtils.lerp(cam.position.x, target.x, 0.05f);
-        cam.position.y = MathUtils.lerp(cam.position.y, target.y, 0.05f);
-        cam.position.z = MathUtils.lerp(
-                cam.position.z,
-                target.z,
-                delta * 2f);
-
-        cam.lookAt(cam.position.x, cam.position.y, 0f);
-
-        //maintain our rotation around Z axis after lookAt, otherwise
-        //we get weird rotation due to floating point error
-        cam.up.set(0f, 1f, 0f);
-
-        cam.update();
-        /////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        //////////////////////////////////////////////////////////////////////////////////
-        //WE RESPAWN THE PLAYER IN HERE////////////////////////////////////////////////////////////
-        if (player == null)
-        {
-            respawnTimer += delta;
-
-            int particles = 16;
-
-            Vector3 velocity = new Vector3();
-            Vector3 dim = new Vector3(0.75f, 0.025f, 0.025f);
-
-            for (int i = 0; i < particles; i++)
-            {
-                float angle = (float) i / (float) particles * 360f;
-
-                angle += MathUtils.random(-30f, 30f);
-
-                velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
-                velocity.scl(MathUtils.random(2f, 4f));
-
-
-                createParticle(
-                        Vector3.Zero,
-                        velocity,
-                        dim,
-                        MathUtils.random(0.4f, 0.6f),
-                        Color.PURPLE,
-                        Color.BLUE);
-
-                velocity = new Vector3(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
-                velocity.scl(MathUtils.random(3f, 5f));
-
-                createParticle(
-                        Vector3.Zero,
-                        velocity,
-                        dim,
-                        MathUtils.random(0.4f, 0.6f),
-                        Color.RED,
-                        Color.YELLOW);
-            }
-            if (respawnTimer >= RESPAWN_TIME)
-            {
-                AudioSystem.playSound(AudioSystem.SoundEffect.RESPAWN);
-                //RESPAWN PLAYER
-                addEntity(new Player(null));
-                applyRadialForce(new Vector3(), 2000f * delta, 2.25f);
-
-                particles = 256;
-                for (int i = 0; i < particles; i++)
-                {
-                    float angle = (float) i / (float) particles * 360f;
-
-                    angle += MathUtils.random(-10f, 10f);
-
-                    velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
-
-                    velocity.scl(MathUtils.random(10f, 14f));
-                    createParticle(
-                            Vector3.Zero,
-                            velocity,
-                            dim.set(0.75f, 0.1f, 0.1f),
-                            MathUtils.random(0.7f, 0.9f),
-                            Color.MAGENTA,
-                            Color.BLUE);
-
-                    velocity.set(MathUtils.cosDeg(angle), MathUtils.sinDeg(angle), 0);
-
-                    velocity.scl(MathUtils.random(8f, 14f));
-                    createParticle(
-                            Vector3.Zero,
-                            velocity,
-                            dim,
-                            MathUtils.random(0.7f, 0.9f),
-                            Color.PURPLE,
-                            Color.GREEN);
-                }
-            }
-        }
-        else
-        {
-            respawnTimer = 0;
-        }
-        //////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////
 
         float audioLerp = (1f - respawnTimer / RESPAWN_TIME);
         AudioSystem.setMusicVolume(0.05f + 0.95f * (float) Math.pow(audioLerp, 4f));
@@ -366,7 +226,6 @@ public class WorldModel
                 entities.add(e);
             }
         }
-        if (e instanceof Player) player = (Player) e;
     }
 
     public float getRemainingTime()
@@ -374,7 +233,7 @@ public class WorldModel
         return remainingTime;
     }
 
-    protected int getScore()
+    public int getScore()
     {
         return score;
     }
@@ -384,7 +243,7 @@ public class WorldModel
         return scoreMultiplier;
     }
 
-    protected void incrementMultiplier()
+    public void incrementMultiplier()
     {
         scoreMultiplier++;
     }
@@ -394,39 +253,39 @@ public class WorldModel
         this.score += score * scoreMultiplier;
     }
 
-    public void applyRadialForce(Vector3 pos, float force, float radius)
+    public void applyRadialForce(Vector2 pos, float force, float radius)
     {
         g.applyRadialForce(pos, force, radius);
     }
 
-    public void applyRadialForce(Vector3 pos, float force, float radius, Color c)
+    public void applyRadialForce(Vector2 pos, float force, float radius, Color c)
     {
         g.applyRadialForce(pos, force, radius, c);
     }
 
-    public void createBullet(Vector3 pos, float speed, float dir)
+    public void createBullet(Vector2 pos, float speed, float dir)
     {
         Bullet b = bulletPool.obtain();
         b.init(pos, speed, dir);
         addEntity(b);
     }
 
-    public void createTextParticle(int num, Vector3 pos)
+    public void createTextParticle(int num, Vector2 pos)
     {
-        TextParticle p = new TextParticle(null, "x" + num, pos);
+        TextParticle p = new TextParticle("x" + num, pos);
         textParticles.add(p);
     }
 
-    public void createParticle(Vector3 pos, Vector3 vel, Vector3 dim, float lifespan, Color startColor, Color endColor)
+    public void createParticle(Vector2 pos, Vector2 vel, Vector2 dim, float lifespan, Color startColor, Color endColor)
     {
         Particle p = particlePool.obtain();
         p.init(pos, vel, dim, lifespan, startColor, endColor);
         particles.add(p);
     }
 
-    public void createMultipliers(Vector3 pos, int count)
+    public void createMultipliers(Vector2 pos, int count)
     {
-        Vector3 vel = new Vector3();
+        Vector2 vel = new Vector2();
         for (int i = 0; i < count; i++)
         {
             float angle = ((float) (i) / (float) count) * 360f;
@@ -435,7 +294,7 @@ public class WorldModel
             vel.x = MathUtils.cos(angle) * speed;
             vel.y = MathUtils.sin(angle) * speed;
 
-            Multiplier m = new Multiplier(pos.cpy(), vel.cpy(), null);
+            Multiplier m = new Multiplier(pos.cpy(), vel.cpy());
             addEntity(m);
         }
     }
@@ -446,20 +305,19 @@ public class WorldModel
         {
             e.kill();
         }
-        player = null;
     }
 
-    protected Array<Entity> getAllEntities()
+    public Array<Entity> getAllEntities()
     {
         return entities;
     }
 
-    protected Array<Particle> getAllParticles()
+    public Array<Particle> getAllParticles()
     {
         return particles;
     }
 
-    protected Array<TextParticle> getTextParticles() { return textParticles; }
+    public Array<TextParticle> getTextParticles() { return textParticles; }
 
     public <T> Array<T> getEntityType(Class<T> type)
     {
@@ -482,7 +340,6 @@ public class WorldModel
         {
             e.dispose();
         }
-        g.dispose();
     }
 
     public Player getPlayer()
@@ -490,13 +347,13 @@ public class WorldModel
         return player;
     }
 
-    public PhysicsGrid getGrid()
+    public SpringMassGrid getGrid()
     {
-        return g;
+        return g.getGrid();
     }
 
-    public void setGrid(PhysicsGrid g)
+    public void setGrid(SpringMassGrid grid)
     {
-        this.g = g;
+        g  = new GridUpdater(grid);
     }
 }

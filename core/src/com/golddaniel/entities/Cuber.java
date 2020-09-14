@@ -21,11 +21,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.AudioSystem;
-import com.golddaniel.main.WorldModel;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector2;
+import com.golddaniel.core.AudioSystem;
+import com.golddaniel.core.world.WorldModel;
 
 /**
  *
@@ -38,7 +37,7 @@ public class Cuber extends Entity
     
     static Texture tex;
     
-    Vector3 dir;
+    Vector2 dir;
     
     float width;
     float height;
@@ -49,20 +48,21 @@ public class Cuber extends Entity
 
     Rectangle boundingBox = new Rectangle();
 
-    public Cuber(Vector3 pos, AssetManager assets)
+    public static void LoadTextures(AssetManager assets)
     {
-        super(assets);
-
         if(tex == null)
         {
             tex = assets.get("texture.png", Texture.class);
         }
+    }
 
+    public Cuber(Vector2 pos)
+    {
         health = 9;
         isAlive = true;
-        position = new Vector3(pos);
+        position = new Vector2(pos);
 
-        dir = new Vector3();
+        dir = new Vector2();
         
         width = height = 0.4f;
         
@@ -84,9 +84,9 @@ public class Cuber extends Entity
         }
     }
 
-    private Vector3 getMid()
+    private Vector2 getMid()
     {
-        return position.cpy().add(width/2f, height/2f, 0);
+        return position.cpy().add(width/2f, height/2f);
     }
     
     private float abs(float a)
@@ -105,7 +105,7 @@ public class Cuber extends Entity
 
                 if(model.getPlayer() != null)
                 {
-                    Vector3 pPos = model.getPlayer().position.cpy();
+                    Vector2 pPos = model.getPlayer().position.cpy();
 
                     float xDist = pPos.x - position.x;
                     float yDist = pPos.y - position.y;
@@ -180,8 +180,8 @@ public class Cuber extends Entity
         }
         else
         {
-            Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
-            Vector3 velocity = new Vector3();
+            Vector2 dim = new Vector2(0.35f, 0.05f);
+            Vector2 velocity = new Vector2();
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
@@ -193,8 +193,7 @@ public class Cuber extends Entity
                 model.createParticle(
                         position,
                         velocity.set(MathUtils.cos(angle) * speed,
-                                MathUtils.sin(angle) * speed,
-                                0),
+                                MathUtils.sin(angle) * speed),
                         dim,
                         MathUtils.random(0.1f, 0.25f),
                         Color.RED,
@@ -227,27 +226,25 @@ public class Cuber extends Entity
         {
             AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);
             isAlive = false;
-            model.applyRadialForce(getMid(), 40f, width *3, Color.RED);
+            model.applyRadialForce(getMid(), 55f, width * 5, Color.RED);
 
             model.addScore(10);
             model.createMultipliers(position, 5);
 
-            int particles = 32;
-            Vector3 vel = new Vector3();
-            Vector3 dim = new Vector3(0.5f, 0.075f, 0.075f);
+            int particles = 256;
+            Vector2 vel = new Vector2();
+            Vector2 dim = new Vector2(0.5f, 0.075f);
             for (int i = 0; i < particles; i++)
             {
                 float angle = (float)i/(float)particles*360f;
-                angle += MathUtils.random(-2.5f, 2.5f);
 
 
-                float speed = 5f + MathUtils.random(-2f, 2f);
+                float speed = 14f + MathUtils.random(-2f, 2f);
 
 
                 vel .set(
                         MathUtils.cosDeg(angle)*speed,
-                        MathUtils.sinDeg(angle)*speed,
-                        0);
+                        MathUtils.sinDeg(angle)*speed);
 
 
 

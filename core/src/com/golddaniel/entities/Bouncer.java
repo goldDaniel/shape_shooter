@@ -20,14 +20,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Timer;
-import com.golddaniel.main.AudioSystem;
-import com.golddaniel.main.WorldModel;
+import com.badlogic.gdx.math.Vector2;
+import com.golddaniel.core.AudioSystem;
+import com.golddaniel.core.world.WorldModel;
 
 /**
  *
@@ -54,15 +52,19 @@ public class Bouncer extends Entity
     Rectangle boundingBox = new Rectangle();
 
     //used for particles
-    Vector3 velocity = new Vector3();
+    Vector2 velocity = new Vector2();
 
-    public Bouncer(Vector3 pos, Vector3 dir, AssetManager assets)
+    public static void LoadTextures(AssetManager assets)
     {
-        super(assets);
         if(tex == null)
         {
             tex = new TextureRegion(assets.get("geometric/player.png", Texture.class));
         }
+    }
+
+    public Bouncer(Vector2 pos, Vector2 dir)
+    {
+
 
         width = 1f;
         height = 0.5f;
@@ -85,7 +87,7 @@ public class Bouncer extends Entity
         if(activeTimer > 0)
         {
 
-            Vector3 dim = new Vector3(0.35f, 0.05f, 0.05f);
+            Vector2 dim = new Vector2(0.35f, 0.05f);
             activeTimer -= delta;
             for(int i = 0; i < 6; i++)
             {
@@ -97,8 +99,7 @@ public class Bouncer extends Entity
                 model.createParticle(
                         position,
                         velocity.set(MathUtils.cos(angle) * speed,
-                                MathUtils.sin(angle) * speed,
-                                0),
+                                     MathUtils.sin(angle) * speed),
                         dim,
                         MathUtils.random(0.1f, 0.25f),
                         Color.YELLOW,
@@ -194,32 +195,31 @@ public class Bouncer extends Entity
             health--;
             if(health <= 0)
             {
-                Vector3 dim = new Vector3(0.5f, 0.1f, 0.1f);
-                Vector3 velocity = new Vector3();
-                int particles = 32;
+                Vector2 dim = new Vector2(0.5f, 0.05f);
+                Vector2 velocity = new Vector2();
+                int particles = 256;
                 for (int i = 0; i < particles; i++)
                 {
                     float angle = (float)i/(float)particles*360f;
 
-                    angle += MathUtils.random(-2.5f, 2.5f);
 
 
 
-                    float speed = MathUtils.random(5f, 7f);
+                    float speed = MathUtils.random(14f, 22f);
 
                     model.createParticle(
                             position,
-                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
                             Color.YELLOW,
                             Color.WHITE);
 
-                    speed = MathUtils.random(5f, 7f);
+                    speed = MathUtils.random(8f, 12f);
 
                     model.createParticle(
                             position,
-                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed, 0),
+                            velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
                             dim,
                             MathUtils.random(0.1f, 0.5f),
                             Color.WHITE,
@@ -230,7 +230,7 @@ public class Bouncer extends Entity
 
                 model.addScore(10);
                 model.createMultipliers(position, 6);
-                model.applyRadialForce(position, 20f,
+                model.applyRadialForce(position, 24f,
                                  width * 1.5f,
                                         Color.YELLOW.cpy().fromHsv(55, 0.55f, 0.75f));
 
