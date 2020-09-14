@@ -99,7 +99,7 @@ public class WorldModel
         particles = new Array<Particle>();
 
         //arbitrary large number
-        particlePool = new Pool<Particle>(8192 * 2)
+        particlePool = new Pool<Particle>(8192 * 8)
         {
             protected Particle newObject()
             {
@@ -125,6 +125,8 @@ public class WorldModel
     public void update(float delta)
     {
         delta *= TIMESCALE;
+
+        if(remainingTime <= 0) entities.clear();
 
         isUpdating = true;
 
@@ -185,7 +187,7 @@ public class WorldModel
 
         g.update();
 
-        if(!player.isAlive())
+        if(!player.isAlive() && remainingTime > 0)
         {
             player.update(this, delta);
         }

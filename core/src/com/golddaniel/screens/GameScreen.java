@@ -6,6 +6,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.golddaniel.core.input.AndroidInputController;
 import com.golddaniel.core.input.InputConfig;
 import com.golddaniel.core.input.KeyboardInputController;
@@ -16,6 +20,7 @@ import com.golddaniel.entities.Boid;
 import com.golddaniel.entities.Bouncer;
 import com.golddaniel.entities.Bullet;
 import com.golddaniel.entities.Cuber;
+import com.golddaniel.entities.Entity;
 import com.golddaniel.entities.Multiplier;
 import com.golddaniel.entities.Particle;
 import com.golddaniel.entities.Player;
@@ -76,11 +81,6 @@ public class GameScreen extends VScreen
                 playerInput = new AndroidInputController(model.getPlayer());
             }
 
-
-
-
-
-
             uiRenderer = new UIRenderer(model, assets);
             worldRenderer = new WorldRenderer(model, assets);
 
@@ -92,7 +92,6 @@ public class GameScreen extends VScreen
         }
         else
         {
-
             if (model.getRemainingTime() > 0)
             {
                 AudioSystem.startMusic();
@@ -109,6 +108,8 @@ public class GameScreen extends VScreen
             }
             else
             {
+
+
                 if (gameRestart <= 0)
                 {
                     gameRestart = 5f;
@@ -121,6 +122,50 @@ public class GameScreen extends VScreen
                 }
                 else
                 {
+                    Array<Entity> entities = model.getAllEntities();
+
+                    model.getPlayer().kill(model);
+
+                    for(Entity e : entities)
+                    {
+                        e.kill();
+
+
+                        int particles = 64;
+                        Vector2 velocity = new Vector2();
+                        Vector2 dim = new Vector2(1.f, 0.1f);
+                        float hue = MathUtils.random(360f);
+                        Color color = new Color().fromHsv(hue, 1.f, 1.f);
+
+                        model.applyRadialForce(e.position, 16, 1, new Color().fromHsv(360f - hue, 1.f, 1.f));
+
+                        for (int i = 0; i < particles; i++)
+                        {
+                            float angle = (float)i/(float)particles*360f;
+
+                            float speed = MathUtils.random(14f, 22f);
+
+                            model.createParticle(
+                                    e.position,
+                                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
+                                    dim,
+                                    MathUtils.random(0.5f, 1.5f),
+                                    color,
+                                    Color.WHITE);
+
+                            speed = MathUtils.random(8f, 12f);
+
+                            model.createParticle(
+                                    e.position,
+                                    velocity.set(MathUtils.cos(angle) * speed, MathUtils.sin(angle) * speed),
+                                    dim,
+                                    MathUtils.random(0.5f, 1.5f),
+                                    color,
+                                    Color.ORANGE);
+                        }
+                    }
+                    model.update(delta);
+
                     gameRestart -= delta;
                     worldRenderer.draw(delta);
                     uiRenderer.update(model);

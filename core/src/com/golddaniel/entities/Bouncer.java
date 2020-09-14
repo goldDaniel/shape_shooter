@@ -216,7 +216,7 @@ public class Bouncer extends Entity
                 model.addScore(10);
                 model.createMultipliers(position, 6);
                 model.applyRadialForce(position, 48f,
-                                        2f,
+                                        1.5f,
                                         Color.MAGENTA);
 
                 AudioSystem.playSound(AudioSystem.SoundEffect.ENEMY_DEATH);

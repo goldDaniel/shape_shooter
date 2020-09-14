@@ -26,7 +26,7 @@ public class Player extends Entity
     private float width;
     private float height;
 
-    private final float RESPAWN_TIME = 1.75f;
+    private final float RESPAWN_TIME = 2.15f;
     private float respawnTimer;
 
     //weapon cooldown, should probably move into its own module
@@ -79,6 +79,27 @@ public class Player extends Entity
                 model.addEntity(this);
                 isAlive = true;
             }
+
+            int segments = 8;
+            Vector2 vel = new Vector2();
+            Vector2 dim = new Vector2(2.f, 0.1f);
+            for(int i = 0; i < segments; i++)
+            {
+                float speed = MathUtils.random(15f, 22f);
+
+                float angle = (float)i/(float)segments * 360f;
+                angle += (respawnTimer / RESPAWN_TIME) * 180;
+
+                vel.set(MathUtils.cosDeg(angle) * speed * MathUtils.random(0.4f, 1.f), MathUtils.sinDeg(angle) * speed);
+
+                model.createParticle(Vector2.Zero,
+                        vel,
+                        dim,
+                        0.25f,
+                        Color.WHITE,
+                        Color.WHITE);
+            }
+
             return;
         }
 
@@ -252,6 +273,8 @@ public class Player extends Entity
 
     public void kill(WorldModel model)
     {
+        if(!isAlive) return;
+
         AudioSystem.playSound(AudioSystem.SoundEffect.PLAYER_DEATH);
         isAlive = false;
 
