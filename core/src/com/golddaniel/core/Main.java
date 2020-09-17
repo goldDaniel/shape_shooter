@@ -77,18 +77,18 @@ public class Main extends ApplicationAdapter
                     Skin.class, parms);
         }
 
-//
-//        assets.load("textTextures/x.png", Texture.class);
-//        assets.load("textTextures/0.png", Texture.class);
-//        assets.load("textTextures/1.png", Texture.class);
-//        assets.load("textTextures/2.png", Texture.class);
-//        assets.load("textTextures/3.png", Texture.class);
-//        assets.load("textTextures/4.png", Texture.class);
-//        assets.load("textTextures/5.png", Texture.class);
-//        assets.load("textTextures/6.png", Texture.class);
-//        assets.load("textTextures/7.png", Texture.class);
-//        assets.load("textTextures/8.png", Texture.class);
-//        assets.load("textTextures/9.png", Texture.class);
+
+        assets.load("textTextures/x.png", Texture.class);
+        assets.load("textTextures/0.png", Texture.class);
+        assets.load("textTextures/1.png", Texture.class);
+        assets.load("textTextures/2.png", Texture.class);
+        assets.load("textTextures/3.png", Texture.class);
+        assets.load("textTextures/4.png", Texture.class);
+        assets.load("textTextures/5.png", Texture.class);
+        assets.load("textTextures/6.png", Texture.class);
+        assets.load("textTextures/7.png", Texture.class);
+        assets.load("textTextures/8.png", Texture.class);
+        assets.load("textTextures/9.png", Texture.class);
 
         assets.load("skybox.jpg", Texture.class);
         assets.load("geometric/dashedCircle.png", Texture.class);

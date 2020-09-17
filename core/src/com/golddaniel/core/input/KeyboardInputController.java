@@ -12,7 +12,7 @@ public class KeyboardInputController extends PlayerInputController
     private IntMap<Boolean> inputMap;
     private InputConfig inputConfig;
 
-    public KeyboardInputController(Player player, InputConfig inputConfig)
+    protected KeyboardInputController(Player player, InputConfig inputConfig)
     {
         super(player);
         this.inputConfig = inputConfig;

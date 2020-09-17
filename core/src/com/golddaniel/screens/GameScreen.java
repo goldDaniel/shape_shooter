@@ -3,7 +3,6 @@ package com.golddaniel.screens;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
@@ -11,8 +10,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.golddaniel.core.input.AndroidInputController;
-import com.golddaniel.core.input.InputConfig;
-import com.golddaniel.core.input.KeyboardInputController;
+import com.golddaniel.core.input.DesktopInputController;
 import com.golddaniel.core.input.PlayerInputController;
 import com.golddaniel.core.world.CollisionSystem;
 import com.golddaniel.core.world.WorldModel;
@@ -61,20 +59,9 @@ public class GameScreen extends VScreen
         {
             model = LevelBuilder.getWorldModel();
 
-
-            InputConfig playerInputKeys = new InputConfig(
-                                            Input.Keys.A,
-                                            Input.Keys.D,
-                                            Input.Keys.W,
-                                            Input.Keys.S,
-                                            Input.Keys.LEFT,
-                                            Input.Keys.RIGHT,
-                                            Input.Keys.UP,
-                                            Input.Keys.DOWN);
-
             if(Gdx.app.getType() == Application.ApplicationType.Desktop)
             {
-                playerInput = new KeyboardInputController(model.getPlayer(), playerInputKeys);
+                playerInput = new DesktopInputController(model.getPlayer());
             }
             if(Gdx.app.getType() == Application.ApplicationType.Android)
             {
@@ -87,7 +74,7 @@ public class GameScreen extends VScreen
             resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
             InputMultiplexer input = new InputMultiplexer(playerInput,
-                    uiRenderer.getStage());
+                                                            uiRenderer.getStage());
             Gdx.input.setInputProcessor(input);
         }
         else
@@ -131,13 +118,13 @@ public class GameScreen extends VScreen
                         e.kill();
 
 
-                        int particles = 64;
+                        int particles = 16;
                         Vector2 velocity = new Vector2();
                         Vector2 dim = new Vector2(1.f, 0.1f);
                         float hue = MathUtils.random(360f);
                         Color color = new Color().fromHsv(hue, 1.f, 1.f);
 
-                        model.applyRadialForce(e.position, 16, 1, new Color().fromHsv(360f - hue, 1.f, 1.f));
+                        model.applyRadialForce(e.position, 22, 4, new Color().fromHsv(360f - hue, 1.f, 1.f));
 
                         for (int i = 0; i < particles; i++)
                         {

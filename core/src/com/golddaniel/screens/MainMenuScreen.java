@@ -46,10 +46,10 @@ public class MainMenuScreen extends VScreen
     private Skin uiSkin;
     private Stage uiStage;
 
-    float hue;
+    private float hue;
 
-    float dist = 5000;
-    Texture tex;
+    private float dist = 5000;
+    private Texture tex;
 
     private Pool<Particle> particlePool = new Pool<Particle>(2048)
     {

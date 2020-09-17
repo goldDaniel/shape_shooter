@@ -1,11 +1,16 @@
 package com.golddaniel.core.input;
 
+import com.badlogic.gdx.Input;
+
 /**
  * holds the keyboard controls for player input
  * Use Gdx.input.keys when constructing
  */
 public class InputConfig
 {
+    public static final InputConfig DEFAULT = new InputConfig(Input.Keys.A, Input.Keys.D, Input.Keys.W, Input.Keys.S,
+                                                              Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.UP, Input.Keys.DOWN);
+
     public final int MOVE_LEFT;
     public final int MOVE_RIGHT;
     public final int MOVE_UP;
