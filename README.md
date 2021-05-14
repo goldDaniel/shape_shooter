@@ -1,13 +1,12 @@
-
-
-
-<br />
 <p align="center">
     <h1 align="center">Shape Shooter</h1>
     <h2 align="center">A neon twin stick shooter!</h2>
-    <h3 align="center">
-        <img align="center"width="460" height="300" src="https://img.itch.zone/aW1nLzIzMTcyNjcuZ2lm/315x250%23c/BISnwO.gif">
-    </h3>
+    <p align="center">
+        <video width="100%" controls="">
+                        <source src="https://i.imgur.com/BQ8AiF4.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+        </video>
+    </p>
     <h3 align="center">
         Built With: <a href="https://libgdx.com/">LibGDX</a>
     </h3>
